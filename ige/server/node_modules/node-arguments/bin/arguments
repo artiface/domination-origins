@@ -1,0 +1,9 @@
+#!/usr/bin/env node
+
+var Arguments = require('../lib/arguments').Arguments;
+
+var arguments = new Arguments({ 
+  name: 'the-arguments'
+});
+
+arguments.start();
