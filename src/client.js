@@ -52,7 +52,7 @@ var Client = IgeClass.extend({
 			// Create the main viewport
 			self.vp1 = new IgeViewport()
 				.id('vp1')
-				.autoSize(true)
+				.autoSize(false)
 				.scene(self.mainScene)
 				.drawMouse(true)
 				.drawBounds(false)
@@ -135,12 +135,7 @@ var Client = IgeClass.extend({
 				self.characters.push(newChar);
 			}
 
-			ige.ui.style('#endTurnButton', {
-				'top': 0,
-				'right': 0,
-				'backgroundColor': '#ccc'
-			});
-
+	
 			// Create a UI entity so we can test if clicking the entity will stop
 			// event propagation down to moving the player. If it's working correctly
 			// the player won't move when the entity is clicked.
@@ -149,9 +144,10 @@ var Client = IgeClass.extend({
 				.id('endTurnButton')
 				.depth(1)
 				.backgroundColor('#474747')
-				.width(120)
-				.height(30)
-				.top(1)
+				.bottom(3)
+				.right(20)
+				.width(60)
+				.height(30)				
 				.borderTopColor('#666666')
 				.borderTopWidth(1)
 				.backgroundPosition(0, 0)
@@ -165,10 +161,11 @@ var Client = IgeClass.extend({
 			self.attackButton = new IgeUiLabel()
 				.id('attackButton')
 				.depth(1)
-				.backgroundColor('#474747')
-				.width(120)
+				.bottom(3)
+				.left(70)
+				.width(60)
 				.height(30)
-				.top(1)
+				.backgroundColor('#474747')	
 				.borderTopColor('#666666')
 				.borderTopWidth(1)
 				.backgroundPosition(0, 0)
@@ -178,6 +175,111 @@ var Client = IgeClass.extend({
 				.mouseMove(function () { ige.input.stopPropagation(); })
 				.mouseUp(function () { 
 					self.currentAction = Attack;
+					ige.input.stopPropagation(); 
+				})
+				.mount(self.uiScene);
+
+			self.sprintButton = new IgeUiLabel()
+				.id('sprintButton')
+				.depth(1)
+				.bottom(3)
+				.left(140)
+				.width(60)
+				.height(30)
+				.backgroundColor('#474747')	
+				.borderTopColor('#666666')
+				.borderTopWidth(1)
+				.backgroundPosition(0, 0)
+				.value('Sprint')
+				.mouseOver(function () {this.backgroundColor('#49ceff'); ige.input.stopPropagation(); })
+				.mouseOut(function () {this.backgroundColor('#474747'); ige.input.stopPropagation(); })
+				.mouseMove(function () { ige.input.stopPropagation(); })
+				.mouseUp(function () { 
+					self.debugText.value("Sprint Activated!");
+					ige.input.stopPropagation(); 
+				})
+				.mount(self.uiScene);
+
+			self.skillOneButton = new IgeUiLabel()
+				.id('skillOneButton')
+				.depth(1)
+				.bottom(3)
+				.left(210)
+				.width(60)
+				.height(30)
+				.backgroundColor('#474747')	
+				.borderTopColor('#666666')
+				.borderTopWidth(1)
+				.backgroundPosition(0, 0)
+				.value('Skill 1')
+				.mouseOver(function () {this.backgroundColor('#49ceff'); ige.input.stopPropagation(); })
+				.mouseOut(function () {this.backgroundColor('#474747'); ige.input.stopPropagation(); })
+				.mouseMove(function () { ige.input.stopPropagation(); })
+				.mouseUp(function () { 
+					self.debugText.value("Skill 1 Activated!");
+					ige.input.stopPropagation(); 
+				})
+				.mount(self.uiScene);
+
+			self.skillTwoButton = new IgeUiLabel()
+				.id('skillTwoButton')
+				.depth(1)
+				.bottom(3)
+				.left(280)
+				.width(60)
+				.height(30)
+				.backgroundColor('#474747')	
+				.borderTopColor('#666666')
+				.borderTopWidth(1)
+				.backgroundPosition(0, 0)
+				.value('Skill 2')
+				.mouseOver(function () {this.backgroundColor('#49ceff'); ige.input.stopPropagation(); })
+				.mouseOut(function () {this.backgroundColor('#474747'); ige.input.stopPropagation(); })
+				.mouseMove(function () { ige.input.stopPropagation(); })
+				.mouseUp(function () { 
+					self.debugText.value("Skill 2 Activated!");
+					ige.input.stopPropagation(); 
+				})
+				.mount(self.uiScene);
+
+			self.skillThreeButton = new IgeUiLabel()
+				.id('skillThreeButton')
+				.depth(1)
+				.bottom(3)
+				.left(350)
+				.width(60)
+				.height(30)
+				.backgroundColor('#474747')	
+				.borderTopColor('#666666')
+				.borderTopWidth(1)
+				.backgroundPosition(0, 0)
+				.value('Skill 3')
+				.mouseOver(function () {this.backgroundColor('#49ceff'); ige.input.stopPropagation(); })
+				.mouseOut(function () {this.backgroundColor('#474747'); ige.input.stopPropagation(); })
+				.mouseMove(function () { ige.input.stopPropagation(); })
+				.mouseUp(function () { 
+					self.debugText.value("Skill 3 Activated!");
+					ige.input.stopPropagation(); 
+				})
+				.mount(self.uiScene);
+
+			self.skillFourButton = new IgeUiLabel()
+				.id('skillFourButton')
+				.depth(1)
+				.bottom(3)
+				.left(420)
+				.width(60)
+				.height(30)
+				.backgroundColor('#474747')	
+				.borderTopColor('#666666')
+				.borderTopWidth(1)
+				.backgroundPosition(0, 0)
+				.value('Skill 4')
+				.mouseOver(function () {this.backgroundColor('#49ceff'); ige.input.stopPropagation(); })
+				.mouseOut(function () {this.backgroundColor('#474747'); ige.input.stopPropagation(); })
+				.mouseMove(function () { ige.input.stopPropagation(); })
+				.mouseUp(function () { 
+					self.debugText.value("Skill 4 Activated!");
 					ige.input.stopPropagation(); 
 				})
 				.mount(self.uiScene);
@@ -256,6 +358,8 @@ var Client = IgeClass.extend({
 						break;
 			  	}			  					
 			});
+
+			self.vp1.camera.translateTo(0, 150, 0);
 		};
 
 		self.requestEndTurn = function(){
