@@ -45,7 +45,15 @@ var IgeTileMap2d = IgeEntity.extend({
 
 		return this._highlightOccupied;
 	},
+	highlightTiles: function (val) {
+		if (val !== undefined) {
+			this._highlightTiles = val;
+			return this;
+		}
 
+		return this._highlightTiles;
+	},
+	
 	highlightTileRect: function (val) {
 		if (val !== undefined) {
 			this._highlightTileRect = val;

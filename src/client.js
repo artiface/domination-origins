@@ -3,6 +3,11 @@ const Attack = 1
 
 var Client = IgeClass.extend({
 	classId: 'Client',
+	loadTextures: function () {
+		this.gameTexture.grassTile = new IgeTexture('../assets/textures/backgrounds/grassTileSmall.png');
+		this.gameTexture.brownGrassTile = new IgeTexture('../assets/textures/backgrounds/brownGrassTileSmall.png');
+		this.defaultFont = new IgeFontSheet('../assets/textures/fonts/verdana_12pt.png', 0);		
+	},
 	init: function () {
 		ige.addComponent(IgeEditorComponent);
 		ige.globalSmoothing(true);
@@ -10,11 +15,19 @@ var Client = IgeClass.extend({
 		// Load our textures
 		var self = this;
 		this.obj = [];
+		this.gameTexture = {};
+
 		self.isInitialized = false;
-		self.defaultFont = new IgeFontSheet('../assets/textures/fonts/verdana_12pt.png', 0);
 		self.currentAction = Move;
 
 		self.startSetup = function(mapData, charData) {
+			
+			var wallData = mapData['wall_data'];
+			var mapSize = mapData['size'];
+			var textureMapData = mapData['texture_data'];
+
+			self.gridSize = mapSize;
+
 			// Create the scene
 			self.mainScene = new IgeScene2d()
 				.id('mainScene')
@@ -46,21 +59,49 @@ var Client = IgeClass.extend({
 				.drawBoundsData(false)
 				.mount(ige);
 
+			self.textureMap1 = new IgeTextureMap()
+				.depth(-2)
+//				.translateTo(200, 0, 0)
+				.tileWidth(40)
+				.tileHeight(40)
+				.gridSize(self.gridSize.width, self.gridSize.height)
+				.drawGrid(true)
+				.drawMouse(true)
+				.drawBounds(true)
+				.isometricMounts(true)
+				.autoSection(3)
+				.mount(self.objectScene);
+
 			// Create an isometric tile map
 			self.tilemap = new IgeTileMap2d()
 				.id('tilemap')
 				.isometricMounts(true)
 				.tileWidth(40)
 				.tileHeight(40)
-				.gridSize(10, 10)
-				.drawGrid(5)
-				.loadMap(mapData)
+				.gridSize(self.gridSize.width, self.gridSize.height)
+//				.drawGrid(5)
+				.loadMap(wallData)
 				.highlightOccupied(true) // Draws a red tile wherever a tile is "occupied"			
+				.highlightTiles(true)
+//				.backgroundPattern(self.gameTexture.grassTile, 'repeat', true, true)			
 				.drawMouse(true)
 				.drawBounds(false)
 				.drawBoundsData(false)
 				.mount(self.objectScene);
 
+			self.textureMap1.addTexture(self.gameTexture.grassTile);
+			self.textureMap1.addTexture(self.gameTexture.brownGrassTile);
+
+			for (let x = 0; x < self.gridSize.width; x++)
+			{
+				for (let y = 0; y < self.gridSize.height; y++)
+				{	
+					var textureIndex = textureMapData[y][x];
+					self.textureMap1.paintTile(x, y, textureIndex, 1);
+				} 
+			}
+
+			self.tilemap.map.layerData(0, 0, 1);
 			// Define a function that will be called when the
 			// mouse cursor moves over one of our entities
 			overFunc = function () {
@@ -321,6 +362,8 @@ var Client = IgeClass.extend({
 
 			});
 		});
+
+		this.loadTextures();
 	}
 });
 

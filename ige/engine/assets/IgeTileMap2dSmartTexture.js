@@ -117,7 +117,7 @@ var IgeTileMap2dSmartTexture = {
 					for (x in entity.map._layerData[y]) {
 						if (entity.map._layerData[y][x]) {
 							// Tile should be highlighted
-							var tileId = entity.map._layerData[y][x];
+							var tileId = entity.map._layerData[y][x]; // TODO: Decide on color based on value
 							tilePoint = new IgePoint2d(tileWidth * x, tileHeight * y);
 
 							// TODO: Abstract out the tile drawing method so that it can be overridden for other projections etc

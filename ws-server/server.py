@@ -5,80 +5,43 @@
 import asyncio
 import websockets
 import json
-from enum import IntEnum
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
-
-class CharacterState(IntEnum):
-    Dead = 0
-    Alive = 1
-
-class Player:
-    def __init__(self, playerIndex, websocket):
-        self.index = playerIndex
-        self.socket = websocket
-
-    async def respond(self, response):        
-        jsonResponse = json.dumps(response)
-        await self.socket.send(jsonResponse)
-        print('Response: {}'.format(jsonResponse))
-
-class Character:
-    def __init__(self, charId, owner, x, y):
-        self.owner = owner
-        self.charId = charId
-        self.x = x
-        self.y = y
-        self.state = CharacterState.Alive
-
-    def moveTo(self, dest):
-        self.x = dest['x']
-        self.y = dest['y']
-
-    def toObject(self):
-        return {
-            'owner': self.owner,
-            'charId': self.charId,
-            'pos': {'x': self.x, 'y': self.y},
-            'state': self.state
-        }
+import math
+from skillhandler import SkillHandler
+from common import *
+from vector import Vector
+from gamemap import GameMap
 
 class GameServer:
 
     def __init__(self, hostname, port):
         self.knownRemotes = {}
         self.connected = set()
-        self.mapSize = {'width': 10, 'height': 10}
-        self.mapData = {"data":{"1":{"1":1,"2":1,"3":1,"4":1,"5":1},"2":{"1":1,"5":1},"3":{"1":1,"3":1,"6":1},"4":{"1":1,"3":1,"4":1,"6":1},"5":{"1":1,"4":1,"6":1},"6":{"1":1,"2":1,"4":1}},"dataXY":[0,0]}
-        self.characters = [Character(0, 0, 0, 0), Character(1, 0, 2, 0), Character(2, 1, 0, 2), Character(3, 1, 0, 4)]
+        self.gameMap = GameMap(10, 10)  # TODO: load map data from somewhere        
+        self.gameMap.setTexture(1, 1, 1)
+        self.gameMap.setTexture(1, 2, 1)
+        self.gameMap.setTexture(1, 3, 1)
+        self.wallData = self.gameMap.getWallMap()
+
+        self.gameMap.addChar(Character(0, 0, 0, 0))
+        self.gameMap.addChar(Character(1, 0, 2, 0))
+        self.gameMap.addChar(Character(2, 1, 0, 2))
+        self.gameMap.addChar(Character(3, 1, 0, 4))
+        
         self.turnOfPlayer = 0
-        self.flatMap = []
-        self.navMap = []
+        self.skillHandler = SkillHandler(self)
         print("Server Init")
-        self.updateMaps()
-        self.printFlatMap()
-        self.printNavMap()
+        print(self.gameMap.toString())
+        
+    def charById(self, charId):
+        return self.gameMap.allCharacters[charId]
 
-    def findCharByPos(self, x, y):
-        for char in self.characters:
-            if char.x == x and char.y == y:
-                return char
-        return False
-
-    def printFlatMap(self):        
-        for y in range(self.mapSize['height']):
-            for x in range(self.mapSize['width']):                        
-                print(self.flatMap[y][x], end='')
-            print()
-
-    def printNavMap(self):        
-        for y in range(self.mapSize['height']):
-            for x in range(self.mapSize['width']):                        
-                print(self.navMap[y][x], end='')
-            print()
+    def charByPos(self, x, y):
+        return self.gameMap.getTile(x, y).character
 
     def findPath(self, startX, startY, endX, endY):
-        grid = Grid(matrix=self.navMap)
+        grid = Grid(matrix=self.gameMap.getNavigationMap())
         start = grid.node(startX, startY)
         end = grid.node(endX, endY)
         finder = AStarFinder()
@@ -87,43 +50,8 @@ class GameServer:
         print(grid.grid_str(path=path, start=start, end=end))
         return path
 
-    def updateMaps(self):
-        self.flatMap = []
-        self.navMap = []
-        for y in range(self.mapSize['height']):               
-            row = []
-            navRow = []         
-            for x in range(self.mapSize['width']): 
-                tile = '.'
-                navTile = 1
-                if str(y) in self.mapData['data']:
-                    if str(x) in self.mapData['data'][str(y)]:
-                        tile = '#'
-                        navTile = 0
-                charAtTile = self.findCharByPos(x, y)
-                if charAtTile:
-                    tile = charAtTile.charId
-                    navTile = -1
-                row.append(tile)
-                navRow.append(navTile)
-            self.flatMap.append(row)
-            self.navMap.append(navRow)
-
-
-
     async def authenticate(self, user, password):
         return True
-
-    def run(self):
-
-        start_server = websockets.serve(self.messageLoop, hostname, port,
-            create_protocol=websockets.basic_auth_protocol_factory(
-            realm="CryptoG4N9 Battle Server",
-            check_credentials=self.authenticate
-        ))
-        print("Starting server on {}:{}..".format(hostname, port))
-        asyncio.get_event_loop().run_until_complete(start_server)
-        asyncio.get_event_loop().run_forever()
 
     def playerBySocket(self, websocket):
         for player in self.connected:
@@ -131,42 +59,110 @@ class GameServer:
                 return player
 
     def getCurrentState(self):
-        charData = [char.toObject() for char in self.characters]
-        state = {'message': 'initialize', 'error': '', 'map_size': self.mapSize, 'map_data': self.mapData, 'char_data': charData}
+        charData = [char.toObject() for char in self.gameMap.allCharacters]
+        state = {'message': 'initialize', 'error': '', 'map_data': {'texture_data': self.gameMap.getTextureMap(), 'size': {'width': self.gameMap.width, 'height': self.gameMap.height}, 'wall_data': self.wallData }, 'char_data': charData}
         return state
 
     def startTurnOfNextPlayer(self):
         playerCount = len(self.connected)
         self.turnOfPlayer = (self.turnOfPlayer + 1) % playerCount
+        
+        # reset steps
+        for char in self.gameMap.allCharacters:
+            if char.owner == self.turnOfPlayer:
+                char.stepsTakenThisTurn = 0
+                char.hasAttackedThisTurn = False
 
 
     async def killCharacter(self, charId, killerId):
-        characterToKill = self.characters[charId]
+        characterToKill = self.charById(charId)
         characterToKill.state = CharacterState.Dead
         response = {'message': 'death', 'error': '', 'characterId': charId, 'killerId': killerId }
         await self.broadcast(response)
 
     async def handleMovement(self, player, charId, dest):
-        char = self.characters[charId]
+        char = self.charById(charId)
+        
+        if char.stepsTakenThisTurn >= char.agility:
+            await player.respond({'message': 'movement', 'error': 'has moved already.'})
+            return
+
+        path = self.findPath(char.position[0], char.position[1], dest['x'], dest['y'])
+        stepsLeft = char.agility - char.stepsTakenThisTurn
+        stepsNeeded = len(path) - 1
+
+        if len(path) == 0:
+            await player.respond({'message': 'movement', 'error': 'no path.'})
+            return
+
+        if stepsNeeded > stepsLeft:
+            await player.respond({'message': 'movement', 'error': 'too far away.'})
+            return
+
+        char.stepsTakenThisTurn += stepsNeeded
+        await self.moveChar('movement', charId, dest)
+
+    async def handleSprint(self, player, charId, dest):
+        char = charById(charId)
+        
+        if char.hasSprinted:
+            await player.respond({'message': 'sprint', 'error': 'has sprinted already.'})
+            return
+
         path = self.findPath(char.x, char.y, dest['x'], dest['y'])
-        if len(path) > 0:
-            char.moveTo(dest)
-            self.updateMaps()
-            self.printFlatMap()
-            response = {'message': 'movement', 'error': '', 'characterId': charId, 'destination': dest}        
+        stepsLeft = char.agility
+        stepsNeeded = len(path) - 1
+
+        if len(path) == 0:
+            await player.respond({'message': 'sprint', 'error': 'no path.'})
+            return
+
+        if stepsNeeded > stepsLeft:
+            await player.respond({'message': 'sprint', 'error': 'too far away.'})
+            return
+
+        await self.moveChar('sprint', charId, dest)
+        
+
+    async def moveChar(self, messageType, charId, dest):
+        char = self.charById(charId)
+        self.gameMap.moveChar(char, Vector(dest['x'], dest['y']))
+        response = {'message': messageType, 'error': '', 'characterId': charId, 'destination': dest}        
+        await self.broadcast(response)
+
+    async def handleUseSkill(self, player, char, message):
+        isBroadCast, response = self.skillHandler.handleSkillUsage(char, message)
+        if isBroadCast:
             await self.broadcast(response)
         else:
-            await player.respond({'message': 'movement', 'error': 'no path.'})
-
+            await player.respond(response)
+            
     async def handleAttack(self, player, charId, target):
-        for otherChar in self.characters:
-            if otherChar.x == target['x'] and otherChar.y == target['y']:
-                response = {'message': 'attack', 'error': '', 'characterId': charId, 'target': target, 'victimId': otherChar.charId }
-                await self.broadcast(response)
-                await asyncio.sleep(0.5)
-                await self.killCharacter(otherChar.charId, charId)                
-                return
-        await player.respond({'message': messageType, 'error': 'no target.'})
+        char = self.charById(charId)
+        if char.hasAttackedThisTurn:
+            await player.respond({'message': 'attack', 'error': 'attacked already.'})
+            return
+
+        isMeleeAttack = char.isNextTo(targetPos)
+
+        if not char.canAttackMelee() and isMeleeAttack:
+            await player.respond({'message': 'attack', 'error': 'no melee weapon.'})
+            return
+
+        if not char.canAttackRanged() and not isMeleeAttack:
+            await player.respond({'message': 'attack', 'error': 'no ranged weapon.'})
+            return
+
+        otherChar = self.charByPos(target['x'], target['y'])
+        if otherChar:
+            char.hasAttackedThisTurn = True
+            response = {'message': 'attack', 'error': '', 'characterId': charId, 'target': target, 'victimId': otherChar.charId }
+            await self.broadcast(response)
+            await asyncio.sleep(0.5)
+            await self.killCharacter(otherChar.charId, charId)                
+            return
+
+        await player.respond({'message': 'attack', 'error': 'no target.'})
 
     async def handleRequest(self, socket, request):
         player = self.playerBySocket(socket)
@@ -184,16 +180,25 @@ class GameServer:
         elif self.turnOfPlayer != player.index:
             await player.respond({'message': messageType, 'error': 'not your turn.'})
             return
-        elif 'characterId' in request and self.characters[request['characterId']].owner != player.index:
+        elif 'characterId' in request and self.charById(request['characterId']).owner != player.index:
             await player.respond({'message': messageType, 'error': 'not your character'})
             return
-        elif 'characterId' in request and self.characters[request['characterId']].state == CharacterState.Dead:
+        elif 'characterId' in request and self.charById(request['characterId']).state == CharacterState.Dead:
             await player.respond({'message': messageType, 'error': 'character cannot act.'})
             return
         elif messageType == 'movement':
             dest = request['destination']
             charId = request['characterId']
-            await self.handleMovement(player, charId, dest)            
+            await self.handleMovement(player, charId, dest)
+        elif messageType == 'sprint':
+            dest = request['destination']
+            charId = request['characterId']
+            await self.handleSprint(player, charId, dest)
+
+        elif messageType == 'useSkill':
+            charId = request['characterId']
+            char = charById(charId)
+            await self.handleUseSkill(player, char, request)
 
         elif messageType == 'attack':
             target = request['target']
@@ -238,12 +243,22 @@ class GameServer:
                 request = json.loads(payload)
                 await self.handleRequest(websocket, request)
 
-        except websockets.exceptions.ConnectionClosedOK:
-            print("Connection lost")
+        except (websockets.exceptions.ConnectionClosedOK, asyncio.exceptions.IncompleteReadError) as e:
+            print("Connection lost: " + str(e))
         finally:
             playerToRemove = self.playerBySocket(websocket)
             self.connected.remove(playerToRemove)
             print("Player with ID {} removed.".format(playerToRemove.index))       
+
+    def run(self):
+        start_server = websockets.serve(self.messageLoop, hostname, port,
+            create_protocol=websockets.basic_auth_protocol_factory(
+            realm="CryptoG4N9 Battle Server",
+            check_credentials=self.authenticate
+        ))
+        print("Starting server on {}:{}..".format(hostname, port))
+        asyncio.get_event_loop().run_until_complete(start_server)
+        asyncio.get_event_loop().run_forever()
 
 hostname = "localhost"
 port = 2000

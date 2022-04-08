@@ -4,9 +4,9 @@
 var IgeMap2d = IgeClass.extend({
 	classId: 'IgeMap2d',
 
-	init: function (data) {
+	init: function (data, layerData) {
 		this._mapData = data || [];
-		this._layerData = [];
+		this._layerData = layerData || [];
 	},
 
 	/**
@@ -27,6 +27,33 @@ var IgeMap2d = IgeClass.extend({
 				// No assignment so see if we have data to return
 				if (this._mapData[y]) {
 					return this._mapData[y][x];
+				}
+			}
+		}
+
+		// Either no x, y was specified or there was
+		// no data at the x, y so return undefined
+		return undefined;
+	},
+
+	/**
+	 * Gets / sets a value on the specified map tile co-ordinates.
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {*=} val The data to set on the map tile co-ordinate.
+	 * @return {*}
+	 */
+	layerData: function (x, y, val) {
+		if (x !== undefined && y !== undefined) {
+			if (val !== undefined) {
+				// Assign a value
+				this._layerData[y] = this._layerData[y] || [];
+				this._layerData[y][x] = val;
+				return this;
+			} else {
+				// No assignment so see if we have data to return
+				if (this._layerData[y]) {
+					return this._layerData[y][x];
 				}
 			}
 		}
