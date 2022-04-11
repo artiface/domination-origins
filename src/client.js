@@ -263,27 +263,6 @@ var Client = IgeClass.extend({
 				})
 				.mount(self.uiScene);
 
-			self.skillFourButton = new IgeUiLabel()
-				.id('skillFourButton')
-				.depth(1)
-				.bottom(3)
-				.left(420)
-				.width(60)
-				.height(30)
-				.backgroundColor('#474747')	
-				.borderTopColor('#666666')
-				.borderTopWidth(1)
-				.backgroundPosition(0, 0)
-				.value('Skill 4')
-				.mouseOver(function () {this.backgroundColor('#49ceff'); ige.input.stopPropagation(); })
-				.mouseOut(function () {this.backgroundColor('#474747'); ige.input.stopPropagation(); })
-				.mouseMove(function () { ige.input.stopPropagation(); })
-				.mouseUp(function () { 
-					self.debugText.value("Skill 4 Activated!");
-					ige.input.stopPropagation(); 
-				})
-				.mount(self.uiScene);
-			
 			
 			ige.ui.style('#debugText', {
 				'top': 0,

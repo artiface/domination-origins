@@ -12,6 +12,8 @@ from skillhandler import SkillHandler
 from common import *
 from vector import Vector
 from gamemap import GameMap
+from web3 import Web3
+from utils import geth_poa_middleware
 
 class GameServer:
 
@@ -33,7 +35,7 @@ class GameServer:
         self.skillHandler = SkillHandler(self)
         print("Server Init")
         print(self.gameMap.toString())
-        
+  
     def charById(self, charId):
         return self.gameMap.allCharacters[charId]
 
@@ -243,7 +245,7 @@ class GameServer:
                 request = json.loads(payload)
                 await self.handleRequest(websocket, request)
 
-        except (websockets.exceptions.ConnectionClosedOK, asyncio.exceptions.IncompleteReadError) as e:
+        except (websockets.exceptions.ConnectionClosedOK, websockets.exceptions.ConnectionClosedError, asyncio.exceptions.IncompleteReadError) as e:
             print("Connection lost: " + str(e))
         finally:
             playerToRemove = self.playerBySocket(websocket)
