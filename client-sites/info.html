@@ -5,14 +5,111 @@
 		<meta charset="utf-8">
 		<title>Test Page</title>
 		<!--script type="application/javascript" src="js/web3.min.js"></script-->
-		<script type="module" src="js/chainload.js"></script>
+		<script type="module" src="js/chainload.js">
+		</script>
 		<script type="module" src="js/main.js"></script>
 		<!--script type="application/javascript" src="js/ethers-5.1.esm.min.js"></script-->
+		<style>
+		img {
+		    max-width: 100%;
+		    max-height: 100%;
+		}
+		.portrait {
+		    height: auto;
+		    width: 200px;
+		}
+		.small_portrait {
+		    height: auto;
+		    width: 150px;
+		}
+		.troop_container {
+		    display: grid;
+		    grid-template-rows: auto auto;
+		    gap: 10px;
+		    width: 80%;
+		}
+		.nft_container {
+		    display: grid;
+		    grid-template-rows: auto auto;
+		    gap: 10px;
+		    width: 80%;
+		}
+		.column_1 {
+			grid-column: 1;
+		}
+		.column_2 {
+			grid-column: 2;
+		}
+		.column_3 {
+			grid-column: 3;
+		}
+		.column_4 {
+			grid-column: 4;
+		}
+		.column_5 {
+			grid-column: 5;
+		}
+		select
+		{
+			width: 200px;
+		}
+		</style>
 	</head>
-	<body>
-		<p>
+	<body> 
+		<p>Welcome <span id="user_wallet"></span></p>
+		<div class="troop_container">
+			<div class="column_1">
+				<h3>Troop #1</h3>
+				<img class="small_portrait" id="image_1" src="" />
+				<div id="name_1"></div>
+				<button id="select_troop_1">Troop</button>
+				<button id="select_weapon_1">Weapon</button>
+			</div>
+			<div class="column_2">
+				<h3>Troop #2</h3>
+				<img class="small_portrait" id="image_2" src="" />
+				<div id="name_2"></div>
+				<button id="select_troop_2">Troop</button>
+				<button id="select_weapon_2">Weapon</button>
+			</div>
+			<div class="column_3">
+				<h3>Troop #3</h3>
+				<img class="small_portrait" id="image_3" src="" />
+				<div id="name_3"></div>
+				<button id="select_troop_3">Troop</button>
+				<button id="select_weapon_3">Weapon</button>
+			</div>
+			<div class="column_4">
+				<h3>Troop #4</h3>
+				<img class="small_portrait" id="image_4" src="" />
+				<div id="name_4"></div>
+				<button id="select_troop_4">Troop</button>
+				<button id="select_weapon_4">Weapon</button>
+			</div>
+			<div class="column_5">
+				<h3>Troop #5</h3>
+				<img class="small_portrait" id="image_5" src="" />
+				<div id="name_5"></div>
+				<button id="select_troop_5">Troop</button>
+				<button id="select_weapon_5">Weapon</button>
+			</div>
+		</div>
+		<div id="listcontainer">
+			<button id="paging_back">&lt;&lt;</button>
+			<button id="paging_forward">&gt;&gt;</button>
+			<span id="paging_info"></span>
+			<button id="pick_token">PICK</button>
+			<div id="listview">
+			</div>
+		</div>
+		<div class="nft_container">
+		<div class="column_1">
 			That NFT has <div id="nft_data"></div>
-		</p>
+		</div>
+		<div class="column_2" id="nft_image">
+			
+		</div>
+		</div>
 	</body>
 </html>
 
