@@ -8,13 +8,15 @@ class Tile:
 		self.isWall = False
 		self.character = None
 
-class GameMap:
+class GameState:
 
 	def __init__(self, width, height):
 		self.width = width
 		self.height = height
 		self.tileMap = []
 		self.allCharacters = []
+		self.turnOfPlayer = 0
+		self.wallData = None
 		self.clear()
 
 	def clear(self):
@@ -51,6 +53,12 @@ class GameMap:
 		destTile = self.getTile(x, y)
 		destTile.textureIndex = textureIndex
 
+	def charById(self, charId):
+		for char in self.allCharacters:
+			if char.charId == charId:
+				return char
+		return None
+
 	def addChar(self, char):
 		destTile = self.getTile(char.position[0], char.position[1])
 		destTile.character = char
@@ -84,7 +92,7 @@ class GameMap:
 
 		return navMap
 
-	def getWallMap(self):
+	def updateWallMap(self):
 		wallMap = {}
 		for y in range(self.height):
 			xWalls = {}
@@ -93,8 +101,7 @@ class GameMap:
 					xWalls[x] = 1
 			if len(xWalls) > 0:
 				wallMap[y] = xWalls
-
-		return {"data": wallMap, "dataXY": [0,0]}
+		self.wallData = {"data": wallMap, "dataXY": [0,0]}
 
 	def toString(self):
 		mapString = ''

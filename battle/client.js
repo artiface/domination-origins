@@ -4,8 +4,26 @@ const Attack = 1
 var Client = IgeClass.extend({
 	classId: 'Client',
 	loadTextures: function () {
-		this.gameTexture.grassTile = new IgeTexture('../assets/textures/backgrounds/grassTileSmall.png');
-		this.gameTexture.brownGrassTile = new IgeTexture('../assets/textures/backgrounds/brownGrassTileSmall.png');
+		this.gameTexture.tiles = [];
+
+		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Ceramic Tile.png'));
+		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Clay Brick - A.png'));
+		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Clay Brick - B.png'));
+		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Grass.png'));
+		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Ice - 2.png'));
+		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Lava 2.png'));
+		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Lava Stone.png'));
+		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Magma.png'));
+		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Refine Stone - A.png'));
+		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Refine Stone - B.png'));
+		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Sand Stone.png'));
+		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Sand.png'));
+		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Soil.png'));
+		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Stone.png'));
+		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Water - 2A.png'));
+		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Water - 2B.png'));
+		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Water - 2C.png'));
+
 		this.defaultFont = new IgeFontSheet('../assets/textures/fonts/verdana_12pt.png', 0);		
 	},
 	init: function () {
@@ -16,7 +34,7 @@ var Client = IgeClass.extend({
 		var self = this;
 		this.obj = [];
 		this.gameTexture = {};
-
+		
 		self.isInitialized = false;
 		self.currentAction = Move;
 
@@ -89,8 +107,10 @@ var Client = IgeClass.extend({
 				.drawBoundsData(false)
 				.mount(self.objectScene);
 
-			self.textureMap1.addTexture(self.gameTexture.grassTile);
-			self.textureMap1.addTexture(self.gameTexture.brownGrassTile);
+			for (let i = 0; i < self.gameTexture.tiles.length; i++)
+			{
+				self.textureMap1.addTexture(self.gameTexture.tiles[i]);
+			}
 
 			for (let x = 0; x < self.gridSize.width; x++)
 			{
@@ -424,15 +444,22 @@ var Client = IgeClass.extend({
 			ige.start(function (success) {
 				// Check if the engine started successfully
 				if (success) {
-					const queryString = window.location.search;
-					const urlParams = new URLSearchParams(queryString);
-					const username = urlParams.get('u');
-					const password = 'TODO';
+                    const queryString = window.location.search;
+                    const urlParams = new URLSearchParams(queryString);
+
+                    const battleId = urlParams.get('b');
+					const matchData = JSON.parse(window.localStorage.getItem('match_data'));
+					const userAddress = matchData['user_wallet'];
 					// Setup the socket communication to the server
-					self.socket = new WebSocket("ws://"+username+":"+password+"@127.0.0.1:2000");
+					self.socket = new WebSocket("ws://"+userAddress+":none@localhost:9000/socket/");
 					self.socket.onopen = function (event) {
 						var request = {
-							'message': 'initialize',				
+							'message': 'initialize',
+							'user_name': matchData['user_name'],
+							'user_wallet': matchData['user_wallet'],
+							'troop_selection': matchData['troop_selection'],
+							'signature': matchData['signature'],
+							'battle_id': battleId
 						};
 						var requestAsJson = JSON.stringify(request);
 				  		self.socket.send(requestAsJson);

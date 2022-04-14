@@ -71,7 +71,7 @@ class ChainLoader:
 
 loader = ChainLoader('./TroopNFTs')
 
-for i in range(10000):
+for i in range(4000, 7000):
     try:
         loader.storeToken('char', i)
     except ContractLogicError as e:

@@ -8,42 +8,37 @@ import json
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 import math
+
+from siwe import siwe
+from siwe.siwe import SiweMessage
+
 from skillhandler import SkillHandler
 from common import *
 from vector import Vector
-from gamemap import GameMap
+from gamestate import GameState
 from web3 import Web3
-from utils import geth_poa_middleware
+from storage import Storage
 
 class GameServer:
 
     def __init__(self, hostname, port):
-        self.knownRemotes = {}
+        self.port = port
+        self.hostname = hostname
         self.connected = set()
-        self.gameMap = GameMap(10, 10)  # TODO: load map data from somewhere        
-        self.gameMap.setTexture(1, 1, 1)
-        self.gameMap.setTexture(1, 2, 1)
-        self.gameMap.setTexture(1, 3, 1)
-        self.wallData = self.gameMap.getWallMap()
-
-        self.gameMap.addChar(Character(0, 0, 0, 0))
-        self.gameMap.addChar(Character(1, 0, 2, 0))
-        self.gameMap.addChar(Character(2, 1, 0, 2))
-        self.gameMap.addChar(Character(3, 1, 0, 4))
-        
-        self.turnOfPlayer = 0
+        self.storage = Storage('battles.sqlite')
+        self.matches = {}
         self.skillHandler = SkillHandler(self)
         print("Server Init")
-        print(self.gameMap.toString())
+        #print(self.gameMap.toString())
   
     def charById(self, charId):
-        return self.gameMap.allCharacters[charId]
+        return self.state().charById(charId)
 
     def charByPos(self, x, y):
-        return self.gameMap.getTile(x, y).character
+        return self.state().getTile(x, y).character
 
     def findPath(self, startX, startY, endX, endY):
-        grid = Grid(matrix=self.gameMap.getNavigationMap())
+        grid = Grid(matrix=self.state().getNavigationMap())
         start = grid.node(startX, startY)
         end = grid.node(endX, endY)
         finder = AStarFinder()
@@ -61,16 +56,16 @@ class GameServer:
                 return player
 
     def getCurrentState(self):
-        charData = [char.toObject() for char in self.gameMap.allCharacters]
-        state = {'message': 'initialize', 'error': '', 'map_data': {'texture_data': self.gameMap.getTextureMap(), 'size': {'width': self.gameMap.width, 'height': self.gameMap.height}, 'wall_data': self.wallData }, 'char_data': charData}
+        charData = [char.toObject() for char in self.state().allCharacters]
+        state = {'message': 'initialize', 'error': '', 'map_data': {'texture_data': self.state().getTextureMap(), 'size': {'width': self.state().width, 'height': self.state().height}, 'wall_data': self.state().wallData}, 'char_data': charData}
         return state
 
     def startTurnOfNextPlayer(self):
         playerCount = len(self.connected)
-        self.turnOfPlayer = (self.turnOfPlayer + 1) % playerCount
+        self.turnOfPlayer = (self.state().turnOfPlayer + 1) % playerCount
         
         # reset steps
-        for char in self.gameMap.allCharacters:
+        for char in self.state().allCharacters:
             if char.owner == self.turnOfPlayer:
                 char.stepsTakenThisTurn = 0
                 char.hasAttackedThisTurn = False
@@ -105,7 +100,7 @@ class GameServer:
         await self.moveChar('movement', charId, dest)
 
     async def handleSprint(self, player, charId, dest):
-        char = charById(charId)
+        char = self.charById(charId)
         
         if char.hasSprinted:
             await player.respond({'message': 'sprint', 'error': 'has sprinted already.'})
@@ -124,11 +119,10 @@ class GameServer:
             return
 
         await self.moveChar('sprint', charId, dest)
-        
 
     async def moveChar(self, messageType, charId, dest):
         char = self.charById(charId)
-        self.gameMap.moveChar(char, Vector(dest['x'], dest['y']))
+        self.state().moveChar(char, Vector(dest['x'], dest['y']))
         response = {'message': messageType, 'error': '', 'characterId': charId, 'destination': dest}        
         await self.broadcast(response)
 
@@ -139,7 +133,7 @@ class GameServer:
         else:
             await player.respond(response)
             
-    async def handleAttack(self, player, charId, target):
+    async def handleAttack(self, player, charId, targetPos):
         char = self.charById(charId)
         if char.hasAttackedThisTurn:
             await player.respond({'message': 'attack', 'error': 'attacked already.'})
@@ -155,10 +149,10 @@ class GameServer:
             await player.respond({'message': 'attack', 'error': 'no ranged weapon.'})
             return
 
-        otherChar = self.charByPos(target['x'], target['y'])
+        otherChar = self.charByPos(targetPos['x'], targetPos['y'])
         if otherChar:
             char.hasAttackedThisTurn = True
-            response = {'message': 'attack', 'error': '', 'characterId': charId, 'target': target, 'victimId': otherChar.charId }
+            response = {'message': 'attack', 'error': '', 'characterId': charId, 'target': targetPos , 'victimId': otherChar.charId }
             await self.broadcast(response)
             await asyncio.sleep(0.5)
             await self.killCharacter(otherChar.charId, charId)                
@@ -166,20 +160,94 @@ class GameServer:
 
         await player.respond({'message': 'attack', 'error': 'no target.'})
 
+    async def handlePlayerInit(self, player, message):
+        # this is the first message we receive from the player
+        # so check if he is authenticated and for good measure also verify his signature
+        # query the database for the battle this player is in
+        # if the battle is not found, return an error
+        # if the battle is found, check if we initialized the battle already
+        # if we did, re-connect the player to the battle
+        # if we did not, initialize the battle and connect the player to it
+
+        battleId = message['battle_id']
+        address = message['user_wallet']
+        signature = message['signature']
+        siweData = self.storage.getSiweCache(address)
+        if not siweData:
+            await player.respond({'message': 'init', 'error': 'no sign-in data for verification.'})
+            return
+
+        siweMessage = SiweMessage(siweData)
+        try:
+            siweMessage.validate(signature)
+        except siwe.ValidationError:
+            # no dice..
+            await player.respond({'message': 'init', 'error': 'signature verification failed.'})
+
+        battle = self.storage.findBattle(battleId)
+        playerData = self.storage.findPlayer(address)
+
+        if not battle or not playerData or battle['id'] != playerData['current_battle']:
+            await player.respond({'message': 'init', 'error': 'not part of this battle or battle not found.'})
+            return
+
+        player.currentBattle = battleId
+
+        if battleId in self.matches:
+            # battle is running already, re-connect the player to it
+            response = self.getCurrentState()
+            await player.respond(response)
+
+        # Create a new battle now
+        state = GameState(10, 10)
+
+        self.matches[battleId] = {
+            'knownRemotes': {},
+            'connected': set(),
+            'state': state
+        }
+
+        # TODO: load map data from somewhere
+        state.setTexture(1, 1, 1)
+        state.setTexture(1, 2, 1)
+        state.setTexture(1, 3, 1)
+
+        # TODO: verify loadout ownership
+        # TODO: add characters to map, if the battle has not yet begun
+        #       and the units of this player aren't on the map already
+        troops = message['troop_selection']
+
+        state.addChar(Character(0, 0, 0, 0))
+        state.addChar(Character(1, 0, 2, 0))
+        state.addChar(Character(2, 1, 0, 2))
+        state.addChar(Character(3, 1, 0, 4))
+        
+        state.turnOfPlayer = 0
+
+        state.updateWallMap()
+
+        response = self.getCurrentState()
+        await player.respond(response)
+
+    def state(self):
+        return self.matches[self.currentPlayer.currentBattle]['state']
+
     async def handleRequest(self, socket, request):
         player = self.playerBySocket(socket)
+        self.currentPlayer = player
+
         messageType = request['message']
         response = {'error': 'unknown message.'}
         
         if messageType == 'initialize':
-            response = self.getCurrentState()
-            response['yourPlayerId'] = player.index
-            await player.respond(response)
-
-        elif len(self.connected) < 2:
+            await self.handlePlayerInit(player, request)
+        elif not player.currentBattle:
+            await player.respond({'message': messageType, 'error': 'not part of a battle.'})
+            return
+        elif len(self.matches[player.currentBattle]['connected']) < 2:
             await player.respond({'message': messageType, 'error': 'waiting for other players.'})
             return
-        elif self.turnOfPlayer != player.index:
+        elif self.state().turnOfPlayer != player.index:
             await player.respond({'message': messageType, 'error': 'not your turn.'})
             return
         elif 'characterId' in request and self.charById(request['characterId']).owner != player.index:
@@ -199,7 +267,7 @@ class GameServer:
 
         elif messageType == 'useSkill':
             charId = request['characterId']
-            char = charById(charId)
+            char = self.state().charById(charId)
             await self.handleUseSkill(player, char, request)
 
         elif messageType == 'attack':
@@ -212,31 +280,22 @@ class GameServer:
             response = {'message': messageType, 'error': '', 'turnOfPlayer': self.turnOfPlayer}
             await self.broadcast(response)
 
-
     async def broadcast(self, message):
         responseAsJson = json.dumps(message)
         print('Broadcast: {}'.format(responseAsJson))
         await asyncio.wait([player.socket.send(responseAsJson) for player in self.connected])
         await asyncio.sleep(0.1)
 
-    async def messageLoop(self, websocket, path):
-        if len(self.connected) >= 2:
-            await websocket.send(json.dumps({'error': 'Too many players.'}))
-            await websocket.close()
-            return
-
-        username = websocket.username
+    async def messageLoop(self, websocket, path):        
+        wallet_address = websocket.username
         remote = websocket.remote_address
 
-        if username in self.knownRemotes:
-            playerIndex = self.knownRemotes[username]
-            print('Known Player {} re-connected from {} with ID {}!'.format(username, remote, playerIndex))
+        if self.storage.isPlayerAuthenticated(wallet_address):
+            print('Known Player {} re-connected from {}!'.format(wallet_address, remote))
         else:
-            playerIndex = len(self.connected)
-            self.knownRemotes[username] = playerIndex
-            print('The Player {} connected from {} with ID {}!'.format(username, remote, playerIndex))
+            print('The Player {} connected from {}!'.format(wallet_address, remote))
         
-        self.connected.add(Player(playerIndex, websocket))
+        self.connected.add(Player(wallet_address, websocket))
 
         try:
             while True:
@@ -250,20 +309,17 @@ class GameServer:
         finally:
             playerToRemove = self.playerBySocket(websocket)
             self.connected.remove(playerToRemove)
-            print("Player with ID {} removed.".format(playerToRemove.index))       
+            print("Player with ID {} removed.".format(playerToRemove.wallet))
 
     def run(self):
-        start_server = websockets.serve(self.messageLoop, hostname, port,
+        start_server = websockets.serve(self.messageLoop, self.hostname, self.port,
             create_protocol=websockets.basic_auth_protocol_factory(
             realm="CryptoG4N9 Battle Server",
             check_credentials=self.authenticate
         ))
-        print("Starting server on {}:{}..".format(hostname, port))
+        print("Starting server on {}:{}..".format(self.hostname, self.port))
         asyncio.get_event_loop().run_until_complete(start_server)
         asyncio.get_event_loop().run_forever()
 
-hostname = "localhost"
-port = 2000
-
-server = GameServer(hostname, port)
+server = GameServer("localhost", 2000)
 server.run()

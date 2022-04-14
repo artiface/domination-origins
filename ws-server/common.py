@@ -8,14 +8,25 @@ class CharacterState(IntEnum):
     Alive = 1
 
 class Player:
-    def __init__(self, playerIndex, websocket):
-        self.index = playerIndex
+    def __init__(self, wallet, websocket):
+        self.wallet = wallet
+        self.currentBattle = None
         self.socket = websocket
 
     async def respond(self, response):        
         jsonResponse = json.dumps(response)
         await self.socket.send(jsonResponse)
         print('Response: {}'.format(jsonResponse))
+
+    def __hash__(self):
+        """Overrides the default implementation"""
+        return hash(self.wallet)
+
+    def __eq__(self, other):
+        """Overrides the default implementation"""
+        if isinstance(other, Player):
+            return self.wallet == other.wallet
+        return False
 
 class Character:
     def __init__(self, charId, owner, x, y):
