@@ -18,6 +18,7 @@ from vector import Vector
 from gamestate import GameState
 from web3 import Web3
 from storage import Storage
+import pytmx
 
 class GameServer:
 
@@ -207,10 +208,7 @@ class GameServer:
             'state': state
         }
 
-        # TODO: load map data from somewhere
-        state.setTexture(1, 1, 1)
-        state.setTexture(1, 2, 1)
-        state.setTexture(1, 3, 1)
+        self.loadMap()
 
         # TODO: verify loadout ownership
         # TODO: add characters to map, if the battle has not yet begun
@@ -320,6 +318,32 @@ class GameServer:
         print("Starting server on {}:{}..".format(self.hostname, self.port))
         asyncio.get_event_loop().run_until_complete(start_server)
         asyncio.get_event_loop().run_forever()
+
+    def loadMap(self):
+        tiled_map = pytmx.TiledMap('../assets/maps/lava01.tmx')
+        # iterate over the tiles in the map
+        spawnsWalls = tiled_map.get_layer_by_name("Spawns_N_Walls")
+        groundTiles = tiled_map.get_layer_by_name("GroundTiles")
+        gidmap = dict()
+        for tileIndex, flags in tiled_map.gidmap.items():
+            gidmap[flags[0][0]] = tileIndex - 1
+
+        for layerIndex, layer in enumerate(tiled_map.layers):
+            if layer.name == "Spawns_N_Walls":
+                pass
+            elif layer.name == "GroundTiles":
+                for x in range(self.state().width):
+                    for y in range(self.state().height):
+                        tile = tiled_map.get_tile_gid(x, y, layerIndex)
+                        if tile:
+                            self.state().setTexture(x, y, gidmap[tile])
+
+
+        # TODO: load map data from somewhere
+        #self.state().setTexture(1, 1, 1)
+        #self.state().setTexture(1, 2, 1)
+        #self.state().setTexture(1, 3, 1)
+
 
 server = GameServer("localhost", 2000)
 server.run()

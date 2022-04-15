@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.8" tiledversion="1.8.4" orientation="isometric" renderorder="right-down" width="10" height="10" tilewidth="160" tileheight="80" infinite="0" nextlayerid="3" nextobjectid="1">
+ <tileset firstgid="1" source="../GroundTiles.tsx"/>
+ <layer id="2" name="GroundTiles" width="10" height="10">
+  <data encoding="csv">
+6,6,6,7,7,6,6,14,14,14,
+6,6,7,7,7,7,6,14,14,14,
+6,7,7,14,14,7,7,7,14,14,
+7,7,14,6,14,14,7,7,6,6,
+7,7,14,14,6,14,14,7,7,6,
+6,7,7,14,14,6,14,14,7,7,
+6,6,7,7,14,14,6,14,7,7,
+14,14,7,7,7,14,14,7,7,6,
+14,14,14,6,7,7,7,7,6,6,
+14,14,14,6,6,7,7,6,6,6
+</data>
+ </layer>
+ <layer id="1" name="Spawns_N_Walls" width="10" height="10">
+  <data encoding="csv">
+0,0,0,0,0,0,0,4,0,4,
+0,0,0,0,0,0,0,0,4,0,
+0,0,0,0,0,0,0,4,0,4,
+0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,
+4,0,4,0,0,0,0,0,0,0,
+0,4,0,0,0,0,0,0,0,0,
+4,0,4,0,0,0,0,0,0,0
+</data>
+ </layer>
+</map>
