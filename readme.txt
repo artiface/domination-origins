@@ -1,5 +1,23 @@
 ## The plan
 
+We currently use 40x40 Tiles, meaning the isometric tiles are 80x40 pixels.
+I am using the 160x80 tiles that Kazuko provided, so I could theoretically zoom in at later stage
+
+Graphics needed from Kazuko:
+ - Board piece and Border for Character Portraits (not wider than a tile)
+ - Buttons (around 100x80 or 100x100 or any multiple thereof)
+   - Empty Button
+   - Attack
+   - Sprint
+   - End Turn
+ - Effects
+   - Selected / Highlighted Tiles in some different colors
+   - Bullet(s) Impact
+   - Melee Weapon Swing
+   - Bleeding
+
+
+
 ## Client Side
 
  - Init with MetaMask

@@ -96,3 +96,8 @@ class Storage:
         cur = self.con.cursor()
         cur.execute("DELETE FROM siwe WHERE wallet = ?", [wallet])
         self.con.commit()
+
+    def removeOldBattles(self, wallet):
+        cur = self.con.cursor()
+        cur.execute("DELETE FROM battles WHERE p1_address = ? OR p2_address = ?", [wallet, wallet])
+        self.con.commit()

@@ -53,11 +53,11 @@ var IgeUiTooltip = IgeUiElement.extend({
 			
 		this.setContent(content);
 		this.hide();
+
 		this._mountEntity = mountEntity;
 		this.mount(mountEntity);
 		this.backgroundColor('#53B2F3');
 		this.depth(10000);
-		this.translateTo(parent._translate.x, parent._translate.y, parent._translate.z);
 		this.width(width);
 		this.height(height);
 		
@@ -177,11 +177,30 @@ var IgeUiTooltip = IgeUiElement.extend({
 	 * @private
 	 */
 	_mousemove: function (event) {
+	    var parent = this;
+
 		var tt = this._tooltip;
-		if (tt._hidden) tt.show();
-		var mountPos = tt._mountEntity.worldPosition();
-		tt.translateTo(event.igeX - mountPos.x + tt._bounds2d.x2 + 10, event.igeY - mountPos.y + tt._bounds2d.y2, 0);
-		tt.updateUiChildren();
+		tt.depth(10000);
+		const drawOffset = {x: 70, y: -50};
+
+		if (!this._toolTipTimer && tt._hidden)
+		{
+            this._toolTipTimer = setTimeout(function() {
+                parent._toolTipTimer = null;
+                const mp = ige._currentViewport.mousePos();
+                const mountPos = tt._mountEntity.worldPosition();
+                tt.translateTo(mp.x - mountPos.x + drawOffset.x , mp.y - mountPos.y + drawOffset.y, 0);
+                tt.show();
+                tt.updateUiChildren();
+            }, 500);
+        }
+		else if (!tt._hidden)
+		{
+		    const mp = ige._currentViewport.mousePos();
+            const mountPos = tt._mountEntity.worldPosition();
+            tt.translateTo(mp.x - mountPos.x + drawOffset.x, mp.y - mountPos.y + drawOffset.y, 0);
+            tt.updateUiChildren();
+		}
 	},
 
 	/**

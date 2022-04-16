@@ -27,7 +27,7 @@ class BattleManager:
         openBattle = storage.findOpenBattle(wallet)
         if not openBattle:
             return False
-
+        print("Found open battle: %s" % openBattle)
         storage.addSecondPlayer(openBattle['id'], wallet, loadout)
         return self.createSiweMessage(wallet, openBattle['id'])
 
@@ -64,9 +64,11 @@ class BattleManager:
     def delSiweMessage(self, wallet):
         Storage(self.sqlite_file).delSiweCache(wallet)
 
-    def createNewBattle(self, wallet, loadout):       
-
-        battleId = Storage(self.sqlite_file).insertNewBattle(wallet, loadout)
+    def createNewBattle(self, wallet, loadout):
+        storage = Storage(self.sqlite_file)
+        storage.removeOldBattles(wallet)
+        battleId = storage.insertNewBattle(wallet, loadout)
+        # also delete the old battle sessions for this wallet
         return self.createSiweMessage(wallet, battleId)
 
     def authenticate(self, address):
@@ -90,6 +92,7 @@ class AuthServer(FlaskView):
 
         siweMessage = batman.tryMatchWithOpenBattle(user_wallet, loadout)
         if not siweMessage:
+            print("No open battle found, creating new battle")
             siweMessage = batman.createNewBattle(user_wallet, loadout)
 
         return jsonify({'siwe_message': siweMessage.prepare_message()})

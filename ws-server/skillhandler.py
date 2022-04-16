@@ -6,7 +6,7 @@ class SkillHandler:
 		self.gameServer = gameServer
 
 	def handleSkillUsage(self, char, message):
-		charId = char.charId
+		charId = char.tokenId
 		skillId = message['skill_id']
 
 		

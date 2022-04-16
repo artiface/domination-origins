@@ -1,8 +1,11 @@
 const Move = 0
 const Attack = 1
 
+const matchData = JSON.parse(window.localStorage.getItem('match_data'));
+
 var Client = IgeClass.extend({
 	classId: 'Client',
+	pathFinder: new IgePathFinder().neighbourLimit(100),
 	loadTextures: function () {
 		this.gameTexture.tiles = [];
 
@@ -23,7 +26,11 @@ var Client = IgeClass.extend({
 		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Water - 2A.png'));
 		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Water - 2B.png'));
 		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Water - 2C.png'));
-
+        this.buttonTexture = new IgeTexture('../assets/ui/EmptyButton.png');
+        this.attackButonTexture = new IgeTexture('../assets/ui/Attack.png');
+        this.moveButtonTexture = new IgeTexture('../assets/ui/Move.png');
+        this.endTurnButtonTexture = new IgeTexture('../assets/ui/End_Turn.png');
+        this.sprintButtonTexture = new IgeTexture('../assets/ui/Sprint.png');
 		this.defaultFont = new IgeFontSheet('../assets/textures/fonts/verdana_12pt.png', 0);		
 	},
 	init: function () {
@@ -37,12 +44,79 @@ var Client = IgeClass.extend({
 		
 		self.isInitialized = false;
 		self.currentAction = Move;
+        self.characterById = function(charId) {
+            for (var i = 0; i < self.characters; i++) {
+                if (self.characters[i].getCharId() == charId) {
+                    return self.characters[i];
+                }
+            }
+            return null;
+        };
+
+        self.reloadCharacters = function(charData) {
+            // call destroy() on all existing characters
+            for (var i = 0; i < self.characters.length; i++) {
+                self.characters[i].destroy();
+            }
+            for (var i = 0; i < charData.length; i++) {
+                self.createCharacter(charData[i]);
+            }
+        };
+
+        self.createCharacter = function(charData) {
+            const pos = charData['pos'];
+            const state = charData['state'];
+            const troopTokenId = charData['tokenId'];
+            const charId = charData['charId'];
+            // check if we are the owner of the character
+            const isOwner = charData['owner'] == self.playerId;
+
+            const char = new Character()
+                .layer(1)
+                .id('char_' + charId.toString())
+                .setTokenId(troopTokenId)
+                .setCharId(charId)
+                .mouseOver(overFunc)
+                .mouseOut(outFunc)
+                .drawBounds(false)
+                .drawBoundsData(false)
+                .mount(self.tilemap)
+                .translateToTile(pos.x, pos.y, 0);
+
+            const boardPiece = new CharacterPiece()
+                .layer(1)
+                .clientIsOwner(isOwner)
+                .mount(char);
+
+            const toolTip = new IgeUiTooltip(char, char, 100, 80, 'tooltip').layer(22);
+
+            if (state === 0)
+                char.kill();
+            self.characters.push(char);
+
+            char.addComponent(IgePathComponent).path
+                .finder(self.pathFinder)
+                .tileMap(ige.$('tilemap'))
+                .tileChecker(function (tileData, tileX, tileY, node, prevNodeX, prevNodeY, dynamic) {
+                    // If the map tile data is set to 1, don't allow a path along it
+                    return tileData !== 1;
+                })
+                .lookAheadSteps(3)
+                .dynamic(true)
+                .allowSquare(true) // Allow north, south, east and west movement
+                .allowDiagonal(false) // Allow north-east, north-west, south-east, south-west movement
+                .drawPath(true) // Enable debug drawing the paths
+                .drawPathGlow(true) // Enable path glowing (eye candy)
+                .drawPathText(false); // Enable path text output
+        };
 
 		self.startSetup = function(mapData, charData) {
 			
 			var wallData = mapData['wall_data'];
 			var mapSize = mapData['size'];
 			var textureMapData = mapData['texture_data'];
+            const tileWidth = 60;
+            const tileHeight = 60;
 
 			self.gridSize = mapSize;
 
@@ -57,6 +131,7 @@ var Client = IgeClass.extend({
 				.depth(0)
 				.drawBounds(false)
 				.drawBoundsData(false)
+				.depthSortMode(2)
 				.mount(self.mainScene);
 
 			self.uiScene = new IgeScene2d()
@@ -80,11 +155,11 @@ var Client = IgeClass.extend({
 			self.textureMap1 = new IgeTextureMap()
 				.depth(-2)
 //				.translateTo(200, 0, 0)
-				.tileWidth(40)
-				.tileHeight(40)
+				.tileWidth(tileWidth)
+				.tileHeight(tileHeight)
 				.gridSize(self.gridSize.width, self.gridSize.height)
 				.drawGrid(true)
-				.drawMouse(true)
+				//.drawMouse(true)
 				.drawBounds(true)
 				.isometricMounts(true)
 				.autoSection(3)
@@ -94,8 +169,8 @@ var Client = IgeClass.extend({
 			self.tilemap = new IgeTileMap2d()
 				.id('tilemap')
 				.isometricMounts(true)
-				.tileWidth(40)
-				.tileHeight(40)
+				.tileWidth(tileWidth)
+				.tileHeight(tileHeight)
 				.gridSize(self.gridSize.width, self.gridSize.height)
 //				.drawGrid(5)
 				.loadMap(wallData)
@@ -126,33 +201,21 @@ var Client = IgeClass.extend({
 			// mouse cursor moves over one of our entities
 			overFunc = function () {
 				this.highlight(true);
+				ige.input.stopPropagation();
 			};
 
 			// Define a function that will be called when the
 			// mouse cursor moves away from one of our entities
 			outFunc = function () {
 				this.highlight(false);
+				ige.input.stopPropagation();
 			};
 
 			// Create the 3d container that the player
 			// entity will be mounted to
 
 			for (let i = 0; i < charData.length; i++) {
-				var pos = charData[i]['pos'];
-				var state = charData[i]['state'];
-				var newChar = new Character()
-						.id('char_' + i.toString())
-						.addComponent(PlayerComponent)
-						.isometric(true)
-						.mouseOver(overFunc)
-						.mouseOut(outFunc)
-						.drawBounds(false)
-						.drawBoundsData(false)
-						.mount(self.tilemap)
-						.translateToTile(pos.x, pos.y, 0);
-				if (state === 0)
-					newChar.kill();
-				self.characters.push(newChar);
+				self.createCharacter(charData[i]);
 			}
 
 	
@@ -163,17 +226,15 @@ var Client = IgeClass.extend({
 			self.endTurnButton = new IgeUiLabel()
 				.id('endTurnButton')
 				.depth(1)
-				.backgroundColor('#474747')
+				.paddingLeft(0)
 				.bottom(3)
 				.right(20)
 				.width(60)
-				.height(30)				
-				.borderTopColor('#666666')
-				.borderTopWidth(1)
-				.backgroundPosition(0, 0)
-				.value('EndTurn')
-				.mouseOver(function () {this.backgroundColor('#49ceff'); ige.input.stopPropagation(); })
-				.mouseOut(function () {this.backgroundColor('#474747'); ige.input.stopPropagation(); })
+				.height(60)
+				.texture(self.endTurnButtonTexture)
+				.allowHover(true)
+                .mouseOver(overFunc)
+                .mouseOut(outFunc)
 				.mouseMove(function () { ige.input.stopPropagation(); })
 				.mouseUp(function () { self.requestEndTurn(); ige.input.stopPropagation(); })
 				.mount(self.uiScene);
@@ -181,17 +242,15 @@ var Client = IgeClass.extend({
 			self.attackButton = new IgeUiLabel()
 				.id('attackButton')
 				.depth(1)
+				.paddingLeft(0)
 				.bottom(3)
 				.left(70)
 				.width(60)
-				.height(30)
-				.backgroundColor('#474747')	
-				.borderTopColor('#666666')
-				.borderTopWidth(1)
-				.backgroundPosition(0, 0)
-				.value('Attack')
-				.mouseOver(function () {this.backgroundColor('#49ceff'); ige.input.stopPropagation(); })
-				.mouseOut(function () {this.backgroundColor('#474747'); ige.input.stopPropagation(); })
+				.height(60)
+				.texture(self.attackButonTexture)
+				.allowHover(true)
+                .mouseOver(overFunc)
+                .mouseOut(outFunc)
 				.mouseMove(function () { ige.input.stopPropagation(); })
 				.mouseUp(function () { 
 					self.currentAction = Attack;
@@ -202,18 +261,16 @@ var Client = IgeClass.extend({
 			self.sprintButton = new IgeUiLabel()
 				.id('sprintButton')
 				.depth(1)
+				.paddingLeft(0)
 				.bottom(3)
 				.left(140)
 				.width(60)
-				.height(30)
-				.backgroundColor('#474747')	
-				.borderTopColor('#666666')
-				.borderTopWidth(1)
-				.backgroundPosition(0, 0)
-				.value('Sprint')
-				.mouseOver(function () {this.backgroundColor('#49ceff'); ige.input.stopPropagation(); })
-				.mouseOut(function () {this.backgroundColor('#474747'); ige.input.stopPropagation(); })
-				.mouseMove(function () { ige.input.stopPropagation(); })
+				.height(60)
+				.texture(self.sprintButtonTexture)
+				.allowHover(true)
+                .mouseOver(overFunc)
+                .mouseOut(outFunc)
+    			.mouseMove(function () { ige.input.stopPropagation(); })
 				.mouseUp(function () { 
 					self.debugText.value("Sprint Activated!");
 					ige.input.stopPropagation(); 
@@ -223,17 +280,18 @@ var Client = IgeClass.extend({
 			self.skillOneButton = new IgeUiLabel()
 				.id('skillOneButton')
 				.depth(1)
+				.paddingLeft(0)
 				.bottom(3)
 				.left(210)
 				.width(60)
-				.height(30)
-				.backgroundColor('#474747')	
-				.borderTopColor('#666666')
-				.borderTopWidth(1)
-				.backgroundPosition(0, 0)
+				.height(60)
+				.texture(self.buttonTexture)
 				.value('Skill 1')
-				.mouseOver(function () {this.backgroundColor('#49ceff'); ige.input.stopPropagation(); })
-				.mouseOut(function () {this.backgroundColor('#474747'); ige.input.stopPropagation(); })
+				.color('white')
+				.font('12px Verdana')
+				.allowHover(true)
+                .mouseOver(overFunc)
+                .mouseOut(outFunc)
 				.mouseMove(function () { ige.input.stopPropagation(); })
 				.mouseUp(function () { 
 					self.debugText.value("Skill 1 Activated!");
@@ -244,17 +302,18 @@ var Client = IgeClass.extend({
 			self.skillTwoButton = new IgeUiLabel()
 				.id('skillTwoButton')
 				.depth(1)
+				.paddingLeft(0)
 				.bottom(3)
 				.left(280)
 				.width(60)
-				.height(30)
-				.backgroundColor('#474747')	
-				.borderTopColor('#666666')
-				.borderTopWidth(1)
-				.backgroundPosition(0, 0)
+				.height(60)
+				.texture(self.buttonTexture)
 				.value('Skill 2')
-				.mouseOver(function () {this.backgroundColor('#49ceff'); ige.input.stopPropagation(); })
-				.mouseOut(function () {this.backgroundColor('#474747'); ige.input.stopPropagation(); })
+				.color('white')
+				.font('12px Verdana')
+				.allowHover(true)
+                .mouseOver(overFunc)
+                .mouseOut(outFunc)
 				.mouseMove(function () { ige.input.stopPropagation(); })
 				.mouseUp(function () { 
 					self.debugText.value("Skill 2 Activated!");
@@ -265,23 +324,27 @@ var Client = IgeClass.extend({
 			self.skillThreeButton = new IgeUiLabel()
 				.id('skillThreeButton')
 				.depth(1)
+				.paddingLeft(0)
 				.bottom(3)
 				.left(350)
 				.width(60)
-				.height(30)
-				.backgroundColor('#474747')	
-				.borderTopColor('#666666')
-				.borderTopWidth(1)
-				.backgroundPosition(0, 0)
+				.height(60)
+				.texture(self.buttonTexture)
 				.value('Skill 3')
-				.mouseOver(function () {this.backgroundColor('#49ceff'); ige.input.stopPropagation(); })
-				.mouseOut(function () {this.backgroundColor('#474747'); ige.input.stopPropagation(); })
+				.color('white')
+				.font('12px Verdana')
+				.allowHover(true)
+                .mouseOver(overFunc)
+                .mouseOut(outFunc)
 				.mouseMove(function () { ige.input.stopPropagation(); })
 				.mouseUp(function () { 
 					self.debugText.value("Skill 3 Activated!");
 					ige.input.stopPropagation(); 
 				})
 				.mount(self.uiScene);
+			self.skillOneButton._fontEntity.textAlignX(1).textAlignY(1).left(5).top(1);
+			self.skillTwoButton._fontEntity.textAlignX(1).textAlignY(1).left(5).top(1);
+			self.skillThreeButton._fontEntity.textAlignX(1).textAlignY(1).left(5).top(1);
 
 			
 			ige.ui.style('#debugText', {
@@ -302,39 +365,9 @@ var Client = IgeClass.extend({
 				.drawBoundsData(false)
 				.mount(self.uiScene);
 
-			// Create a path finder
-			self.pathFinder = new IgePathFinder()
-				.neighbourLimit(100);
-
-			// Set up the chars with pathfinders
-			for (let i = 0; i < self.characters.length; i++) {
-			  	var char = self.characters[i];
-
-			  	if (self.tilemap.isometricMounts()) {
-					// Set the player to move isometrically
-					char.isometric(true);
-				}
-
-			  	char.addComponent(IgePathComponent).path
-					.finder(self.pathFinder)
-					.tileMap(ige.$('tilemap'))
-					.tileChecker(function (tileData, tileX, tileY, node, prevNodeX, prevNodeY, dynamic) {
-						// If the map tile data is set to 1, don't allow a path along it
-						return tileData !== 1;
-					})
-					.lookAheadSteps(3)
-					.dynamic(true)
-					.allowSquare(true) // Allow north, south, east and west movement
-					.allowDiagonal(false) // Allow north-east, north-west, south-east, south-west movement
-					.drawPath(true) // Enable debug drawing the paths
-					.drawPathGlow(true) // Enable path glowing (eye candy)
-					.drawPathText(true); // Enable path text output
-			}
-			
 			// Listen for the mouse up event
 			ige.input.on('mouseUp', function (event, x, y, button) {
 				var endTile = ige.$('tilemap').mouseToTile();
-		  		var characterId = self.characters.indexOf(self.selectedCharacter);
 
 		  		for (let i = 0; i < self.characters.length; i++) {
 			  		var char = self.characters[i];
@@ -345,8 +378,11 @@ var Client = IgeClass.extend({
 			  			return;
 			  		}
 			  	}
-		  		
 
+		  		if (!self.selectedCharacter)
+		  		    return;
+
+                var characterId = self.selectedCharacter.getCharId();
 			  	switch(self.currentAction)
 			  	{
 			  		case Move:
@@ -358,7 +394,7 @@ var Client = IgeClass.extend({
 			  	}			  					
 			});
 
-			self.vp1.camera.translateTo(0, 150, 0);
+			self.vp1.camera.translateTo(0, 300, 0);
 		};
 
 		self.requestEndTurn = function(){
@@ -401,12 +437,19 @@ var Client = IgeClass.extend({
 				case 'initialize':
 					var mapData = message['map_data'];
 					var charData = message['char_data'];
-					var playerId = message['yourPlayerId'];
+					var playerId = message['playerId'];
+
+					var wallet = message['user_wallet'];
 					if (!self.isInitialized)
 					{
 						self.isInitialized = true;
 						self.playerId = playerId;
 						self.startSetup(mapData, charData);
+					}
+					else
+					{
+					    // we might need to update some data since the server is sending us a full state update
+					    self.reloadCharacters(charData);
 					}
 					break;
 				case 'movement':
@@ -421,7 +464,7 @@ var Client = IgeClass.extend({
 				case 'endTurn':
 					var turnOfPlayer = message['turnOfPlayer'];
 					var nextTurnText = 'It is now the turn of player ' + turnOfPlayer;
-					if (turnOfPlayer === self.playerId)
+					if (turnOfPlayer === matchData['user_wallet'])
 					{
 						nextTurnText = 'IT IS YOUR TURN!';
 					}
@@ -448,7 +491,7 @@ var Client = IgeClass.extend({
                     const urlParams = new URLSearchParams(queryString);
 
                     const battleId = urlParams.get('b');
-					const matchData = JSON.parse(window.localStorage.getItem('match_data'));
+
 					const userAddress = matchData['user_wallet'];
 					// Setup the socket communication to the server
 					self.socket = new WebSocket("ws://"+userAddress+":none@localhost:9000/socket/");

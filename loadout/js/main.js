@@ -6,7 +6,8 @@ const chainId = network.chainId;
 
 if (chainId === 137)
 {
-    window.localStorage.clear();
+    //window.localStorage.clear();
+
     var itemsPerPage = 10;
     var serverBaseUrl = 'http://localhost:9000/';
     var userAddress = await signer.getAddress();
@@ -63,7 +64,13 @@ if (chainId === 137)
     var currentTroopSelection = 0;
     var currentTokenType = 'troops';
     var troopSelection = {};   
-
+    const matchData = JSON.parse(window.localStorage.getItem('match_data'));
+    // fetch the loadout data
+    if (matchData)
+    {
+        troopSelection = matchData['troop_selection'];
+        updateTroopDisplay(troopSelection);
+    }
 
 	startUp();
  

@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# WS server example
-
 import asyncio
 import websockets
 import json
@@ -19,6 +17,8 @@ from gamestate import GameState
 from web3 import Web3
 from storage import Storage
 import pytmx
+
+from chain import ChainLoader
 
 class GameServer:
 
@@ -58,19 +58,8 @@ class GameServer:
 
     def getCurrentState(self):
         charData = [char.toObject() for char in self.state().allCharacters]
-        state = {'message': 'initialize', 'error': '', 'map_data': {'texture_data': self.state().getTextureMap(), 'size': {'width': self.state().width, 'height': self.state().height}, 'wall_data': self.state().wallData}, 'char_data': charData}
+        state = {'message': 'initialize', 'playerId': self.currentPlayer.playerIndex, 'error': '', 'map_data': {'texture_data': self.state().getTextureMap(), 'size': {'width': self.state().width, 'height': self.state().height}, 'wall_data': self.state().wallData}, 'char_data': charData}
         return state
-
-    def startTurnOfNextPlayer(self):
-        playerCount = len(self.connected)
-        self.turnOfPlayer = (self.state().turnOfPlayer + 1) % playerCount
-        
-        # reset steps
-        for char in self.state().allCharacters:
-            if char.owner == self.turnOfPlayer:
-                char.stepsTakenThisTurn = 0
-                char.hasAttackedThisTurn = False
-
 
     async def killCharacter(self, charId, killerId):
         characterToKill = self.charById(charId)
@@ -153,10 +142,10 @@ class GameServer:
         otherChar = self.charByPos(targetPos['x'], targetPos['y'])
         if otherChar:
             char.hasAttackedThisTurn = True
-            response = {'message': 'attack', 'error': '', 'characterId': charId, 'target': targetPos , 'victimId': otherChar.charId }
+            response = {'message': 'attack', 'error': '', 'characterId': charId, 'target': targetPos , 'victimId': otherChar.tokenId}
             await self.broadcast(response)
             await asyncio.sleep(0.5)
-            await self.killCharacter(otherChar.charId, charId)                
+            await self.killCharacter(otherChar.tokenId, charId)
             return
 
         await player.respond({'message': 'attack', 'error': 'no target.'})
@@ -184,9 +173,14 @@ class GameServer:
         except siwe.ValidationError:
             # no dice..
             await player.respond({'message': 'init', 'error': 'signature verification failed.'})
+            return
 
         battle = self.storage.findBattle(battleId)
         playerData = self.storage.findPlayer(address)
+
+        if playerData['wallet'] != player.wallet:
+            await player.respond({'message': 'init', 'error': 'wallet mismatch.'})
+            return
 
         if not battle or not playerData or battle['id'] != playerData['current_battle']:
             await player.respond({'message': 'init', 'error': 'not part of this battle or battle not found.'})
@@ -194,38 +188,53 @@ class GameServer:
 
         player.currentBattle = battleId
 
-        if battleId in self.matches:
+        chain = ChainLoader()
+        troops = message['troop_selection']
+        for slot, troopInfo in troops.items():
+            troopTokenId = troopInfo['troops']
+            if not chain.isOwnerOf(player.wallet, 'char', troopTokenId):
+                await player.respond({'message': 'init', 'error': 'not owner of all the troops.'})
+                return
+        ## TODO: Check the ownership of the items in the same way as the troops
+        if player.currentBattle not in self.matches or not self.matches[player.currentBattle]['state']:
+            # Create a new battle now
+            state = GameState(10, 10)
+            self.matches[battleId] = {
+                'knownRemotes': {},
+                'connected': set(),
+                'state': state
+            }
+            self.loadMap()
+
+        if player in self.state().players:
             # battle is running already, re-connect the player to it
+            print('re-connecting player with wallet {} to battle {}'.format(player.wallet, battleId))
+            self.state().updatePlayerAfterReconnect(player)
+            self.matches[player.currentBattle]['connected'].add(player)
             response = self.getCurrentState()
             await player.respond(response)
+            return
 
-        # Create a new battle now
-        state = GameState(10, 10)
-
-        self.matches[battleId] = {
-            'knownRemotes': {},
-            'connected': set(),
-            'state': state
-        }
-
-        self.loadMap()
-
-        # TODO: verify loadout ownership
-        # TODO: add characters to map, if the battle has not yet begun
-        #       and the units of this player aren't on the map already
         troops = message['troop_selection']
 
-        state.addChar(Character(0, 0, 0, 0))
-        state.addChar(Character(1, 0, 2, 0))
-        state.addChar(Character(2, 1, 0, 2))
-        state.addChar(Character(3, 1, 0, 4))
-        
-        state.turnOfPlayer = 0
+        self.spawnTroopsOfPlayer(player, troops)
 
-        state.updateWallMap()
+        if len(self.state().players) == 2:
+            # start the game
+            self.state().startGame()
+
+        self.matches[player.currentBattle]['connected'].add(player)
+        print('player with wallet {} connected to battle {}'.format(player.wallet, battleId))
 
         response = self.getCurrentState()
-        await player.respond(response)
+        await self.broadcast(response)
+
+    def spawnTroopsOfPlayer(self, player, troops):
+        troopList = []
+        for slot, troopInfo in troops.items():
+            troopTokenId = troopInfo['troops']
+            troopList.append(Character(player, troopTokenId))
+        self.state().spawnTeam(player, troopList)
 
     def state(self):
         return self.matches[self.currentPlayer.currentBattle]['state']
@@ -233,7 +242,7 @@ class GameServer:
     async def handleRequest(self, socket, request):
         player = self.playerBySocket(socket)
         self.currentPlayer = player
-
+        print('got request from player with wallet {} and index {}'.format(player.wallet, player.playerIndex))
         messageType = request['message']
         response = {'error': 'unknown message.'}
         
@@ -245,10 +254,10 @@ class GameServer:
         elif len(self.matches[player.currentBattle]['connected']) < 2:
             await player.respond({'message': messageType, 'error': 'waiting for other players.'})
             return
-        elif self.state().turnOfPlayer != player.index:
-            await player.respond({'message': messageType, 'error': 'not your turn.'})
+        elif self.state().turnOfPlayer() != player:
+            await player.respond({'message': messageType, 'error': 'It is the turn of {}.'.format(self.state().turnOfPlayerIndex)})
             return
-        elif 'characterId' in request and self.charById(request['characterId']).owner != player.index:
+        elif 'characterId' in request and self.charById(request['characterId']).owner != player:
             await player.respond({'message': messageType, 'error': 'not your character'})
             return
         elif 'characterId' in request and self.charById(request['characterId']).state == CharacterState.Dead:
@@ -274,11 +283,21 @@ class GameServer:
             await self.handleAttack(player, charId, target)
     
         elif messageType == 'endTurn':
-            self.startTurnOfNextPlayer()
-            response = {'message': messageType, 'error': '', 'turnOfPlayer': self.turnOfPlayer}
+            self.state().nextTurn()
+            response = {'message': messageType, 'error': '', 'turnOfPlayer': self.state().turnOfPlayer().wallet}
             await self.broadcast(response)
 
     async def broadcast(self, message):
+        responseAsJson = json.dumps(message)
+        # remove all players that are not connected
+        for player in self.state().players:
+            if player.socket.closed:
+                self.state().players.remove(player)
+        print('Broadcast: {}'.format(responseAsJson))
+        await asyncio.wait([player.socket.send(responseAsJson) for player in self.state().players])
+        await asyncio.sleep(0.1)
+
+    async def globalBroadcast(self, message):
         responseAsJson = json.dumps(message)
         print('Broadcast: {}'.format(responseAsJson))
         await asyncio.wait([player.socket.send(responseAsJson) for player in self.connected])
@@ -302,11 +321,12 @@ class GameServer:
                 request = json.loads(payload)
                 await self.handleRequest(websocket, request)
 
-        except (websockets.exceptions.ConnectionClosedOK, websockets.exceptions.ConnectionClosedError, asyncio.exceptions.IncompleteReadError) as e:
+        except (websockets.exceptions.ConnectionClosedOK, websockets.exceptions.ConnectionClosedError) as e:
             print("Connection lost: " + str(e))
         finally:
             playerToRemove = self.playerBySocket(websocket)
             self.connected.remove(playerToRemove)
+            self.matches[playerToRemove.currentBattle]['connected'].remove(playerToRemove)
             print("Player with ID {} removed.".format(playerToRemove.wallet))
 
     def run(self):
@@ -322,27 +342,26 @@ class GameServer:
     def loadMap(self):
         tiled_map = pytmx.TiledMap('../assets/maps/lava01.tmx')
         # iterate over the tiles in the map
-        spawnsWalls = tiled_map.get_layer_by_name("Spawns_N_Walls")
-        groundTiles = tiled_map.get_layer_by_name("GroundTiles")
         gidmap = dict()
         for tileIndex, flags in tiled_map.gidmap.items():
             gidmap[flags[0][0]] = tileIndex - 1
 
-        for layerIndex, layer in enumerate(tiled_map.layers):
-            if layer.name == "Spawns_N_Walls":
-                pass
-            elif layer.name == "GroundTiles":
-                for x in range(self.state().width):
-                    for y in range(self.state().height):
+        for x in range(self.state().width):
+            for y in range(self.state().height):
+                for layerIndex, layer in enumerate(tiled_map.layers):
+                    if layer.name == "Spawns_N_Walls":
+                        tile = tiled_map.get_tile_gid(x, y, layerIndex)
+                        if tile:
+                            tileIndex = gidmap[tile]
+                            if tileIndex in [3, 4]:
+                                self.state().addSpawn(tileIndex - 2, Vector(x, y))
+                    elif layer.name == "GroundTiles":
                         tile = tiled_map.get_tile_gid(x, y, layerIndex)
                         if tile:
                             self.state().setTexture(x, y, gidmap[tile])
+        self.state().updateWallMap()
 
 
-        # TODO: load map data from somewhere
-        #self.state().setTexture(1, 1, 1)
-        #self.state().setTexture(1, 2, 1)
-        #self.state().setTexture(1, 3, 1)
 
 
 server = GameServer("localhost", 2000)
