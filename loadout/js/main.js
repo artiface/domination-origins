@@ -11,9 +11,14 @@ if (chainId === 137)
 
     var itemsPerPage = 10;
     var serverBaseUrl = 'http://localhost:9000/';
-    var userAddress = await signer.getAddress();
-    var numberOfTroops = await getTokenCount(userAddress, 'troops');
-    var numberOfWeapons = await getTokenCount(userAddress, 'weapons');
+    try {
+        var userAddress = await signer.getAddress();
+        var numberOfTroops = await getTokenCount(userAddress, 'troops');
+        var numberOfWeapons = await getTokenCount(userAddress, 'weapons');
+    }
+    catch (e) {
+        alert("Please login to MetaMask: " + e);
+    }
     var findMatchPath = '/src/index.html';
     var tokens = {
         'troops':{

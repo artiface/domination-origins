@@ -1,3 +1,5 @@
+from asyncio import create_task
+
 from vector import Vector
 import math
 from enum import IntEnum
@@ -29,10 +31,12 @@ class Player:
             'currentBattle': self.currentBattle
         }
 
-    async def respond(self, response):        
-        jsonResponse = json.dumps(response)
-        await self.socket.send(jsonResponse)
-        #print('Response: {}'.format(jsonResponse))
+    async def respond(self, response):
+        if self.socket is not None and self.socket.open:
+            jsonResponse = json.dumps(response)
+            create_task(self.socket.send(jsonResponse))
+            print('Sent to player with wallet: ' + self.wallet)
+            print('Response: {}'.format(jsonResponse))
 
     def __hash__(self):
         """Overrides the default implementation"""

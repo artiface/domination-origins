@@ -264,9 +264,9 @@ class GameState:
 			json.dump(self.toObject(), f, ensure_ascii=False, indent=4)
 
 	@staticmethod
-	async def fromFile(battleId):
+	def fromFile(filename):
 		# load json data from file
-		with open('./battlecache/bs_{}.json'.format(battleId), 'r', encoding='utf-8') as f:
+		with open(filename, 'r', encoding='utf-8') as f:
 			gameStateObj = json.load(f)
 			state = GameState(gameStateObj['battleId'], gameStateObj['width'], gameStateObj['height'])
 			state.playerMap = gameStateObj['playerMap']

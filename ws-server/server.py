@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import asyncio
+import os
 from asyncio import create_task
 
 import websockets
@@ -19,6 +20,7 @@ from chain import ChainLoader
 class GameServer:
 
     def __init__(self, hostname, port):
+        self.battlecache = './battlecache/'
         self.siwe = SignInManager()
         self.port = port
         self.hostname = hostname
@@ -28,16 +30,18 @@ class GameServer:
         self.matches = {}
         self.skillHandler = SkillHandler(self)
         print("Server Init")
-        #print(self.gameMap.toString())
+        if self.battlesAreOnDisk():
+            print("Loading existing battles from disk")
+            self.loadBattles()
   
-    def charById(self, charId):
-        return self.state().charById(charId)
+    def charById(self, player: Player, charId: int):
+        return self.state(player).charById(charId)
 
-    def charByPos(self, x, y):
-        return self.state().getTile(x, y).character
+    def charByPos(self, player, x, y):
+        return self.state(player).getTile(x, y).character
 
-    def findPath(self, startX, startY, endX, endY):
-        grid = Grid(matrix=self.state().getNavigationMap())
+    def findPath(self, player, startX, startY, endX, endY):
+        grid = Grid(matrix=self.state(player).getNavigationMap())
         start = grid.node(startX, startY)
         end = grid.node(endX, endY)
         finder = AStarFinder()
@@ -55,13 +59,13 @@ class GameServer:
                 return player
 
     async def handleMovement(self, player, charId, dest):
-        char = self.charById(charId)
+        char = self.charById(player, charId)
         
         if char.stepsTakenThisTurn >= char.agility:
             create_task(player.respond({'message': 'movement', 'error': 'has moved already.'}))
             return
 
-        path = self.findPath(char.position[0], char.position[1], dest['x'], dest['y'])
+        path = self.findPath(player, char.position[0], char.position[1], dest['x'], dest['y'])
         stepsLeft = char.agility - char.stepsTakenThisTurn
         stepsNeeded = len(path) - 1
 
@@ -74,16 +78,16 @@ class GameServer:
             return
 
         char.stepsTakenThisTurn += stepsNeeded
-        create_task(self.moveChar('movement', charId, dest))
+        create_task(self.moveChar(player, 'movement', charId, dest))
 
     async def handleSprint(self, player, charId, dest):
-        char = self.charById(charId)
+        char = self.charById(player, charId)
         
         if char.hasSprinted:
             create_task(player.respond({'message': 'sprint', 'error': 'has sprinted already.'}))
             return
 
-        path = self.findPath(char.x, char.y, dest['x'], dest['y'])
+        path = self.findPath(player, char.x, char.y, dest['x'], dest['y'])
         stepsLeft = char.agility
         stepsNeeded = len(path) - 1
 
@@ -95,23 +99,23 @@ class GameServer:
             create_task(player.respond({'message': 'sprint', 'error': 'too far away.'}))
             return
 
-        create_task(self.moveChar('sprint', charId, dest))
+        create_task(self.moveChar(player, 'sprint', charId, dest))
 
-    async def moveChar(self, messageType, charId, dest):
-        char = self.charById(charId)
-        self.state().moveChar(char, Vector(dest['x'], dest['y']))
+    async def moveChar(self, player, messageType, charId, dest):
+        char = self.charById(player, charId)
+        self.state(player).moveChar(char, Vector(dest['x'], dest['y']))
         response = {'message': messageType, 'error': '', 'characterId': charId, 'destination': dest}        
-        create_task(self.state().broadcast(response))
+        create_task(self.state(player).broadcast(response))
 
     async def handleUseSkill(self, player, char, message):
         isBroadCast, response = self.skillHandler.handleSkillUsage(char, message)
         if isBroadCast:
-            create_task(self.state().broadcast(response))
+            create_task(self.state(player).broadcast(response))
         else:
             create_task(player.respond(response))
             
     async def handleAttack(self, player, charId, targetPos):
-        char = self.charById(charId)
+        char = self.charById(player, charId)
         if char.hasAttackedThisTurn:
             create_task(player.respond({'message': 'attack', 'error': 'attacked already.'}))
             return
@@ -126,13 +130,13 @@ class GameServer:
             create_task(player.respond({'message': 'attack', 'error': 'no ranged weapon.'}))
             return
 
-        otherChar = self.charByPos(targetPos['x'], targetPos['y'])
+        otherChar = self.charByPos(player, targetPos['x'], targetPos['y'])
         if otherChar:
             char.hasAttackedThisTurn = True
             response = {'message': 'attack', 'error': '', 'characterId': charId, 'target': targetPos , 'victimId': otherChar.tokenId}
-            await self.state().broadcast(response)
+            await self.state(player).broadcast(response)
             await asyncio.sleep(0.5)
-            await self.state().killCharacter(otherChar.tokenId, charId)
+            await self.state(player).killCharacter(otherChar.tokenId, charId)
             return
 
         create_task(player.respond({'message': 'attack', 'error': 'no target.'}))
@@ -159,13 +163,12 @@ class GameServer:
         state.startGame()
         create_task(state.broadcastState())
         create_task(state.saveToDisk())
-        print('battle created and saved to disk!\nassigned battleId and playerIndex to players..\n{}: {}\n{}: {}'.format(playerOne.playerIndex, playerOne.wallet, playerTwo.playerIndex, playerTwo.wallet))
+        print('battle {} created and saved to disk!\nassigned battleId and playerIndex to players..\n{}: {}\n{}: {}'.format(battleId, playerOne.playerIndex, playerOne.wallet, playerTwo.playerIndex, playerTwo.wallet))
 
-    def state(self) -> GameState:
-        return self.matches[self.currentPlayer.currentBattle]
+    def state(self, player: Player) -> GameState:
+        return self.matches[player.currentBattle]
 
-    async def handleRequest(self, request):
-        player = self.currentPlayer
+    async def handleRequest(self, player, request):
         messageType = request['message']
         print('{}({}): {}'.format(player.wallet, player.playerIndex, messageType))
         response = {'error': 'unknown message.'}
@@ -178,16 +181,16 @@ class GameServer:
         elif not player.currentBattle:
             create_task(player.respond({'message': messageType, 'error': 'not part of a battle.'}))
             return
-        elif len(self.state().connectedPlayers) < 2:
+        elif len(self.state(player).connectedPlayers) < 2:
             create_task(player.respond({'message': messageType, 'error': 'waiting for other players.'}))
             return
-        elif self.state().turnOfPlayer() != player:
-            create_task(player.respond({'message': messageType, 'error': 'It is the turn of {}.'.format(self.state().turnOfPlayerIndex)}))
+        elif self.state(player).turnOfPlayer() != player:
+            create_task(player.respond({'message': messageType, 'error': 'It is the turn of {}.'.format(self.state(player).turnOfPlayerIndex)}))
             return
-        elif 'characterId' in request and self.charById(request['characterId']).ownerWallet != player.wallet:
+        elif 'characterId' in request and self.charById(player, request['characterId']).ownerWallet != player.wallet:
             create_task(player.respond({'message': messageType, 'error': 'not your character'}))
             return
-        elif 'characterId' in request and self.charById(request['characterId']).state == CharacterState.Dead:
+        elif 'characterId' in request and self.charById(player, request['characterId']).state == CharacterState.Dead:
             create_task(player.respond({'message': messageType, 'error': 'character cannot act.'}))
             return
         elif messageType == 'movement':
@@ -203,7 +206,7 @@ class GameServer:
 
         elif messageType == 'useSkill':
             charId = request['characterId']
-            char = self.state().charById(charId)
+            char = self.state(player).charById(charId)
             create_task(self.handleUseSkill(player, char, request))
             return
 
@@ -214,9 +217,9 @@ class GameServer:
             return
     
         elif messageType == 'endTurn':
-            self.state().nextTurn()
-            response = {'message': messageType, 'error': '', 'turnOfPlayer': self.state().turnOfPlayer().wallet}
-            create_task(self.state().broadcast(response))
+            self.state(player).nextTurn()
+            response = {'message': messageType, 'error': '', 'turnOfPlayer': self.state(player).turnOfPlayer().wallet}
+            create_task(self.state(player).broadcast(response))
             return
 
     async def globalBroadcast(self, message):
@@ -227,23 +230,23 @@ class GameServer:
     async def messageLoop(self, websocket, path):
         wallet_address = websocket.username
         remote = websocket.remote_address
-        self.currentPlayer = Player(wallet_address, websocket)
+        player = Player(wallet_address, websocket)
 
-        self.connected.add(self.currentPlayer)
+        self.connected.add(player)
 
         try:
             while True:
                 payload = await websocket.recv()
                 #print('Request: {}'.format(payload))
                 request = json.loads(payload)
-                create_task(self.handleRequest(request))
+                await self.handleRequest(player, request)
 
         except (websockets.exceptions.ConnectionClosedOK, websockets.exceptions.ConnectionClosedError) as e:
             print("Connection lost: " + str(e))
         finally:
             # playerToRemove = self.playerBySocket(websocket)
-            self.connected.remove(self.currentPlayer)
-            print("Player with ID {} removed from battle {}.".format(self.currentPlayer.wallet, self.currentPlayer.currentBattle))
+            self.connected.discard(player)
+            print("Player with ID {} removed from battle {}.".format(player.wallet, player.currentBattle))
 
     def run(self):
         start_server = websockets.serve(self.messageLoop, self.hostname, self.port,
@@ -305,6 +308,17 @@ class GameServer:
             if player in disconnectedPlayers:
                 return battle
         return None
+
+    def battlesAreOnDisk(self):
+        if len(os.listdir(self.battlecache)) > 0:
+            return True
+        return False
+
+    def loadBattles(self):
+        for path in os.listdir(self.battlecache):
+            state = GameState.fromFile(self.battlecache + path)
+            self.matches[state.battleId] = state
+            print('Restored battle {} from disk'.format(state.battleId))
 
 
 server = GameServer("localhost", 2000)

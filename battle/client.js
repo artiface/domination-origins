@@ -443,7 +443,7 @@ var Client = IgeClass.extend({
 		self.handleServerResponse = async function(message) {
 			if (message['error'])
 			{
-				self.debugText.value(message['message'] + ': ' + message['error']);
+				alert(message['message'] + ': ' + message['error']);
 				return;
 			}
 			switch (message['message'])
