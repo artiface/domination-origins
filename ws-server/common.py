@@ -11,7 +11,6 @@ class LoadOut:
     def toString(self):
         return json.dumps(self.__dict__)
 
-
 class CharacterState(IntEnum):
     Dead = 0
     Alive = 1

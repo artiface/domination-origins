@@ -236,9 +236,12 @@ class GameState:
 				self.connectedPlayers.remove(player)
 			else:
 				print('Broadcast state to player with index {}'.format(player.playerIndex))
-				state = self.getCurrentState()
-				state['playerId'] = player.playerIndex
-				create_task(player.respond(state))
+				create_task(self.sendPlayerState(player))
+
+	async def sendPlayerState(self, player):
+		state = self.getCurrentState()
+		state['playerId'] = player.playerIndex
+		create_task(player.respond(state))
 
 	def getCurrentState(self):
 		charData = [char.toObject() for char in self.allCharacters]
@@ -288,3 +291,17 @@ class GameState:
 
 	def tileMapFromObject(self, tileMapObj):
 		self.tileMap = [[Tile.fromObject(tile) for tile in row] for row in tileMapObj]
+
+	def reconnectPlayer(self, player):
+		for inPlayer in self.connectedPlayers:
+			if inPlayer.socket.closed and inPlayer == player and not player.socket.closed:
+				inPlayer.socket = player.socket
+				player.playerIndex = inPlayer.playerIndex
+				player.currentBattle = self.battleId
+
+	def disconnectedPlayers(self):
+		discPlayers = []
+		for player in self.connectedPlayers:
+			if player.socket.closed:
+				discPlayers.append(player)
+		return discPlayers

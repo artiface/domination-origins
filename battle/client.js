@@ -13,6 +13,7 @@ if (isEmpty(matchData)) {
 
 const provider = window.chain_provider;
 const signer = window.chain_signer;
+const userAddress = window.chain_user_address;
 
 const battleUrl = "http://localhost:9000/battle/"
 
@@ -82,7 +83,7 @@ var Client = IgeClass.extend({
             const troopTokenId = charData['tokenId'];
             const charId = charData['charId'];
             // check if we are the owner of the character
-            const isOwner = charData['owner'] == self.playerId;
+            const isOwner = charData['ownerWallet'] == userAddress;
 
             const char = new Character()
                 .layer(1)

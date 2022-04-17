@@ -9,3 +9,4 @@ if (network.chainId !== 137)
     window.location.href = '/loadout/';
 }
 
+window.chain_user_address = await window.chain_signer.getAddress();

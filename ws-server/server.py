@@ -149,11 +149,7 @@ class GameServer:
         battleId = self.storage.createBattle()
         state = GameState(battleId, 10, 10)
         state.loadMap()
-        self.matches[battleId] = {
-            'knownRemotes': {},
-            'connected': set(),
-            'state': state
-        }
+        self.matches[battleId] = state
         self.playersLookingForBattle.remove(playerOne)
         self.playersLookingForBattle.remove(playerTwo)
         playerOne.currentBattle = battleId
@@ -165,8 +161,8 @@ class GameServer:
         create_task(state.saveToDisk())
         print('battle created and saved to disk!\nassigned battleId and playerIndex to players..\n{}: {}\n{}: {}'.format(playerOne.playerIndex, playerOne.wallet, playerTwo.playerIndex, playerTwo.wallet))
 
-    def state(self):
-        return self.matches[self.currentPlayer.currentBattle]['state']
+    def state(self) -> GameState:
+        return self.matches[self.currentPlayer.currentBattle]
 
     async def handleRequest(self, request):
         player = self.currentPlayer
@@ -182,7 +178,7 @@ class GameServer:
         elif not player.currentBattle:
             create_task(player.respond({'message': messageType, 'error': 'not part of a battle.'}))
             return
-        elif len(self.matches[player.currentBattle]['connected']) < 2:
+        elif len(self.state().connectedPlayers) < 2:
             create_task(player.respond({'message': messageType, 'error': 'waiting for other players.'}))
             return
         elif self.state().turnOfPlayer() != player:
@@ -247,8 +243,6 @@ class GameServer:
         finally:
             # playerToRemove = self.playerBySocket(websocket)
             self.connected.remove(self.currentPlayer)
-            if self.currentPlayer.currentBattle and self.currentPlayer.currentBattle in self.matches:
-                self.matches[self.currentPlayer.currentBattle]['connected'].remove(self.currentPlayer)
             print("Player with ID {} removed from battle {}.".format(self.currentPlayer.wallet, self.currentPlayer.currentBattle))
 
     def run(self):
@@ -267,7 +261,7 @@ class GameServer:
         siweMessage = self.siwe.createSiweMessage(user_wallet, loadout.toString())
         create_task(player.respond({'message': 'auth', 'siwe_message': siweMessage.prepare_message()}))
 
-    async def handleSiwe(self, player, request):
+    async def handleSiwe(self, player: Player, request):
         user_wallet = request['user_wallet']
         signature = request['signature']
         loadout = LoadOut(request['troop_selection'])
@@ -279,12 +273,21 @@ class GameServer:
             create_task(player.respond({'message': 'siwe', 'error': 'Login failed.'}))
             return
 
-        print('Player {} authenticated! Loadout verified and assigned:\n\n{}'.format(user_wallet, loadout.toString()))
+        create_task(self.postAuthentication(player, loadout))
+
+    async def postAuthentication(self, player: Player, loadout: LoadOut):
+        print('Player {} authenticated! Loadout verified and assigned:\n\n{}'.format(player.wallet, loadout.toString()))
         create_task(player.respond({'message': 'siwe', 'success': 'Welcome to the battle'}))
         player.loadout = loadout
-        self.playersLookingForBattle.add(player)
 
-        create_task(self.startMatchMaking())
+        runningBattle = self.findRunningBattle(player)
+        if runningBattle:
+            runningBattle.reconnectPlayer(player)
+            print('reconnected player {} to battle {}'.format(player.wallet, runningBattle.battleId))
+            create_task(runningBattle.sendPlayerState(player))
+        else:
+            self.playersLookingForBattle.add(player)
+            create_task(self.startMatchMaking())
 
     async def startMatchMaking(self):
         if len(self.playersLookingForBattle) <= 1:
@@ -295,6 +298,13 @@ class GameServer:
         second = next(pit)
         print('Starting match between {} and {}'.format(first.wallet, second.wallet))
         create_task(self.createNewBattle(first, second))
+
+    def findRunningBattle(self, player) -> GameState:
+        for battleId, battle in self.matches.items():
+            disconnectedPlayers = battle.disconnectedPlayers()
+            if player in disconnectedPlayers:
+                return battle
+        return None
 
 
 server = GameServer("localhost", 2000)
