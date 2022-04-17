@@ -1,6 +1,6 @@
 ## The plan
 
-We currently use 40x40 Tiles, meaning the isometric tiles are 80x40 pixels.
+We currently use 60x60 Tiles, meaning the isometric tiles are 80x40 pixels.
 I am using the 160x80 tiles that Kazuko provided, so I could theoretically zoom in at later stage
 
 Graphics needed from Kazuko:
