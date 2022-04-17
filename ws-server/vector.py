@@ -1,11 +1,10 @@
 import math
 
 class Vector(object):
-    def __init__(self, *args):
+    def __init__(self, x, y):
         """ Create a vector, example: v = Vector(1,2) """
-        if len(args)==0: self.values = (0,0)
-        else: self.values = args
-        
+        self.values = (x, y)
+
     def norm(self):
         """ Returns the norm (length, magnitude) of the vector """
         return math.sqrt(sum( x*x for x in self ))

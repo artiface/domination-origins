@@ -1,7 +1,20 @@
 const Move = 0
 const Attack = 1
 
-const matchData = JSON.parse(window.localStorage.getItem('match_data'));
+function isEmpty(obj) {
+    return Object.keys(obj).length === 0;
+}
+
+const matchData = JSON.parse(window.localStorage.getItem('match_data') || '{}')
+
+if (isEmpty(matchData)) {
+    window.location.href = '/loadout/';
+}
+
+const provider = window.chain_provider;
+const signer = window.chain_signer;
+
+const battleUrl = "http://localhost:9000/battle/"
 
 var Client = IgeClass.extend({
 	classId: 'Client',
@@ -34,7 +47,7 @@ var Client = IgeClass.extend({
 		this.defaultFont = new IgeFontSheet('../assets/textures/fonts/verdana_12pt.png', 0);		
 	},
 	init: function () {
-		ige.addComponent(IgeEditorComponent);
+		//ige.addComponent(IgeEditorComponent);
 		ige.globalSmoothing(true);
 
 		// Load our textures
@@ -88,7 +101,7 @@ var Client = IgeClass.extend({
                 .clientIsOwner(isOwner)
                 .mount(char);
 
-            const toolTip = new IgeUiTooltip(char, char, 100, 80, 'tooltip').layer(22);
+            //const toolTip = new IgeUiTooltip(char, char, 100, 80, 'tooltip').layer(22);
 
             if (state === 0)
                 char.kill();
@@ -426,7 +439,7 @@ var Client = IgeClass.extend({
 	  		self.socket.send(requestAsJson);
 		};
 
-		self.handleServerResponse = function(message) {
+		self.handleServerResponse = async function(message) {
 			if (message['error'])
 			{
 				self.debugText.value(message['message'] + ': ' + message['error']);
@@ -434,6 +447,30 @@ var Client = IgeClass.extend({
 			}
 			switch (message['message'])
 			{
+		        case 'auth':
+                    const flatSig = await signer.signMessage(message['siwe_message']);
+
+                    const siweData = matchData;
+                    siweData['message'] = 'siwe';
+                    siweData['signature'] = flatSig;
+
+                    const siweString = JSON.stringify(siweData);
+
+                    window.localStorage.setItem('match_data', siweString);
+                    self.socket.send(siweString);
+                    break;
+                case 'siwe':
+                    if (message['error'])
+                    {
+                        alert(message['message'] + ': ' + message['error']);
+                        return;
+                    }
+                    else
+                    {
+                        alert('Matchup created! You should wait for your opponent to accept the match.');
+                        return;
+                    }
+                    break;
 				case 'initialize':
 					var mapData = message['map_data'];
 					var charData = message['char_data'];
@@ -486,33 +523,27 @@ var Client = IgeClass.extend({
 			// Start the engine
 			ige.start(function (success) {
 				// Check if the engine started successfully
+				const userAddress = matchData['user_wallet'];
 				if (success) {
-                    const queryString = window.location.search;
-                    const urlParams = new URLSearchParams(queryString);
-
-                    const battleId = urlParams.get('b');
-
-					const userAddress = matchData['user_wallet'];
-					// Setup the socket communication to the server
+                    function sendBeginAuthMessage(socket) {
+                        const authMessage = {
+                            'message': 'auth',
+                            'troop_selection': matchData['troop_selection'],	// eg. {'1': {'troops': 111, 'weapons': 134}, '2': {'troops': 114, 'weapons': 1134}}
+                            'user_name': matchData['user_name'],
+                            'user_wallet': userAddress,
+                        };
+                        const requestAsJson = JSON.stringify(authMessage);
+                        socket.send(requestAsJson);
+                    }
 					self.socket = new WebSocket("ws://"+userAddress+":none@localhost:9000/socket/");
 					self.socket.onopen = function (event) {
-						var request = {
-							'message': 'initialize',
-							'user_name': matchData['user_name'],
-							'user_wallet': matchData['user_wallet'],
-							'troop_selection': matchData['troop_selection'],
-							'signature': matchData['signature'],
-							'battle_id': battleId
-						};
-						var requestAsJson = JSON.stringify(request);
-				  		self.socket.send(requestAsJson);
+						sendBeginAuthMessage(self.socket);
 					};
 					self.socket.onmessage = function (event) {
 						var msg = JSON.parse(event.data);
 					  	self.handleServerResponse(msg);
 					};
 				}
-
 			});
 		});
 

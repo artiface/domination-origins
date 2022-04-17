@@ -38,7 +38,7 @@ var IgeEngine = IgeEntity.extend({
 		// Check if we are running client-side
 		if (this.isClient) {
 			// Enable cocoonJS support because we are running client-side
-			this.addComponent(IgeCocoonJsComponent);
+			//this.addComponent(IgeCocoonJsComponent);
 		}
 
 		// Create storage

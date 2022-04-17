@@ -1,5 +1,13 @@
+import asyncio
+import json
+import pickle
+from asyncio import create_task
+
+from pytmx import pytmx
+
 from vector import Vector
-from common import Character
+from common import Character, CharacterState, Player
+
 
 class Tile:
 	def __init__(self, position):
@@ -8,24 +16,41 @@ class Tile:
 		self.isWall = False
 		self.character = None
 
-class GameState:
+	def toObject(self):
+		return {
+			'position': {'x': self.position[0], 'y': self.position[1]},
+			'textureIndex': self.textureIndex,
+			'isWall': self.isWall,
+			'character': self.character.toObject() if self.character is not None else None
+		}
 
-	def __init__(self, width, height):
+	@classmethod
+	def fromObject(cls, obj):
+		tile = Tile(Vector(obj['position']['x'], obj['position']['y']))
+		tile.textureIndex = obj['textureIndex']
+		tile.isWall = obj['isWall']
+		tile.character = Character.fromObject(obj['character']) if obj['character'] is not None else None
+
+class GameState:
+	def __init__(self, battleId, width, height):
+		self.battleId = battleId
 		self.width = width
 		self.height = height
 		self.tileMap = []
 		self.allCharacters = []
 		self.turnOfPlayerIndex = -1
-		self.wallData = None
-		self.clear()
 		self.teamSpawns = dict()
-		self.players = []
+		self.playerMap = dict()
+
+		self.wallData = None
+		self.connectedPlayers = []
+		self.clearMap()
 
 	def startGame(self):
 		self.turnOfPlayerIndex = 0
 
 	def turnOfPlayer(self):
-		return self.players[self.turnOfPlayerIndex]
+		return self.connectedPlayers[self.turnOfPlayerIndex]
 
 	def addSpawn(self, team, position):
 		# check if there is a list for this team
@@ -34,37 +59,43 @@ class GameState:
 		self.teamSpawns[team].append(position)
 
 	def nextTurn(self):
-		self.turnOfPlayerIndex = (self.turnOfPlayerIndex + 1) % len(self.players)
+		self.turnOfPlayerIndex = (self.turnOfPlayerIndex + 1) % len(self.connectedPlayers)
 		# reset steps
 		for char in self.allCharacters:
-			if char.owner == self.turnOfPlayer():
+			if char.ownerWallet == self.turnOfPlayer().wallet:
 				char.stepsTakenThisTurn = 0
 				char.hasAttackedThisTurn = False
 
-	def spawnTeam(self, player, characters):
-		if player in self.players or len(self.teamSpawns) == 0:
+	def spawnTroopsOfPlayer(self, player, troops):
+		if player in self.connectedPlayers or len(self.teamSpawns) == 0:
 			return False
 
-		playerIndex = len(self.players)
+		troopList = []
+		for slot, troopInfo in troops.items():
+			troopTokenId = troopInfo['troops']
+			troopList.append(Character(player.wallet, troopTokenId))
+
+		playerIndex = len(self.connectedPlayers)
 		spawnIndex = playerIndex + 1
 		spawns = self.teamSpawns[spawnIndex]
 		for index, spawnPosition in enumerate(spawns):
-			if index >= len(characters):
+			if index >= len(troopList):
 				break
-			character = characters[index]
+			character = troopList[index]
 			character.position = spawnPosition
 			self.addChar(character)
 
 		player.playerIndex = playerIndex
-		self.players.append(player)
+		self.connectedPlayers.append(player)
+		self.playerMap[player.wallet] = player.playerIndex
 
 	def updatePlayerAfterReconnect(self, player):
-		for index, playerInList in enumerate(self.players):
+		for index, playerInList in enumerate(self.connectedPlayers):
 			if playerInList.wallet == player.wallet:
-				self.players[index] = player
+				self.connectedPlayers[index] = player
 				player.playerIndex = index
 
-	def clear(self):
+	def clearMap(self):
 		for y in range(self.height):
 			self.tileMap.append([])
 			for x in range(self.width):
@@ -116,6 +147,12 @@ class GameState:
 		oldTile.character = None
 		newTile.character = char
 
+	async def killCharacter(self, charId, killerId):
+		characterToKill = self.allCharacters[charId]
+		characterToKill.state = CharacterState.Dead
+		response = {'message': 'death', 'error': '', 'characterId': charId, 'killerId': killerId}
+		create_task(self.broadcast(response))
+
 	def getTextureMap(self):
 		textMap = []
 		for y in range(self.height):
@@ -161,3 +198,93 @@ class GameState:
 			mapString += '\n'
 
 		return mapString
+
+	def loadMap(self):
+		tiled_map = pytmx.TiledMap('../assets/maps/lava01.tmx')
+		# iterate over the tiles in the map
+		gidmap = dict()
+		for tileIndex, flags in tiled_map.gidmap.items():
+			gidmap[flags[0][0]] = tileIndex - 1
+
+		for x in range(self.width):
+			for y in range(self.height):
+				for layerIndex, layer in enumerate(tiled_map.layers):
+					if layer.name == "Spawns_N_Walls":
+						tile = tiled_map.get_tile_gid(x, y, layerIndex)
+						if tile:
+							tileIndex = gidmap[tile]
+							if tileIndex in [3, 4]:
+								self.addSpawn(tileIndex - 2, Vector(x, y))
+					elif layer.name == "GroundTiles":
+						tile = tiled_map.get_tile_gid(x, y, layerIndex)
+						if tile:
+							self.setTexture(x, y, gidmap[tile])
+		self.updateWallMap()
+
+	async def broadcast(self, message):
+		responseAsJson = json.dumps(message)
+		# remove all players that are not connected
+		for player in self.connectedPlayers:
+			if player.socket.closed:
+				self.connectedPlayers.remove(player)
+		# print('Broadcast: {}'.format(responseAsJson))
+		create_task(asyncio.wait([player.socket.send(responseAsJson) for player in self.connectedPlayers]))
+
+	async def broadcastState(self):
+		for player in self.connectedPlayers:
+			if player.socket.closed:
+				self.connectedPlayers.remove(player)
+			else:
+				print('Broadcast state to player with index {}'.format(player.playerIndex))
+				state = self.getCurrentState()
+				state['playerId'] = player.playerIndex
+				create_task(player.respond(state))
+
+	def getCurrentState(self):
+		charData = [char.toObject() for char in self.allCharacters]
+		state = {
+			'message': 'initialize',
+			'turnOfPlayer': self.turnOfPlayerIndex,
+			'error': '',
+			'map_data': {
+				'texture_data': self.getTextureMap(),
+				'size': {'width': self.width, 'height': self.height},
+				'wall_data': self.wallData
+			},
+			'char_data': charData
+		}
+		return state
+
+	# use pickle to serialize the complete class to a file
+	async def saveToDisk(self):
+		with open('./battlecache/bs_{}.json'.format(self.battleId), 'w', encoding='utf-8') as f:
+			json.dump(self.toObject(), f, ensure_ascii=False, indent=4)
+
+	@staticmethod
+	async def fromFile(battleId):
+		# load json data from file
+		with open('./battlecache/bs_{}.json'.format(battleId), 'r', encoding='utf-8') as f:
+			gameStateObj = json.load(f)
+			state = GameState(gameStateObj['battleId'], gameStateObj['width'], gameStateObj['height'])
+			state.playerMap = gameStateObj['playerMap']
+			state.turnOfPlayerIndex = gameStateObj['turnOfPlayerIndex']
+			state.allCharacters = [Character.fromObject(char) for char in gameStateObj['allCharacters']]
+			state.tileMapFromObject(gameStateObj['tileMap'])
+			return state
+
+	def toObject(self):
+		return {
+			'battleId': self.battleId,
+			'width': self.width,
+			'height': self.height,
+			'playerMap': self.playerMap,
+			'turnOfPlayerIndex': self.turnOfPlayerIndex,
+			'allCharacters': [char.toObject() for char in self.allCharacters],
+			'tileMap': self.tileMapToObject(),
+		}
+
+	def tileMapToObject(self):
+		return [[tile.toObject() for tile in row] for row in self.tileMap]
+
+	def tileMapFromObject(self, tileMapObj):
+		self.tileMap = [[Tile.fromObject(tile) for tile in row] for row in tileMapObj]

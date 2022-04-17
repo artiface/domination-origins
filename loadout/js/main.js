@@ -3,6 +3,7 @@ import {getTokenCount, loadUserNFTs, loadNFT, signer, provider} from "./chainloa
 
 const network = await provider.getNetwork();
 const chainId = network.chainId;
+const battleUrl = "http://localhost:9000/battle/"
 
 if (chainId === 137)
 {
@@ -81,20 +82,11 @@ else
 }
 
 
+
 async function startUp() {
     
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-
-    const userName = urlParams.get('u');
-
-
-
     const walletLabel = document.getElementById("user_wallet");
     walletLabel.innerHTML = userAddress;
-
-    
-
 
     document.getElementById("pick_token").onclick = function () {
         var tokenSelect = document.getElementById("token_selection");
@@ -122,68 +114,12 @@ async function startUp() {
 
     document.getElementById("find_match_button").onclick = async function () {
         if (!troopSelection.hasOwnProperty('1')) return;
-
-        var authMessage = {
-            'troop_selection': troopSelection,	// eg. {'1': {'troops': 111, 'weapons': 134}, '2': {'troops': 114, 'weapons': 1134}}
-            'user_name': userName,
-            'user_wallet': userAddress,
-        };
-        var serverResponse = await fetch('http://localhost:9000/auth/init/', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(authMessage)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Request failed with status ${response.status}`);
-                }
-                return response.json();
-            });
-
-        const siweMessage = serverResponse.siwe_message;
-        const flatSig = await signer.signMessage(siweMessage);
-
-        //const sig = ethers.utils.splitSignature(flatSig);
-
         const matchData = {
             'troop_selection': troopSelection,	// eg. {'1': {'troops': 111, 'weapons': 134}, '2': {'troops': 114, 'weapons': 1134}}
-            'user_name': userName,
+            'user_name': 'TODO',
             'user_wallet': userAddress,
-            'signature': flatSig
         };
-
         window.localStorage.setItem('match_data', JSON.stringify(matchData));
-
-        var serverResponse = await fetch('http://localhost:9000/auth/sign/', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(matchData)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Request failed with status ${response.status}`);
-                }
-                return response.json();
-            });
-
-        var serverResponse = await fetch('http://localhost:9000/auth/sign/', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(matchData)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Request failed with status ${response.status}`);
-                }
-                return response.json();
-            });
-        const battleUrl = serverResponse.battleUrl;
         window.open(battleUrl, "_self");
     };
 
@@ -377,33 +313,3 @@ async function updateTroopDisplay() {
 		}
 	}	
 };
-
-/*
-const queryString = window.location.search;
-const urlParams = new URLSearchParams(queryString);
-
-const tokenType = urlParams.get('m');
-const tokenId = urlParams.get('t');
-*/
-/*
-var namePromise = loadNFT(tokenType, tokenId);
-namePromise.then((info) => {
-	var collectionName = info.collection_name;
-	var uri = info.uri;
-	var tokenId = info.id;
-	var metaData = info['meta_data'];
-	var name = metaData.name;
-	var imageIpfs = metaData.image;
-	var httpImage = imageIpfs.replace("ipfs://", "https://ipfs.io/ipfs/");
-	var imgSrc = '<img class="portrait" src="'+httpImage+'"/><br/>';
-	var attributes = metaData.attributes;
-	var attributeList = "<ul>";
-	attributes.forEach(element => {
-		var key = element['trait_type'] || element['display_type'];
-		var value = element.value;
-		attributeList += "<li>"+ key + ": " + value +"</li>";
-	});
-	attributeList += "</ul>";
-	document.getElementById("nft_data").innerHTML = imgSrc + name +" (#"+tokenId+")"+ " from " + collectionName + ": " + uri + attributeList;
-});
-*/

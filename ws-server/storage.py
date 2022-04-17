@@ -1,6 +1,7 @@
 import sqlite3
 import json
 
+
 def dict_factory(cursor, row):
     d = {}
     for idx, col in enumerate(cursor.description):
@@ -12,32 +13,29 @@ class Storage:
     def __init__(self, sqlite_file):
         self.con = sqlite3.connect(sqlite_file)
         self.con.row_factory = dict_factory
+        # create all the tables
+        self.createBattleTable()
+        self.createPlayerTable()
+        self.createSiweCacheTable()
 
     def createBattleTable(self):
         cur = self.con.cursor()
         cur.execute(
-            '''CREATE TABLE IF NOT EXISTS battles (id integer primary key, p1_address, p1_loadout, p2_address, p2_loadout, Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
+            '''CREATE TABLE IF NOT EXISTS battles (id integer primary key, map text, p1_address, p2_address, turn integer, Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
         self.con.commit()
 
     def createPlayerTable(self):
         cur = self.con.cursor()
         cur.execute(
-            '''CREATE TABLE IF NOT EXISTS users (wallet text primary key, name text, authenticated integer, wins integer, losses integer, draws integer, current_battle integer, FOREIGN KEY(current_battle) REFERENCES battles(id))''')
+            '''CREATE TABLE IF NOT EXISTS users (wallet text primary key, name text, wins integer, losses integer, draws integer)''')
         self.con.commit()
 
-    def insertNewBattle(self, p1_address, p1_loadout):
+    def createBattle(self):
         cur = self.con.cursor()
-        cur.execute("insert into battles(p1_address, p1_loadout) values (?, ?)", (p1_address, json.dumps(p1_loadout)))
+        values = ('None',)
+        cur.execute("insert into battles(map) values (?)", values)
         self.con.commit()
-        battleId = cur.lastrowid
-        cur.execute("update users set current_battle = ? where wallet = ?", (battleId, p1_address))
-        self.con.commit()
-        return battleId
-
-    def setPlayerAuthenticated(self, wallet, authenticated):
-        cur = self.con.cursor()
-        cur.execute("update users set authenticated = ? where wallet = ?", (authenticated, wallet))
-        self.con.commit()
+        return cur.lastrowid
 
     def addSecondPlayer(self, battleId, p2_address, p2_loadout):
         cur = self.con.cursor()
@@ -95,9 +93,4 @@ class Storage:
     def delSiweCache(self, wallet):
         cur = self.con.cursor()
         cur.execute("DELETE FROM siwe WHERE wallet = ?", [wallet])
-        self.con.commit()
-
-    def removeOldBattles(self, wallet):
-        cur = self.con.cursor()
-        cur.execute("DELETE FROM battles WHERE p1_address = ? OR p2_address = ?", [wallet, wallet])
         self.con.commit()
