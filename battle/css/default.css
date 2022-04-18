@@ -1,0 +1,8 @@
+.loadingLogo {
+	position: relative;
+	width: 60px;
+	height: 60px;
+	left: 10px;
+	top: 10px;
+	background-image: url(../../assets/ui/Logo_Circle.png);
+}

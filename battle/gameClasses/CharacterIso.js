@@ -16,6 +16,7 @@ var Character = IgeEntity.extend({
 			.depth(1)
 			.setType(3)
 			.bounds3d(60, 60, 60);
+
 	},
 
 	/* Function for setting the token id */

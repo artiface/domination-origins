@@ -106,7 +106,7 @@ var Client = IgeClass.extend({
                 .clientIsOwner(isOwner)
                 .mount(char);
 
-            //const toolTip = new IgeUiTooltip(char, char, 100, 80, 'tooltip').layer(22);
+            const toolTip = new IgeUiTooltip(char, 100, 80, 'tooltip').layer(22);
 
             if (state === 0)
                 char.kill();
@@ -126,7 +126,11 @@ var Client = IgeClass.extend({
                 .drawPath(true) // Enable debug drawing the paths
                 .drawPathGlow(true) // Enable path glowing (eye candy)
                 .drawPathText(false); // Enable path text output
+
+            char.player.updateReachableTiles();
         };
+
+
 
 		self.startSetup = function(mapData, charData) {
 			var wallData = mapData['wall_data'];
@@ -216,7 +220,7 @@ var Client = IgeClass.extend({
 				} 
 			}
 
-			self.tilemap.map.layerData(0, 0, 1);
+
 			// Define a function that will be called when the
 			// mouse cursor moves over one of our entities
 			overFunc = function () {
@@ -385,25 +389,44 @@ var Client = IgeClass.extend({
 				.drawBoundsData(false)
 				.mount(self.uiScene);
 
+            const charTooltipDelay = 800;
+			var onMouseOnCharacter = function(char){
+			    char.highlight(true);
+                self.highlightedCharacter = char;
+                // delay showing the tooltip
+                setTimeout(function() {
+                    // if the mouse is still over that character..
+                    const mouseTile = self.tilemap.mouseToTile();
+                    const charUnderMouse = self.tilemap.tileOccupiedBy(mouseTile.x, mouseTile.y);
+                    if (char === charUnderMouse)
+                    {
+                        char._tooltip.show();
+                    }
+                }, charTooltipDelay);
+			};
+
+			var onMouseLeavingCharacter = function(char){
+			    char.highlight(false);
+                char._tooltip.hide();
+			};
+
 			ige.input.on('mouseMove', function (event, x, y, button) {
 			    const mouseTile = self.tilemap.mouseToTile();
 
 				if (self.tilemap.isTileOccupied(mouseTile.x, mouseTile.y))
                 {
-
                     const char = self.tilemap.tileOccupiedBy(mouseTile.x, mouseTile.y);
                     if (self.highlightedCharacter && self.highlightedCharacter !== char)
                     {
-                        self.highlightedCharacter.highlight(false);
+                        onMouseLeavingCharacter(self.highlightedCharacter);
                     }
-                    char.highlight(true);
-                    self.highlightedCharacter = char;
+                    onMouseOnCharacter(char);
                 }
                 else
                 {
                     if (self.highlightedCharacter)
                     {
-                        self.highlightedCharacter.highlight(false);
+                        onMouseLeavingCharacter(self.highlightedCharacter);
                     }
                 }
 			});
@@ -429,7 +452,13 @@ var Client = IgeClass.extend({
                     const char = self.tilemap.tileOccupiedBy(mouseTile.x, mouseTile.y);
                     if (self.currentAction == Move)
                     {
+                        if (self.selectedCharacter)
+                        {
+                            self.selectedCharacter.player.hideReachableTiles();
+                        }
                         self.selectedCharacter = char;
+                        self.selectedCharacter.player.showReachableTiles();
+
                         self.debugText.value("Selected: " + self.selectedCharacter.getCharId());
                     }
                     else if (self.currentAction == Attack && self.selectedCharacter)

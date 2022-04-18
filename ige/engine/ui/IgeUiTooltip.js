@@ -7,13 +7,11 @@ var IgeUiTooltip = IgeUiElement.extend({
 
 	/**
 	 * @constructor
-	 * @param parent Where the mousemove is captured i.e. on which element the tooltip should appear
-	 * @param mountEntity Where the tooltip should be mounted. A scene is suggested.
 	 * @param width Width of the tooltip
 	 * @param height Height of the tooltip
 	 * @param content The content which is set with public method "setContent". Can be string, array(2) or an entity
 	 */
-	init: function (parent, mountEntity, width, height, content) {
+	init: function (parent, width, height, content) {
 		IgeUiElement.prototype.init.call(this);
 
 		var self = this;
@@ -54,20 +52,16 @@ var IgeUiTooltip = IgeUiElement.extend({
 		this.setContent(content);
 		this.hide();
 
-		this._mountEntity = mountEntity;
-		this.mount(mountEntity);
-		this.backgroundColor('#53B2F3');
+		this.mount(parent);
+		//this.backgroundColor('#53B2F3');
 		this.depth(10000);
 		this.width(width);
 		this.height(height);
 		
 		parent._tooltip = this;
 
-		// Listen for keyboard events to capture text input
-		parent._mouseEventsActive = true;
-		parent.on('mouseMove', self._mousemove);
-		parent.on('mouseOut', self._mouseout);
-		
+		this.translateTo(0, -90, 0);
+
 		return this;
 	},
 
@@ -170,45 +164,4 @@ var IgeUiTooltip = IgeUiElement.extend({
 		return this;
 	},
 
-	/**
-	 * Handles mousemove event to show the textbox and adjust its
-	 * position according to the mouse position
-	 * @param event
-	 * @private
-	 */
-	_mousemove: function (event) {
-	    var parent = this;
-
-		var tt = this._tooltip;
-		tt.depth(10000);
-		const drawOffset = {x: 70, y: -50};
-
-		if (!this._toolTipTimer && tt._hidden)
-		{
-            this._toolTipTimer = setTimeout(function() {
-                parent._toolTipTimer = null;
-                const mp = ige._currentViewport.mousePos();
-                const mountPos = tt._mountEntity.worldPosition();
-                tt.translateTo(mp.x - mountPos.x + drawOffset.x , mp.y - mountPos.y + drawOffset.y, 0);
-                tt.show();
-                tt.updateUiChildren();
-            }, 500);
-        }
-		else if (!tt._hidden)
-		{
-		    const mp = ige._currentViewport.mousePos();
-            const mountPos = tt._mountEntity.worldPosition();
-            tt.translateTo(mp.x - mountPos.x + drawOffset.x, mp.y - mountPos.y + drawOffset.y, 0);
-            tt.updateUiChildren();
-		}
-	},
-
-	/**
-	 * Handles mouseout event to hide the tooltip
-	 * @param event
-	 * @private
-	 */
-	_mouseout: function (event) {
-		this._tooltip.hide();
-	}
 });

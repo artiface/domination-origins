@@ -1,6 +1,75 @@
 /**
  * Creates a new path using the A* path-finding algorithm.
  */
+
+const pq_top = 0;
+const pq_parent = i => ((i + 1) >>> 1) - 1;
+const pq_left = i => (i << 1) + 1;
+const pq_right = i => (i + 1) << 1;
+
+class PriorityQueue {
+  constructor(comparator = (a, b) => a > b) {
+    this._heap = [];
+    this._comparator = comparator;
+  }
+  size() {
+    return this._heap.length;
+  }
+  isEmpty() {
+    return this.size() == 0;
+  }
+  peek() {
+    return this._heap[pq_top];
+  }
+  push(...values) {
+    values.forEach(value => {
+      this._heap.push(value);
+      this._siftUp();
+    });
+    return this.size();
+  }
+  pop() {
+    const poppedValue = this.peek();
+    const bottom = this.size() - 1;
+    if (bottom > pq_top) {
+      this._swap(pq_top, bottom);
+    }
+    this._heap.pop();
+    this._siftDown();
+    return poppedValue;
+  }
+  replace(value) {
+    const replacedValue = this.peek();
+    this._heap[pq_top] = value;
+    this._siftDown();
+    return replacedValue;
+  }
+  _greater(i, j) {
+    return this._comparator(this._heap[i], this._heap[j]);
+  }
+  _swap(i, j) {
+    [this._heap[i], this._heap[j]] = [this._heap[j], this._heap[i]];
+  }
+  _siftUp() {
+    let node = this.size() - 1;
+    while (node > pq_top && this._greater(node, pq_parent(node))) {
+      this._swap(node, pq_parent(node));
+      node = pq_parent(node);
+    }
+  }
+  _siftDown() {
+    let node = pq_top;
+    while (
+      (pq_left(node) < this.size() && this._greater(pq_left(node), node)) ||
+      (pq_right(node) < this.size() && this._greater(pq_right(node), node))
+    ) {
+      let maxChild = (pq_right(node) < this.size() && this._greater(pq_right(node), pq_left(node))) ? pq_right(node) : pq_left(node);
+      this._swap(node, maxChild);
+      node = maxChild;
+    }
+  }
+}
+
 var IgePathFinder = IgeEventingClass.extend({
 	classId: 'IgePathFinder',
 
@@ -223,6 +292,109 @@ var IgePathFinder = IgeEventingClass.extend({
 			return finalPath;
 		}
 	},
+
+	_pHash: function(point) {
+        return point.x + ',' + point.y;
+    },
+
+	/**
+	 * Get all tiles that can be reached from the current tile with a given movement cost
+	 * @param  {object} tileMap The tile map to use
+     * @param  {object} startPoint The tile to start from
+     * @param  {number} maxSteps The maximum number of steps to take
+     * @return {array} An array of tiles that can be reached from the current tile
+	 */
+	getReachableTiles: function(tileMap, startPoint, maxSteps) {
+	    // use dijkstra's algorithm to find all reachable tiles
+        var reachableTiles = new Set();
+        var distMap = {};
+
+        const pairwiseQueue = new PriorityQueue((a, b) => a[1] < b[1]);
+        // we use a priority queue to keep track of the tiles we need to check
+        // we add the startPoint as the first item in the queue
+        pairwiseQueue.push([startPoint, 0]);
+
+        // we use a dictionary to keep track of the distance to each tile
+        distMap[this._pHash(startPoint)] = 0;
+
+        // we start the search loop
+        while (pairwiseQueue.size() > 0)
+        {
+            // we get the next tile to check
+            var currentTile = pairwiseQueue.pop()[0];
+            // we get the distance to the current tile
+            var currentDist = distMap[this._pHash(currentTile)];
+            // we get the neighbours of the current tile
+            var neighbours = this._getSimpleNeighbours(tileMap, currentTile);
+            // we loop through the neighbours
+            for (var i = 0; i < neighbours.length; i++)
+            {
+                // we get the neighbour
+                var neighbour = neighbours[i];
+                // we get the distance to the neighbour
+                var neighbourDist = currentDist + 1;
+                if (neighbourDist <= maxSteps)
+                {
+                    // we check if we have already found a path to the neighbour
+                    if (distMap[this._pHash(neighbour)])
+                    {
+                        // check the old distance
+                        if (distMap[this._pHash(neighbour)] > neighbourDist)
+                        {
+                            // we update the distance to the neighbour
+                            distMap[this._pHash(neighbour)] = neighbourDist;
+                            // we add the neighbour to the queue
+                            pairwiseQueue.push([neighbour, neighbourDist]);
+                            continue;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                    // we add the neighbour to the queue
+                    pairwiseQueue.push([neighbour, neighbourDist]);
+                    // we set the distance to the neighbour
+                    distMap[this._pHash(neighbour)] = neighbourDist;
+                    // we add the neighbour to the reachable tiles
+                    reachableTiles.add(neighbour);
+                }
+            }
+        }
+        return reachableTiles;
+	},
+    _getSimpleNeighbours: function (tileMap, currentTile) {
+        var mapData = tileMap.map._mapData;
+        var neighbours = [];
+        const bounds = tileMap._gridSize;
+
+        // we get the neighbours of the current tile
+        var north = mapData[currentTile.y - 1] && mapData[currentTile.y - 1][currentTile.x] ? mapData[currentTile.y - 1][currentTile.x] : null;
+        var south = mapData[currentTile.y + 1] && mapData[currentTile.y + 1][currentTile.x] ? mapData[currentTile.y + 1][currentTile.x] : null;
+        var east = mapData[currentTile.y] && mapData[currentTile.y][currentTile.x + 1] ? mapData[currentTile.y][currentTile.x + 1] : null;
+        var west = mapData[currentTile.y] && mapData[currentTile.y][currentTile.x - 1] ? mapData[currentTile.y][currentTile.x - 1] : null;
+
+        // check if the neighbour is walkable and in bounds
+        if (north === null && currentTile.y - 1 >= 0)
+        {
+            neighbours.push({x: currentTile.x, y: currentTile.y - 1});
+        }
+        if (south === null && currentTile.y + 1 < bounds.y)
+        {
+            neighbours.push({x: currentTile.x, y: currentTile.y + 1});
+        }
+        if (east === null && currentTile.x + 1 < bounds.x)
+        {
+            neighbours.push({x: currentTile.x + 1, y: currentTile.y});
+        }
+        if (west === null && currentTile.x - 1 >= 0)
+        {
+            neighbours.push({x: currentTile.x - 1, y: currentTile.y});
+        }
+
+
+        return neighbours;
+    },
 
 	/**
 	 * Get all the neighbors of a node for the A* algorithm.
