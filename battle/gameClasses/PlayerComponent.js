@@ -13,10 +13,11 @@ var PlayerComponent = IgeClass.extend({
 		this._entity = entity;
 
 		// Store any options that were passed to us
-		this._options = options;		
+		this._options = options;
 	},
 
 	showReachableTiles: function() {
+	    this.updateReachableTiles();
 	    const tilemap = this._entity._parent;
         for (let tile of this._reachableTiles)
         {
@@ -34,16 +35,20 @@ var PlayerComponent = IgeClass.extend({
 
 	updateReachableTiles: function()
 	{
+	    this.hideReachableTiles();
         const currentPosition = this._entity._translate;
 		const tile = this._entity._parent.pointToTile(currentPosition);
 	    const tilemap = this._entity._parent;
-	    this._reachableTiles = this._entity.path._finder.getReachableTiles(tilemap, {x: tile.x, y: tile.y}, 5); // TODO: put agility of character here
+	    const maxSteps = this._entity.getStat('agility') - this._entity.getStat('stepsTakenThisTurn');
+	    this._reachableTiles = this._entity.path._finder.getReachableTiles(tilemap, {x: tile.x, y: tile.y}, maxSteps); // TODO: put agility of character here
 	},
-
+    tilePosition: function()
+    {
+        return this._entity._parent.pointToTile(this._entity._translate);
+    },
 	moveTo: function (toTileX, toTileY) {
 	    const tilemap = this._entity._parent;
-	    var currentPosition = this._entity._translate;
-		var startTile = this._entity._parent.pointToTile(currentPosition);
+		var startTile = this.tilePosition();
         tilemap.unOccupyTile(startTile.x, startTile.y, 1, 1);
 
 		this._entity.path
@@ -51,8 +56,7 @@ var PlayerComponent = IgeClass.extend({
 				.speed(5)
 				.start();
 
-	    tilemap.occupyTile(toTileX, toTileY, 1, 1, this._entity);
-	    this.updateReachableTiles();
+
 	}
 });
 

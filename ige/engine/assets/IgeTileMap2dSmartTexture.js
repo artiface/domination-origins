@@ -111,7 +111,7 @@ var IgeTileMap2dSmartTexture = {
 		}
 
 		if (entity._highlightTiles) {
-			ctx.fillStyle = '#11ee11';
+			ctx.fillStyle = "rgba(10, 240, 120, 0.34)";
 			for (y in entity.map._layerData) {
 				if (entity.map._layerData[y]) {
 					for (x in entity.map._layerData[y]) {

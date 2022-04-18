@@ -6,7 +6,7 @@ var Character = IgeEntity.extend({
 		IgeEntity.prototype.init.call(this);
 
 		var self = this;
-		
+		this._charData = {};
 		// Create a character entity as a child of this container
 		self.addComponent(PlayerComponent)
             .isometric(true)
@@ -30,7 +30,19 @@ var Character = IgeEntity.extend({
 		}, false, true);
 		return this;
     },
-
+    setCharData: function (data) {
+        this._charData = data;
+        return this;
+    },
+    // add getter for character data
+    getStat: function (statName) {
+        return this._charData[statName];
+    },
+    // add setter for character data
+    setStat: function (statName, value) {
+        this._charData[statName] = value;
+        return this;
+    },
     /* Function for setting the char id */
     setCharId: function (id) {
         this._charId = id;

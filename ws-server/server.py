@@ -78,7 +78,7 @@ class GameServer:
             return
 
         char.stepsTakenThisTurn += stepsNeeded
-        create_task(self.moveChar(player, 'movement', charId, dest))
+        create_task(self.moveChar(player, 'movement', char, dest))
 
     async def handleSprint(self, player, charId, dest):
         char = self.charById(player, charId)
@@ -99,12 +99,11 @@ class GameServer:
             create_task(player.respond({'message': 'sprint', 'error': 'too far away.'}))
             return
 
-        create_task(self.moveChar(player, 'sprint', charId, dest))
+        create_task(self.moveChar(player, 'sprint', char, dest))
 
-    async def moveChar(self, player, messageType, charId, dest):
-        char = self.charById(player, charId)
+    async def moveChar(self, player, messageType, char: Character, dest):
         self.state(player).moveChar(char, Vector(dest['x'], dest['y']))
-        response = {'message': messageType, 'error': '', 'characterId': charId, 'destination': dest}        
+        response = {'message': messageType, 'error': '', 'characterId': char.charId, 'destination': dest, 'stepsTakenThisTurn': char.stepsTakenThisTurn}
         create_task(self.state(player).broadcast(response))
 
     async def handleUseSkill(self, player, char, message):

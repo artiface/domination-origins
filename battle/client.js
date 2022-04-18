@@ -69,7 +69,7 @@ var Client = IgeClass.extend({
             return null;
         };
 
-        self.reloadCharacters = function(charData) {
+        self.loadCharacters = function(charData) {
             // call destroy() on all existing characters
             for (var i = 0; i < self.characters.length; i++) {
                 self.characters[i].destroy();
@@ -92,8 +92,7 @@ var Client = IgeClass.extend({
                 .id('char_' + charId.toString())
                 .setTokenId(troopTokenId)
                 .setCharId(charId)
-//                .mouseOver(overFunc)
-//                .mouseOut(outFunc)
+                .setCharData(charData)
                 .drawBounds(false)
                 .drawBoundsData(false)
                 .mount(self.tilemap)
@@ -116,8 +115,7 @@ var Client = IgeClass.extend({
                 .finder(self.pathFinder)
                 .tileMap(ige.$('tilemap'))
                 .tileChecker(function (tileData, tileX, tileY, node, prevNodeX, prevNodeY, dynamic) {
-                    // If the map tile data is set to 1, don't allow a path along it
-                    return tileData !== 1;
+                    return tileData === null;
                 })
                 .lookAheadSteps(3)
                 .dynamic(true)
@@ -127,7 +125,11 @@ var Client = IgeClass.extend({
                 .drawPathGlow(true) // Enable path glowing (eye candy)
                 .drawPathText(false); // Enable path text output
 
-            char.player.updateReachableTiles();
+            char.path.on('pathComplete', function(){
+                char.player.showReachableTiles();
+                const pos = char.player.tilePosition();
+                self.tilemap.occupyTile(pos.x, pos.y, 1, 1, this._entity);
+            });
         };
 
 
@@ -238,9 +240,7 @@ var Client = IgeClass.extend({
 			// Create the 3d container that the player
 			// entity will be mounted to
 
-			for (let i = 0; i < charData.length; i++) {
-				self.createCharacter(charData[i]);
-			}
+			self.loadCharacters(charData);
 
 	
 			// Create a UI entity so we can test if clicking the entity will stop
@@ -545,13 +545,15 @@ var Client = IgeClass.extend({
 					else
 					{
 					    // we might need to update some data since the server is sending us a full state update
-					    self.reloadCharacters(charData);
+					    self.loadCharacters(charData);
 					}
 					break;
 				case 'movement':
 					var charIndex = message['characterId'];
 					var destination = message['destination'];
+					self.characters[charIndex].setStat('stepsTakenThisTurn', message['stepsTakenThisTurn']);
 					self.characters[charIndex].player.moveTo(destination.x, destination.y);
+
 					break;
 				case 'death':
 					var charIndex = message['characterId'];
@@ -563,8 +565,18 @@ var Client = IgeClass.extend({
 					if (turnOfPlayer === matchData['user_wallet'])
 					{
 						nextTurnText = 'IT IS YOUR TURN!';
+
 					}
+					// reset the steps taken this turn stat for each character where the ownerWallet matches the turnOfPlayer
+                    for (var i = 0; i < self.characters.length; i++)
+                    {
+                        if (self.characters[i].getStat('ownerWallet') === turnOfPlayer)
+                        {
+                            self.characters[i].setStat('stepsTakenThisTurn', 0);
+                        }
+                    }
 					self.debugText.value(nextTurnText);
+
 					break;
 			}
 		};

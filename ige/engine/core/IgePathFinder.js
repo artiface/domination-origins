@@ -392,7 +392,6 @@ var IgePathFinder = IgeEventingClass.extend({
             neighbours.push({x: currentTile.x - 1, y: currentTile.y});
         }
 
-
         return neighbours;
     },
 
