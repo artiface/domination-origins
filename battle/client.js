@@ -105,7 +105,10 @@ var Client = IgeClass.extend({
                 .clientIsOwner(isOwner)
                 .mount(char);
 
-            const toolTip = new IgeUiTooltip(char, 100, 80, 'tooltip').layer(22);
+            const statString =
+            'Level: ' + char.getStat('level') + '\n' +
+            'Agility: ' + char.getStat('agility');
+            const toolTip = new IgeUiTooltip(char, 100, 80, ['#' + troopTokenId, statString]).layer(22);
 
             if (state === 0)
                 char.kill();
@@ -396,18 +399,21 @@ var Client = IgeClass.extend({
 
             const charTooltipDelay = 800;
 			var onMouseOnCharacter = function(char){
-			    char.highlight(true);
-                self.highlightedCharacter = char;
-                // delay showing the tooltip
-                setTimeout(function() {
-                    // if the mouse is still over that character..
-                    const mouseTile = self.tilemap.mouseToTile();
-                    const charUnderMouse = self.tilemap.tileOccupiedBy(mouseTile.x, mouseTile.y);
-                    if (char === charUnderMouse)
-                    {
-                        char._tooltip.show();
-                    }
-                }, charTooltipDelay);
+			    if (!char.highlight())
+			    {
+                    char.highlight(true);
+                    self.highlightedCharacter = char;
+                    // delay showing the tooltip
+                    char._tooltip._timeout = setTimeout(function() {
+                        // if the mouse is still over that character..
+                        const mouseTile = self.tilemap.mouseToTile();
+                        const charUnderMouse = self.tilemap.tileOccupiedBy(mouseTile.x, mouseTile.y);
+                        if (char === charUnderMouse)
+                        {
+                            char._tooltip.show();
+                        }
+                    }, charTooltipDelay);
+                }
 			};
 
 			var onMouseLeavingCharacter = function(char){
@@ -481,6 +487,7 @@ var Client = IgeClass.extend({
 			});
 
 			self.vp1.camera.translateTo(0, 300, 0);
+			self.vp1._resizeEvent(null);
 		};
 
 		self.requestEndTurn = function(){

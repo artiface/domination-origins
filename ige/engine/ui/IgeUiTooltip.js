@@ -33,27 +33,27 @@ var IgeUiTooltip = IgeUiElement.extend({
 		
 		this.fontEntityTitle = new IgeFontEntity()
 			.left(5)
-			.top(-4)
+			.top(5)
 			.textAlignX(0)
 			.textAlignY(0)
 			.nativeFont('10pt Arial')
-			.textLineSpacing(-5)
+			.textLineSpacing(15)
 			.mount(this.titleBox);
 			
 		this.fontEntityText = new IgeFontEntity()
 			.left(5)
-			.top(0)
+			.top(5)
 			.textAlignX(0)
 			.textAlignY(0)
 			.nativeFont('10pt Arial')
-			.textLineSpacing(-5)
+			.textLineSpacing(15)
 			.mount(this.textBox);
 			
 		this.setContent(content);
 		this.hide();
 
 		this.mount(parent);
-		//this.backgroundColor('#53B2F3');
+		this.backgroundColor('#53B2F3');
 		this.depth(10000);
 		this.width(width);
 		this.height(height);
@@ -118,24 +118,27 @@ var IgeUiTooltip = IgeUiElement.extend({
 	 */
 	setContent: function (val) {
 		if (val !== undefined) {
+			/*
 			this.titleBox.unMount();
 			this.textBox.unMount();
 			this._children.forEach(function(child) {
 				child.unMount();
 				child.destroy();
 			});
-			if (typeof(val) == 'string') {
-				this.textBox.mount(this);
-				this.textBox.height(this._bounds2d.y);
-				this.textBox.top(0);
-				// Set the text of the font entity to the value
-				this.fontEntityText.text(this._value);
-			}
-			else if (typeof(val) == 'object' && typeof(val[0] == 'string') && typeof(val[1] == 'string')) {
+			*/
+			if (typeof(val) == 'object' && typeof(val[0] == 'string') && typeof(val[1] == 'string')) {
+				const totalHeight = this._bounds2d.y;
+				const titleHeight = 30;
+				const textHeight = totalHeight - titleHeight;
+                /*
 				this.titleBox.mount(this);
 				this.textBox.mount(this);
-				this.textBox.height(this._bounds2d.y - this.titleBox._bounds2d.y);
+                */
+				/*this.titleBox.height(titleHeight);
+				this.textBox.height(textHeight);
+				this.titleBox.top(0);
 				this.textBox.top(this.titleBox._bounds2d.y);
+                */
 				//title + text
 				this.fontEntityTitle.text(val[0]);
 				this.fontEntityText.text(val[1]);
