@@ -113,8 +113,13 @@ var Client = IgeClass.extend({
 
             char.addComponent(IgePathComponent).path
                 .finder(self.pathFinder)
-                .tileMap(ige.$('tilemap'))
+                .tileMap(self.tilemap)
                 .tileChecker(function (tileData, tileX, tileY, node, prevNodeX, prevNodeY, dynamic) {
+                    const bounds = self.tilemap._gridSize;
+                    // check if the tile is in bounds
+                    if (tileX < 0 || tileX >= bounds.x || tileY < 0 || tileY >= bounds.y) {
+                        return false;
+                    }
                     return tileData === null;
                 })
                 .lookAheadSteps(3)
