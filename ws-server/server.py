@@ -271,6 +271,8 @@ class GameServer:
 
         validated = self.siwe.validate(user_wallet, signature)
         is_owner_of_loadout = await self.isOwnerOfLoadout(player, loadout)
+        # TODO: add further checks for the loadout
+        #  - check for duplicate troops
 
         if not validated or not is_owner_of_loadout:
             create_task(player.respond({'message': 'siwe', 'error': 'Login failed.'}))

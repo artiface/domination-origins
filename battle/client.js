@@ -1,6 +1,7 @@
 const Move = 0
 const Attack = 1
 
+
 function isEmpty(obj) {
     return Object.keys(obj).length === 0;
 }
@@ -55,7 +56,8 @@ var Client = IgeClass.extend({
 		var self = this;
 		this.obj = [];
 		this.gameTexture = {};
-		
+
+        self.highlightedCharacter = undefined;
 		self.isInitialized = false;
 		self.currentAction = Move;
         self.characterById = function(charId) {
@@ -90,12 +92,14 @@ var Client = IgeClass.extend({
                 .id('char_' + charId.toString())
                 .setTokenId(troopTokenId)
                 .setCharId(charId)
-                .mouseOver(overFunc)
-                .mouseOut(outFunc)
+//                .mouseOver(overFunc)
+//                .mouseOut(outFunc)
                 .drawBounds(false)
                 .drawBoundsData(false)
                 .mount(self.tilemap)
                 .translateToTile(pos.x, pos.y, 0);
+
+            self.tilemap.occupyTile(pos.x, pos.y, 1, 1, char);
 
             const boardPiece = new CharacterPiece()
                 .layer(1)
@@ -125,7 +129,6 @@ var Client = IgeClass.extend({
         };
 
 		self.startSetup = function(mapData, charData) {
-			
 			var wallData = mapData['wall_data'];
 			var mapSize = mapData['size'];
 			var textureMapData = mapData['texture_data'];
@@ -137,12 +140,14 @@ var Client = IgeClass.extend({
 			// Create the scene
 			self.mainScene = new IgeScene2d()
 				.id('mainScene')
+				.autoSize(true)
 				.drawBounds(false)
 				.drawBoundsData(false);
 
 			self.objectScene = new IgeScene2d()
 				.id('objectScene')
 				.depth(0)
+				.autoSize(true)
 				.drawBounds(false)
 				.drawBoundsData(false)
 				.depthSortMode(2)
@@ -151,6 +156,7 @@ var Client = IgeClass.extend({
 			self.uiScene = new IgeScene2d()
 				.id('uiScene')
 				.depth(1)
+				.autoSize(true)
 				.drawBounds(false)
 				.drawBoundsData(false)
 				.ignoreCamera(true) // We don't want the UI scene to be affected by the viewport's camera
@@ -159,7 +165,7 @@ var Client = IgeClass.extend({
 			// Create the main viewport
 			self.vp1 = new IgeViewport()
 				.id('vp1')
-				.autoSize(false)
+				.autoSize(true)
 				.scene(self.mainScene)
 				.drawMouse(true)
 				.drawBounds(false)
@@ -379,33 +385,65 @@ var Client = IgeClass.extend({
 				.drawBoundsData(false)
 				.mount(self.uiScene);
 
-			// Listen for the mouse up event
+			ige.input.on('mouseMove', function (event, x, y, button) {
+			    const mouseTile = self.tilemap.mouseToTile();
+
+				if (self.tilemap.isTileOccupied(mouseTile.x, mouseTile.y))
+                {
+
+                    const char = self.tilemap.tileOccupiedBy(mouseTile.x, mouseTile.y);
+                    if (self.highlightedCharacter && self.highlightedCharacter !== char)
+                    {
+                        self.highlightedCharacter.highlight(false);
+                    }
+                    char.highlight(true);
+                    self.highlightedCharacter = char;
+                }
+                else
+                {
+                    if (self.highlightedCharacter)
+                    {
+                        self.highlightedCharacter.highlight(false);
+                    }
+                }
+			});
+
+			document.addEventListener("keypress", function onEvent(event) {
+                if (event.key === "f") {
+                    // Toggle the stats
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen();
+                    } else {
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                        }
+                    }
+                }
+            });
+
 			ige.input.on('mouseUp', function (event, x, y, button) {
-				var endTile = ige.$('tilemap').mouseToTile();
+				const mouseTile = self.tilemap.mouseToTile();
 
-		  		for (let i = 0; i < self.characters.length; i++) {
-			  		var char = self.characters[i];
-			  		if (char.highlight())
-			  		{
-			  			self.selectedCharacter = char;
-			  			self.debugText.value("Selected: " + self.selectedCharacter.id());	
-			  			return;
-			  		}
-			  	}
-
-		  		if (!self.selectedCharacter)
-		  		    return;
-
-                var characterId = self.selectedCharacter.getCharId();
-			  	switch(self.currentAction)
-			  	{
-			  		case Move:
-						self.requestMovement(characterId, endTile.x, endTile.y);
-						break;
-			  		case Attack:
-						self.requestAttack(characterId, endTile.x, endTile.y);
-						break;
-			  	}			  					
+				if (self.tilemap.isTileOccupied(mouseTile.x, mouseTile.y))
+                {
+                    const char = self.tilemap.tileOccupiedBy(mouseTile.x, mouseTile.y);
+                    if (self.currentAction == Move)
+                    {
+                        self.selectedCharacter = char;
+                        self.debugText.value("Selected: " + self.selectedCharacter.getCharId());
+                    }
+                    else if (self.currentAction == Attack && self.selectedCharacter)
+                    {
+                        self.requestAttack(self.selectedCharacter.getCharId(), mouseTile.x, mouseTile.y);
+                    }
+                }
+                else
+                {
+                    if (self.currentAction == Move && self.selectedCharacter)
+                    {
+                        self.requestMovement(self.selectedCharacter.getCharId(), mouseTile.x, mouseTile.y);
+                    }
+                }
 			});
 
 			self.vp1.camera.translateTo(0, 300, 0);
@@ -461,16 +499,7 @@ var Client = IgeClass.extend({
                     self.socket.send(siweString);
                     break;
                 case 'siwe':
-                    if (message['error'])
-                    {
-                        alert(message['message'] + ': ' + message['error']);
-                        return;
-                    }
-                    else
-                    {
-                        alert('Matchup created! You should wait for your opponent to accept the match.');
-                        return;
-                    }
+                    alert('Matchup created! You should wait for your opponent to accept the match.');
                     break;
 				case 'initialize':
 					var mapData = message['map_data'];
@@ -519,7 +548,7 @@ var Client = IgeClass.extend({
 		// Wait for our textures to load before continuing
 		ige.on('texturesLoaded', function () {
 			// Create the HTML canvas
-			ige.createFrontBuffer(true);
+			ige.createFrontBuffer(true, false);
 
 			// Start the engine
 			ige.start(function (success) {

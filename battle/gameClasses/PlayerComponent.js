@@ -17,13 +17,17 @@ var PlayerComponent = IgeClass.extend({
 	},
 
 	moveTo: function (toTileX, toTileY) {
-		var currentPosition = this._entity._translate;
+	    const tilemap = this._entity._parent;
+	    var currentPosition = this._entity._translate;
 		var startTile = this._entity._parent.pointToTile(currentPosition);
+        tilemap.unOccupyTile(startTile.x, startTile.y, 1, 1);
 
 		this._entity.path
 				.set(startTile.x, startTile.y, 0, toTileX, toTileY, 0)
 				.speed(5)
 				.start();
+
+	    tilemap.occupyTile(toTileX, toTileY, 1, 1, this._entity);
 	}
 });
 

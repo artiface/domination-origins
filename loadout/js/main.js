@@ -102,11 +102,16 @@ async function startUp() {
 
         if (tokens[currentTokenType].deploymentSet.has(tokenId)) return;
 
+
+        // TODO: check for duplicates, don't allow the user to add the same token twice
+
+
         if (!troopSelection[currentTroopSelection])
         {
             troopSelection[currentTroopSelection] = {};
         }
 
+        // replace
         if (troopSelection[currentTroopSelection][currentTokenType])
             tokens[currentTokenType].deploymentSet.delete(troopSelection[currentTroopSelection][currentTokenType])
 
