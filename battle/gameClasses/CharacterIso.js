@@ -25,9 +25,12 @@ var Character = IgeEntity.extend({
         this._characterTexture = new IgeTexture('../TroopNFTs/ct_'+id+'.png');
         var self = this;
         this._characterTexture.on('loaded', function () {
-			self.texture(self._characterTexture)
-				.dimensionsFromCell();
+			/*self.texture(self._characterTexture)
+				.dimensionsFromCell();*/
+            self.width(76);
+            self.height(76);
 		}, false, true);
+
 		return this;
     },
     setCharData: function (data) {
