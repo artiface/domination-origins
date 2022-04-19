@@ -13,22 +13,22 @@ var IgeUiTooltip = IgeUiElement.extend({
 	 */
 	init: function (parent, width, height, content) {
 		IgeUiElement.prototype.init.call(this);
-
+        const titleHeight = 20;
 		var self = this;
 		this.titleBox = new IgeUiElement()
 			.left(0)
 			.top(0)
 			.width(width)
-			.height(30)
+			.height(titleHeight)
 			.mount(this);
 		this.titleBox.borderBottomColor('#ffffff');
 		this.titleBox.borderBottomWidth(1);
 		
 		this.textBox = new IgeUiElement()
 			.left(0)
-			.top(30)
+			.top(titleHeight)
 			.width(width)
-			.height(height - 30)
+			.height(height - titleHeight)
 			.mount(this);
 		
 		this.fontEntityTitle = new IgeFontEntity()
@@ -36,6 +36,7 @@ var IgeUiTooltip = IgeUiElement.extend({
 			.top(5)
 			.textAlignX(0)
 			.textAlignY(0)
+			.colorOverlay('#ffffff')
 			.nativeFont('10pt Arial')
 			.textLineSpacing(15)
 			.mount(this.titleBox);
@@ -43,8 +44,10 @@ var IgeUiTooltip = IgeUiElement.extend({
 		this.fontEntityText = new IgeFontEntity()
 			.left(5)
 			.top(5)
+			.height(height - titleHeight)
 			.textAlignX(0)
 			.textAlignY(0)
+			.colorOverlay('#ffffff')
 			.nativeFont('10pt Arial')
 			.textLineSpacing(15)
 			.mount(this.textBox);
@@ -53,7 +56,7 @@ var IgeUiTooltip = IgeUiElement.extend({
 		this.hide();
 
 		this.mount(parent);
-		this.backgroundColor('#53B2F3');
+		this.backgroundColor('#000000');
 		this.depth(10000);
 		this.width(width);
 		this.height(height);

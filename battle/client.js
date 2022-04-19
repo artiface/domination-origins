@@ -107,8 +107,11 @@ var Client = IgeClass.extend({
 
             const statString =
             'Level: ' + char.getStat('level') + '\n' +
-            'Agility: ' + char.getStat('agility');
-            const toolTip = new IgeUiTooltip(char, 100, 80, ['#' + troopTokenId, statString]).layer(22);
+            'Agility: ' + char.getStat('agility') + '\n' +
+            'Strength: ' + char.getStat('strength') + '\n' +
+            'Intelligence: ' + char.getStat('intelligence');
+
+            const toolTip = new IgeUiTooltip(char, 100, 90, ['#' + troopTokenId, statString]).layer(22);
 
             if (state === 0)
                 char.kill();

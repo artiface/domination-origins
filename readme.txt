@@ -1,7 +1,9 @@
 ## The plan
 
-We currently use 60x60 Tiles, meaning the isometric tiles are 80x40 pixels.
-I am using the 160x80 tiles that Kazuko provided, so I could theoretically zoom in at later stage
+We will use 60x60 Tiles, meaning the isometric tiles are 120x60 pixels.
+For Retina Displays, we need double that: 240x120 pixels.
+
+So normal ground tiles will be needed in the following sizes 120x60 and 240x120.
 
 Graphics needed from Kazuko:
  - Board piece and Border for Character Portraits (not wider than a tile)
@@ -16,7 +18,11 @@ Graphics needed from Kazuko:
    - Melee Weapon Swing
    - Bleeding
 
-
+## Infrastructure
+ - Python Websocket Server
+ - Static File Server & Reverse Proxy
+   - Loadout and Battle Pages
+   - Mapping the Websocket Server
 
 ## Client Side
 
@@ -45,3 +51,9 @@ Graphics needed from Kazuko:
  - If so, Send initial map states to the players
 
  
+
+Ok, we should decide wether the scale of the game is fine as it is now. Because changing this after the fact could be some big trouble and would also mean re-creating most images.
+
+I am thinking of going with 60x60px tiles on a non-retina display. The isometric tiles are then 120x60 pixels in size and for retina displays, we need double that so 240x120.
+
+This scale would

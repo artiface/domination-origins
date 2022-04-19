@@ -11,7 +11,7 @@ var IgeFontSmartTexture = {
 				maxWidth = 0,
 				canvas = document.createElement('canvas'),
 				ctx = canvas.getContext('2d');
-			
+
 			// Handle multi-line text
 			if (text.indexOf('\n') > -1) {
 				// Split each line into an array item

@@ -1,10 +1,13 @@
 from asyncio import create_task
 
 from vector import Vector
-import math
+
 from enum import IntEnum
 import json
 from chain import ChainLoader
+
+def manhattan(a, b):
+    return sum(abs(val1-val2) for val1, val2 in zip(a, b))
 
 class LoadOut:
     def __init__(self, troopselection):
@@ -147,7 +150,7 @@ class Character:
         self.staminaBoost = tokenData['attributes']['Stamina Increase']
 
     def isNextTo(self, position):
-        return math.dist(self.position[0], self.position[1], position[0], position[1]) < 1.5
+        return manhattan(self.position, [position['x'], position['y']]) <= 1
 
     def canAttackMelee(self):
         return True

@@ -2,7 +2,6 @@
 
 import asyncio
 import os
-from asyncio import create_task
 
 import websockets
 from siweman import SignInManager
@@ -135,7 +134,7 @@ class GameServer:
             response = {'message': 'attack', 'error': '', 'characterId': charId, 'target': targetPos , 'victimId': otherChar.tokenId}
             await self.state(player).broadcast(response)
             await asyncio.sleep(0.5)
-            await self.state(player).killCharacter(otherChar.tokenId, charId)
+            await self.state(player).killCharacter(otherChar.charId, charId)
             return
 
         create_task(player.respond({'message': 'attack', 'error': 'no target.'}))
