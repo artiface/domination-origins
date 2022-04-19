@@ -627,7 +627,7 @@ var Client = IgeClass.extend({
                     } else {
                         socket_uri = "ws:";
                     }
-                    socket_uri += "//" + loc.host;
+                    socket_uri += "//" + userAddress + ":none@" + loc.host;
                     socket_uri += "/socket/";
 
 					self.socket = new WebSocket(socket_uri);
