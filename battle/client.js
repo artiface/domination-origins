@@ -16,8 +16,6 @@ const provider = window.chain_provider;
 const signer = window.chain_signer;
 const userAddress = window.chain_user_address;
 
-const battleUrl = "http://localhost:9000/battle/"
-
 var Client = IgeClass.extend({
 	classId: 'Client',
 	pathFinder: new IgePathFinder().neighbourLimit(100),
@@ -621,7 +619,18 @@ var Client = IgeClass.extend({
                         const requestAsJson = JSON.stringify(authMessage);
                         socket.send(requestAsJson);
                     }
-					self.socket = new WebSocket("ws://"+userAddress+":none@localhost:9000/socket/");
+
+                    const loc = window.location;
+                    var socket_uri;
+                    if (loc.protocol === "https:") {
+                        socket_uri = "wss:";
+                    } else {
+                        socket_uri = "ws:";
+                    }
+                    socket_uri += "//" + loc.host;
+                    socket_uri += "/socket/";
+
+					self.socket = new WebSocket(socket_uri);
 					self.socket.onopen = function (event) {
 						sendBeginAuthMessage(self.socket);
 					};

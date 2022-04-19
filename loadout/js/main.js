@@ -3,14 +3,13 @@ import {getTokenCount, loadUserNFTs, loadNFT, signer, provider} from "./chainloa
 
 const network = await provider.getNetwork();
 const chainId = network.chainId;
-const battleUrl = "http://localhost:9000/battle/"
+const battleUrl = "/battle/"
 
 if (chainId === 137)
 {
     //window.localStorage.clear();
 
     var itemsPerPage = 10;
-    var serverBaseUrl = 'http://localhost:9000/';
     try {
         var userAddress = await signer.getAddress();
         var numberOfTroops = await getTokenCount(userAddress, 'troops');
@@ -205,7 +204,7 @@ async function startUp() {
 }
 
 async function loadLocalNFT(type, tokenId) {
-	const nftBaseUrl = serverBaseUrl + tokens[type].localCacheDir;
+	const nftBaseUrl = tokens[type].localCacheDir;
 	var data = await fetch(nftBaseUrl + tokenId + '.json')
 	  	.then(response => {
 		    if (!response.ok) {
