@@ -22,13 +22,14 @@ var Character = IgeEntity.extend({
 	/* Function for setting the token id */
     setTokenId: function (id) {
         this._tokenId = id;
-        this._characterTexture = new IgeTexture('../TroopNFTs/ct_'+id+'.png');
+        this._characterTexture = new IgeTexture('../TroopNFTs/thumbs/ct_'+id+'.png');
         var self = this;
         this._characterTexture.on('loaded', function () {
 			/*self.texture(self._characterTexture)
 				.dimensionsFromCell();*/
-            self.width(76);
-            self.height(76);
+            self.texture(self._characterTexture).width(76);
+            self.texture(self._characterTexture).height(76);
+            self.texture(self._characterTexture).localAabb(true);
 		}, false, true);
 
 		return this;

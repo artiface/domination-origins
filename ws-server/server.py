@@ -130,14 +130,12 @@ class GameServer:
 
         otherChar = self.charByPos(player, targetPos['x'], targetPos['y'])
         if otherChar:
-            char.hasAttackedThisTurn = True
-            response = {'message': 'attack', 'error': '', 'characterId': charId, 'target': targetPos , 'victimId': otherChar.tokenId}
-            await self.state(player).broadcast(response)
-            await asyncio.sleep(0.5)
-            await self.state(player).killCharacter(otherChar.charId, charId)
-            return
-
-        create_task(player.respond({'message': 'attack', 'error': 'no target.'}))
+            if isMeleeAttack:
+                create_task(self.state(player).meleeAttack(char, otherChar))
+            else:
+                create_task(self.state(player).rangedAttack(char, otherChar))
+        else:
+            create_task(player.respond({'message': 'attack', 'error': 'no target.'}))
 
     async def isOwnerOfLoadout(self, player, loadout: LoadOut):
         chain = ChainLoader()

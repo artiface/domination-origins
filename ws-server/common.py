@@ -51,6 +51,35 @@ class Player:
             return self.wallet == other.wallet
         return False
 
+class Weapon:
+    def __init__(self, ownerWallet: str, tokenId):
+        self.dna = None
+        self.ownerWallet = ownerWallet
+        self.tokenId = tokenId
+        self.weaponType = None
+        self.effect = None
+        self.minimumDamage = 0
+        self.maximumDamage = 0
+        self.levelRequirement = 0
+        self.criticalChance = 0
+        self.accuracy = 0
+
+        self.loadTokenData()
+
+    def loadTokenData(self):
+        chain = ChainLoader()
+        tokenData = chain.loadLocalNFT('weapon', self.tokenId)
+
+        self.dna = tokenData['dna']
+        self.weaponType = tokenData['attributes']['Weapon Type']
+        self.effect = tokenData['attributes']['Effect']
+        self.minimumDamage = tokenData['attributes']['Minimum Damage']
+        self.maximumDamage = tokenData['attributes']['Maximum Damage']
+        self.levelRequirement = tokenData['attributes']['Level Requirement']
+        self.criticalChance = tokenData['attributes']['Crit Chance']
+        self.accuracy = tokenData['attributes']['Accuracy']
+
+
 
 class Character:
     def __init__(self, ownerWallet: str, tokenId):
@@ -137,7 +166,7 @@ class Character:
         # we just load the token data from the local directory and json file
         # load a file from disk
         chain = ChainLoader()
-        tokenData = chain.loadLocalNFT(self.tokenId)
+        tokenData = chain.loadLocalNFT('char', self.tokenId)
 
         self.level = tokenData['attributes']['Level']
         self.dna = tokenData['dna']

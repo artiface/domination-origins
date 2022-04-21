@@ -1,3 +1,5 @@
+"use strict";
+
 import { ethers } from "./ethers-5.1.esm.min.js";
 export const provider = new ethers.providers.Web3Provider(window.ethereum, 'any')
 await provider.send("eth_requestAccounts", []);

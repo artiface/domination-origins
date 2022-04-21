@@ -1,6 +1,8 @@
 import asyncio
 import json
+import math
 import pickle
+import secrets
 from asyncio import create_task
 
 from pytmx import pytmx
@@ -146,12 +148,6 @@ class GameState:
 		char.position = destination
 		oldTile.character = None
 		newTile.character = char
-
-	async def killCharacter(self, charId, killerId):
-		characterToKill = self.allCharacters[charId]
-		characterToKill.state = CharacterState.Dead
-		response = {'message': 'death', 'error': '', 'characterId': charId, 'killerId': killerId}
-		create_task(self.broadcast(response))
 
 	def getTextureMap(self):
 		textMap = []
@@ -305,3 +301,55 @@ class GameState:
 			if player.socket.closed:
 				discPlayers.append(player)
 		return discPlayers
+
+	def dealDamage(self, attacker, defender, damage):
+		defender.health -= damage
+		if defender.health <= 0:
+			defender.state = CharacterState.Dead
+			return True
+		return False
+
+	async def meleeAttack(self, attacker, defender):
+		chanceToHit = attacker.intelligence * attacker.level
+
+		attacker.hasAttackedThisTurn = True
+		damage = attacker.weapon.damage()
+		hit = secrets.randbelow(100) < chanceToHit
+		killed = False
+		if hit:
+			killed = self.dealDamage(attacker, defender, damage)
+		response = {
+			'message': 'meleeAttack',
+			'error': '',
+			'attacker_tile': attacker.position,
+			'attacker': attacker.charId,
+			'defender_tile': defender.position,
+			'defender': defender.charId,
+			'hit': hit,
+			'damage': damage if hit else 0,
+			'killed': killed
+		}
+		create_task(self.broadcast(response))
+
+	async def rangedAttack(self, attacker, defender):
+		dist = math.dist(attacker.position, defender.position)
+		chanceToHit = (attacker.dexterity * attacker.level) - 5 * dist
+
+		attacker.hasAttackedThisTurn = True
+		damage = attacker.weapon.damage()
+		hit = secrets.randbelow(100) < chanceToHit
+		killed = False
+		if hit:
+			killed = self.dealDamage(attacker, defender, damage)
+		response = {
+			'message': 'rangedAttack',
+			'error': '',
+			'attacker_tile': attacker.position,
+			'attacker': attacker.charId,
+			'defender_tile': defender.position,
+			'defender': defender.charId,
+			'hit': hit,
+			'damage': damage if hit else 0,
+			'killed': killed
+		}
+		create_task(self.broadcast(response))

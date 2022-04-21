@@ -1,3 +1,4 @@
+"use strict";
 import { ethers } from "./ethers-5.1.esm.min.js";
 import {getTokenCount, loadUserNFTs, loadNFT, signer, provider} from "./chainload.js";
 

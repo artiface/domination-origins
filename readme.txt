@@ -1,12 +1,46 @@
 ## The plan
 
+All graphics need have a resolution that is divisible by the 2.
+
 We will use 60x60 Tiles, meaning the isometric tiles are 120x60 pixels.
 For Retina Displays, we need double that: 240x120 pixels.
 
 So normal ground tiles will be needed in the following sizes 120x60 and 240x120.
 
+I need the Hero Icons once again, with a width of 240 pixels and another version with 120 pixels width.
+Can we make the color difference a bit more noticable? The red and blue border color is only on a thin part and
+both look pretty dark. I'd like to have them read much easier. So it is really obvious which units are yours.
+Make them brighter or change the colors? I don't know, man. You're the artist ;)
+
+I also would need some kind of selection Marker. To show the user, that a character is currently selected and can be moved.
+It can be something like an arrow over the hero or the that the hero icon border changes. Maybe you want to be creative here.
+But it might be a good idea to discuss it with me before drawing it, so I can estimate how hard it would be to implement.
+
+We also need to think about death animations. For now I just made the hero icons fall over. That has a certain ring to it already.
+But what I was really thinking about, was having crosses or coffins pop up when the character died.
+Like in Worms, you have gravestones that appear when your character dies. For starters we could do with just one gravestone
+for every one of the three factions. They should be themed according to the faction, of course.
+
+For the MVP state of the game I also really need that melee attack swing animation and the bullet impact animation.
+
+I am having some mixed feeling about some of the existing token graphics because of the mixture of traditional medieval fantasy elements with science and fiction.
+And it also sometimes has some completely different, divine touch with some of the weapons and chests.
+
+I would like to know what the general theme is:
+Is it fantasy, science fiction, or a mix of both? We have genetic mutations and cyberware right?
+But we also have helmets, wooden chests and swords.
+
+So maybe we could decide a bit what exactly constitutes the maximum and minimum in terms of plausibility in this setting.
+Really, I was attracted to this project in the first place because it was a departure from the usual fantasy setting.
+And I think the G4N9 stuff and the troop graphics don't really match with wooden chests and daggers. And I'd prefer if we leaned a bit more
+in the tech, sci-fi and cyberpunk direction. But in the end that would be your decision.
+
+With that in mind, I'd like to ask for some more high-tech looking buttons instead of the current ones. They clean round feel
+doesn't fit too well with the rest. At least that's what I am feeling right now. Pleased to hear what you guys think.
+
 Graphics needed from Kazuko:
  - Board piece and Border for Character Portraits (not wider than a tile)
+
  - Buttons (around 100x80 or 100x100 or any multiple thereof)
    - Empty Button
    - Attack
@@ -50,7 +84,33 @@ Graphics needed from Kazuko:
  - If match found: Send battle tax collection command and wait for verification
  - If so, Send initial map states to the players
 
- 
+
+## Needed for Alpha Battles
+ - Health Bars & Focus Bars
+ - Weapon Slots
+ - Battle Fee
+ - Basic Animations
+ - Sprint Mechanic
+ - First Three Skills
+ - Win & Loose Conditions & Turn Counter
+ - Hit Chance & Damage Calculations
+   - Base Chance to Hit:
+     - Melee: Intelligence * Level [1, 80]
+     - Ranged: ((Dexterity * Level) - 5 per tile distance) [1, 80]
+   - Base Damage:
+     - Melee: Weapon Damage + Strength [6, 80]
+     - Ranged: Weapon Damage [5, 70]
+
+Attribute Range: [1, 10]
+Weapon Damage Range: [5, 70]
+Crit Chance Range: [5, 80]
+Accuracy Range: [50, 100]
+Level Range: [1, 8]
+
+## Game Modes
+ - Team Deathmatch
+ - Kill the Leader
+
 
 Ok, we should decide wether the scale of the game is fine as it is now. Because changing this after the fact could be some big trouble and would also mean re-creating most images.
 

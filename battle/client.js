@@ -1,3 +1,5 @@
+"use strict";
+
 const Move = 0
 const Attack = 1
 
@@ -12,9 +14,9 @@ if (isEmpty(matchData)) {
     window.location.href = '/loadout/';
 }
 
-const provider = window.chain_provider;
-const signer = window.chain_signer;
-const userAddress = window.chain_user_address;
+var provider = window.chain_provider;
+var signer = window.chain_signer;
+var userAddress = window.chain_user_address;
 
 var Client = IgeClass.extend({
 	classId: 'Client',
@@ -234,14 +236,14 @@ var Client = IgeClass.extend({
 
 			// Define a function that will be called when the
 			// mouse cursor moves over one of our entities
-			overFunc = function () {
+			let overFunc = function () {
 				this.highlight(true);
 				ige.input.stopPropagation();
 			};
 
 			// Define a function that will be called when the
 			// mouse cursor moves away from one of our entities
-			outFunc = function () {
+			let outFunc = function () {
 				this.highlight(false);
 				ige.input.stopPropagation();
 			};
@@ -607,8 +609,11 @@ var Client = IgeClass.extend({
 			// Start the engine
 			ige.start(function (success) {
 				// Check if the engine started successfully
-				const userAddress = matchData['user_wallet'];
-				if (success) {
+				if (userAddress !== matchData['user_wallet'])
+				{
+				    alert('Loadout has been created for a different wallet.');
+				}
+				else if (success) {
                     function sendBeginAuthMessage(socket) {
                         const authMessage = {
                             'message': 'auth',

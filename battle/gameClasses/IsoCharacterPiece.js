@@ -16,11 +16,12 @@ var CharacterPiece = IgeEntity.extend({
 	/* Function for setting the token id */
     clientIsOwner: function (ownedByClientPlayer) {
         const colorString = ownedByClientPlayer ? 'Blue' : 'Red';
-        this._characterTexture = new IgeTexture('../assets/sprites/Hero_Icon_'+colorString+'_120.png');
+        this._characterTexture = new IgeTexture('../assets/sprites/Hero_Icon_'+colorString+'_240.png');
         var self = this;
         this._characterTexture.on('loaded', function () {
-			self.texture(self._characterTexture)
-				.dimensionsFromCell();
+			self.texture(self._characterTexture).width(120);
+            self.texture(self._characterTexture).height(112);
+            self.texture(self._characterTexture).localAabb(true);
 		}, false, true);
 		return this;
     },

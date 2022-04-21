@@ -5,4 +5,7 @@ bin/
 __pycache__/
 TroopNFTs/
 *.sqlite
+LeaderNFTs/
+WeaponNFTs/
+Puzzles/
 
