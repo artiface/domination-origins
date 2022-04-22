@@ -27,4 +27,4 @@ var CharacterPiece = IgeEntity.extend({
     },
 });
 
-if (typeof(module) !== 'undefined' && typeof(module.exports) !== 'undefined') { module.exports = Character; }
+if (typeof(module) !== 'undefined' && typeof(module.exports) !== 'undefined') { module.exports = CharacterPiece; }

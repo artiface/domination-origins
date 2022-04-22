@@ -88,7 +88,7 @@ var Client = IgeClass.extend({
             const isOwner = charData['ownerWallet'] == userAddress;
 
             const char = new Character()
-                .layer(1)
+                .layer(2)
                 .id('char_' + charId.toString())
                 .setTokenId(troopTokenId)
                 .setCharId(charId)
@@ -101,9 +101,17 @@ var Client = IgeClass.extend({
             self.tilemap.occupyTile(pos.x, pos.y, 1, 1, char);
 
             const boardPiece = new CharacterPiece()
-                .layer(1)
+                .layer(2)
                 .clientIsOwner(isOwner)
                 .mount(char);
+
+            const healthBar = new HealthBar()
+                .setMaxHealth(100) // TODO: load health
+                .layer(10)
+                .character(char)
+                .mount(char);
+
+            healthBar.changeHealth(-20);
 
             const statString =
             'Level: ' + char.getStat('level') + '\n' +

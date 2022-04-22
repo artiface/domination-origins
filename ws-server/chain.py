@@ -67,31 +67,24 @@ class ChainLoader:
         
     def storeToken(self, tokenType, tokenId):
         tokenFile = Path("%s/%s.json" % (self.targetPath, tokenId))
-        #imagePath = "%s/%s.png" % (self.targetPath, tokenId)
+        imagePath = "%s/%s.png" % (self.targetPath, tokenId)
 
         tokenExists = tokenFile.exists()
-        #imageExists = Path(imagePath).exists()
+        imageExists = Path(imagePath).exists()
 
-        if tokenExists:# and imageExists:
-            print('%s Exists' % tokenId)
-            return
-        try:
-            data = {}
-            #if tokenExists:
-            #    data = json.loads(tokenFile.read_text())
-            #else:
-            data = self.loadFromChain(tokenType, tokenId)
-            tokenFile.write_text(json.dumps(data))
+        if tokenExists and not imageExists:# and imageExists:
+            try:
+                data = json.loads(tokenFile.read_text())
 
-            #urllib.request.urlretrieve(data['image'], imagePath)
-            print('Saved token %s' % tokenId)
-            return data
-        except (json.decoder.JSONDecodeError, urllib.error.ContentTooShortError, urllib.error.HTTPError) as e:
-            #if Path(imagePath).exists():
-            #    Path(imagePath).unlink()
-            if tokenFile.exists():
-                tokenFile.unlink()
-            return False
+                urllib.request.urlretrieve(data['image'], imagePath)
+                print('Saved token %s' % tokenId)
+                return data
+            except (json.decoder.JSONDecodeError, urllib.error.ContentTooShortError, urllib.error.HTTPError) as e:
+                if Path(imagePath).exists():
+                    Path(imagePath).unlink()
+                #if tokenFile.exists():
+                #    tokenFile.unlink()
+                return False
 
     def loadLocalNFT(self, type, tokenId):
         dirmap = {
@@ -100,7 +93,7 @@ class ChainLoader:
         }
         dir = dirmap[type]
         try:
-            with open('./{}/{}.json'.format(dir, tokenId), 'r') as f:
+            with open('../{}/{}.json'.format(dir, tokenId), 'r') as f:
                 data = json.load(f)
                 # flatten attributes
                 data['attributes'] = self.flattenAttributes(data['attributes'])

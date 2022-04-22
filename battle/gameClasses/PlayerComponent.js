@@ -55,8 +55,6 @@ var PlayerComponent = IgeClass.extend({
 				.set(startTile.x, startTile.y, 0, toTileX, toTileY, 0)
 				.speed(5)
 				.start();
-
-
 	}
 });
 

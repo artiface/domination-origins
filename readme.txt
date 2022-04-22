@@ -86,13 +86,11 @@ Graphics needed from Kazuko:
 
 
 ## Needed for Alpha Battles
+ - Weapon Slots - ITEM NFTs currently CANNOT BE ITERATED OVER
  - Health Bars & Focus Bars
- - Weapon Slots
- - Battle Fee
+ - Turn Counter
  - Basic Animations
- - Sprint Mechanic
  - First Three Skills
- - Win & Loose Conditions & Turn Counter
  - Hit Chance & Damage Calculations
    - Base Chance to Hit:
      - Melee: Intelligence * Level [1, 80]
@@ -100,6 +98,7 @@ Graphics needed from Kazuko:
    - Base Damage:
      - Melee: Weapon Damage + Strength [6, 80]
      - Ranged: Weapon Damage [5, 70]
+ - Battle Fee
 
 Attribute Range: [1, 10]
 Weapon Damage Range: [5, 70]

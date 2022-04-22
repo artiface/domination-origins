@@ -48,6 +48,18 @@ class GameState:
 		self.connectedPlayers = []
 		self.clearMap()
 
+	def battleEndCondition(self):
+		# check if there is only one team left
+		playersWithLivingCharacters = set()
+		for char in self.allCharacters:
+			if char.state == CharacterState.Dead:
+				continue
+			playersWithLivingCharacters.add(char.ownerWallet)
+
+		if len(playersWithLivingCharacters) == 1:
+			return playersWithLivingCharacters.pop()
+		return False
+
 	def startGame(self):
 		self.turnOfPlayerIndex = 0
 
@@ -351,5 +363,13 @@ class GameState:
 			'hit': hit,
 			'damage': damage if hit else 0,
 			'killed': killed
+		}
+		create_task(self.broadcast(response))
+
+	async def sendBattleEnd(self, winner):
+		response = {
+			'message': 'battleEnd',
+			'error': '',
+			'winner': winner
 		}
 		create_task(self.broadcast(response))

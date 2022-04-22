@@ -48,7 +48,7 @@ if (chainId === 137)
             }
         },
         'weapons':{
-            'localCacheDir': '/WeaponsNFTs/',
+            'localCacheDir': '/WeaponNFTs/',
             'pages': Math.ceil(numberOfWeapons / itemsPerPage),
             'lastPageCount': numberOfWeapons % itemsPerPage,
             'cache': JSON.parse(window.localStorage.getItem('weapons_cache') || "[]"),
@@ -101,10 +101,6 @@ async function startUp() {
         var tokenId = tokenSelect.value;
 
         if (tokens[currentTokenType].deploymentSet.has(tokenId)) return;
-
-
-        // TODO: check for duplicates, don't allow the user to add the same token twice
-
 
         if (!troopSelection[currentTroopSelection])
         {
@@ -286,8 +282,7 @@ function tokenSelected(type) {
 };
 
 async function showTokenList(type, page) {
-	if (tokens[type].cache.length === 0 || !tokens[type].cache[page])
-	{
+	if (tokens[type].cache.length === 0 || !tokens[type].cache[page] || tokens[type].cache[page].length === 0) {
 		await loadTokenPage(type, page);
 	}
 	var listElement = document.getElementById("listview");
@@ -316,10 +311,19 @@ async function updateTroopDisplay() {
 	{
 		if (troopSelection[i])
 		{
+		    const weaponTokenId = troopSelection[i].weapons;
 			const charTokenId = troopSelection[i].troops;
-			const charData = await getTokenData('troops', charTokenId);
-			document.getElementById("image_" + i).src = charData['image'];
-			document.getElementById("name_" + i).innerHTML = charTokenId;
+			if (charTokenId)
+			{
+                const charData = await getTokenData('troops', charTokenId);
+                document.getElementById("image_" + i).src = charData['image'];
+                document.getElementById("name_" + i).innerHTML = charTokenId;
+			}
+			if (weaponTokenId)
+			{
+			    const tokenData = await getTokenData('weapons', charTokenId);
+                document.getElementById("weapon_image_" + i).src = tokenData['image'];
+			}
 		}
 	}	
 };

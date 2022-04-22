@@ -87,14 +87,13 @@ class GameServer:
             return
 
         path = self.findPath(player, char.x, char.y, dest['x'], dest['y'])
-        stepsLeft = char.agility
         stepsNeeded = len(path) - 1
 
         if len(path) == 0:
             create_task(player.respond({'message': 'sprint', 'error': 'no path.'}))
             return
 
-        if stepsNeeded > stepsLeft:
+        if stepsNeeded > char.agility:
             create_task(player.respond({'message': 'sprint', 'error': 'too far away.'}))
             return
 
@@ -213,9 +212,13 @@ class GameServer:
             return
     
         elif messageType == 'endTurn':
-            self.state(player).nextTurn()
-            response = {'message': messageType, 'error': '', 'turnOfPlayer': self.state(player).turnOfPlayer().wallet}
-            create_task(self.state(player).broadcast(response))
+            winner = self.state(player).battleEndCondition()
+            if winner:
+                create_task(self.state(player).sendBattleEnd(winner))
+            else:
+                self.state(player).nextTurn()
+                response = {'message': messageType, 'error': '', 'turnOfPlayer': self.state(player).turnOfPlayer().wallet}
+                create_task(self.state(player).broadcast(response))
             return
 
     async def globalBroadcast(self, message):

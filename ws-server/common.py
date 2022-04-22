@@ -80,7 +80,6 @@ class Weapon:
         self.accuracy = tokenData['attributes']['Accuracy']
 
 
-
 class Character:
     def __init__(self, ownerWallet: str, tokenId):
         self.ownerWallet = ownerWallet
@@ -104,12 +103,15 @@ class Character:
         self.powerBoost = 1
         self.staminaBoost = 1
 
-        self.weapon = {}
+        self.weapon = None
         self.armor = {}
         self.items = []
         self.skills = []
 
         self.loadTokenData()
+
+    def setWeapon(self, weaponTokenId):
+        self.weapon = Weapon(self.ownerWallet, weaponTokenId)
 
     def toObject(self):
         return {
@@ -182,7 +184,7 @@ class Character:
         return manhattan(self.position, [position['x'], position['y']]) <= 1
 
     def canAttackMelee(self):
-        return True
+        return True  # TODO: check if we can attack
 
     def canAttackRanged(self):
         return True
