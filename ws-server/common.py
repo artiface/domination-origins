@@ -1,3 +1,4 @@
+import math
 from asyncio import create_task
 
 from vector import Vector
@@ -82,6 +83,8 @@ class Weapon:
 
 class Character:
     def __init__(self, ownerWallet: str, tokenId):
+        self.maxHealth = 0
+        self.currentHealth = 0
         self.ownerWallet = ownerWallet
         self.charId = -1
         self.tokenId = tokenId
@@ -92,7 +95,8 @@ class Character:
         self.hasSprinted = False
         self.level = 0
         self.dna = None
-        self.focus = 1
+        self.maxFocus = 1
+        self.currentFocus = 1
 
         self.agility = 1
         self.intelligence = 1
@@ -109,6 +113,15 @@ class Character:
         self.skills = []
 
         self.loadTokenData()
+        self.startDNADerivation()
+
+    def startDNADerivation(self):
+        integer_dna = int(self.dna, base=16)
+        binary_dna = str(bin(integer_dna))[2:]
+        bits_used, self.maxHealth = self.valueFromBinary(binary_dna, 0, 100, 200)
+        self.currentHealth = self.maxHealth
+        bits_used, self.maxFocus = self.valueFromBinary(binary_dna, bits_used, 1, 10)
+        self.currentFocus = self.maxFocus
 
     def setWeapon(self, weaponTokenId):
         self.weapon = Weapon(self.ownerWallet, weaponTokenId)
@@ -125,7 +138,10 @@ class Character:
             'hasSprinted': self.hasSprinted,
             'level': self.level,
             'dna': self.dna,
-            'focus': self.focus,
+            'maxHealth': self.maxHealth,
+            'currentHealth': self.currentHealth,
+            'maxFocus': self.maxFocus,
+            'currentFocus': self.currentFocus,
             'agility': self.agility,
             'intelligence': self.intelligence,
             'strength': self.strength,
@@ -150,7 +166,10 @@ class Character:
         char.hasSprinted = objData['hasSprinted']
         char.level = objData['level']
         char.dna = objData['dna']
-        char.focus = objData['focus']
+        char.maxHealth = objData['maxHealth']
+        char.currentHealth = objData['currentHealth']
+        char.maxFocus = objData['maxFocus']
+        char.currentFocus = objData['currentFocus']
         char.agility = objData['agility']
         char.intelligence = objData['intelligence']
         char.strength = objData['strength']
@@ -198,3 +217,13 @@ class Character:
         if isinstance(other, Character):
             return self.tokenId == other.tokenId
         return False
+
+    def valueFromBinary(self, binary_dna, start, min, max): # 100..200
+        resolution = max - min  # 100
+        length = math.floor(math.log2(resolution)) + 1 # 7
+        binary_part = binary_dna[start:start+length]
+        value = int(binary_part, base=2) # 0..127
+        max_value = 2 ** length - 1
+        value = (value / max_value) * max  # 0..100
+        value += min  # 100..200
+        return length, value

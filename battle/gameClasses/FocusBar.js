@@ -1,6 +1,6 @@
 // Define our player character container classes
-var HealthBar = IgeEntity.extend({
-	classId: 'HealthBar',
+var FocusBar = IgeEntity.extend({
+	classId: 'FocusBar',
 
 	init: function () {
 		IgeEntity.prototype.init.call(this);
@@ -12,7 +12,7 @@ var HealthBar = IgeEntity.extend({
 			.anchor(0, 10);
 		var self = this;
 
-		this._barTexture = new IgeTexture('../assets/smart/HealthBar.js');
+		this._barTexture = new IgeTexture('../assets/smart/FocusBar.js');
         this._barTexture.on('loaded', function () {
 			self.texture(self._barTexture).width(120);
             self.texture(self._barTexture).height(20);
@@ -24,22 +24,22 @@ var HealthBar = IgeEntity.extend({
         this._character = character;
         return this;
     },
-	changeHealth: function(byAmount) {
-        this._health += byAmount;
+	changeFocus: function(byAmount) {
+        this._focus += byAmount;
         return this;
     },
-    setCurrentHealth: function(health) {
-        this._health = health;
+    setCurrentFocus: function(focus) {
+        this._focus = focus;
         return this;
     },
-	setMaxHealth: function(maxHealth) {
-	    this._maxHealth = maxHealth;
-        this._health = maxHealth;
+	setMaxFocus: function(maxFocus) {
+	    this._maxFocus = maxFocus;
+        this._focus = maxFocus;
         return this;
 	},
-    getHealthAsPercent: function () {
-        return this._health / this._maxHealth;
+    getFocusAsPercent: function () {
+        return this._focus / this._maxFocus;
     },
 });
 
-if (typeof(module) !== 'undefined' && typeof(module.exports) !== 'undefined') { module.exports = HealthBar; }
+if (typeof(module) !== 'undefined' && typeof(module.exports) !== 'undefined') { module.exports = FocusBar; }

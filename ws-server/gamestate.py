@@ -315,8 +315,8 @@ class GameState:
 		return discPlayers
 
 	def dealDamage(self, attacker, defender, damage):
-		defender.health -= damage
-		if defender.health <= 0:
+		defender.currentHealth -= damage
+		if defender.currentHealth <= 0:
 			defender.state = CharacterState.Dead
 			return True
 		return False
@@ -335,8 +335,10 @@ class GameState:
 			'error': '',
 			'attacker_tile': attacker.position,
 			'attacker': attacker.charId,
+			'attacker_health': attacker.currentHealth,
 			'defender_tile': defender.position,
 			'defender': defender.charId,
+			'defender_health': defender.currentHealth,
 			'hit': hit,
 			'damage': damage if hit else 0,
 			'killed': killed
@@ -358,8 +360,10 @@ class GameState:
 			'error': '',
 			'attacker_tile': attacker.position,
 			'attacker': attacker.charId,
+			'attacker_health': attacker.currentHealth,
 			'defender_tile': defender.position,
 			'defender': defender.charId,
+			'defender_health': defender.currentHealth,
 			'hit': hit,
 			'damage': damage if hit else 0,
 			'killed': killed

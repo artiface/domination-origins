@@ -106,12 +106,18 @@ var Client = IgeClass.extend({
                 .mount(char);
 
             const healthBar = new HealthBar()
-                .setMaxHealth(100) // TODO: load health
+                .setMaxHealth(charData['maxHealth'])
                 .layer(10)
                 .character(char)
-                .mount(char);
+                .mount(char)
+                .setCurrentHealth(charData['currentHealth']);
 
-            healthBar.changeHealth(-20);
+            const focusBar = new FocusBar()
+                .setMaxFocus(charData['maxFocus'])
+                .layer(10)
+                .character(char)
+                .mount(char)
+                .setCurrentFocus(charData['currentFocus']);
 
             const statString =
             'Level: ' + char.getStat('level') + '\n' +
