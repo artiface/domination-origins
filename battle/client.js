@@ -23,6 +23,9 @@ var Client = IgeClass.extend({
 	pathFinder: new IgePathFinder().neighbourLimit(100),
 	loadTextures: function () {
 		this.gameTexture.tiles = [];
+		this.gameTexture.effects = [];
+
+        this.gameTexture.effects.push(new IgeCellSheet('../assets/sprites/bullet_sheet.png', 4, 1));
 
 		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Ceramic Tile.png'));
 		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Clay Brick - A.png'));
@@ -41,6 +44,7 @@ var Client = IgeClass.extend({
 		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Water - 2A.png'));
 		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Water - 2B.png'));
 		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Water - 2C.png'));
+
         this.buttonTexture = new IgeTexture('../assets/ui/EmptyButton.png');
         this.attackButonTexture = new IgeTexture('../assets/ui/Attack.png');
         this.moveButtonTexture = new IgeTexture('../assets/ui/Move.png');
@@ -48,6 +52,7 @@ var Client = IgeClass.extend({
         this.sprintButtonTexture = new IgeTexture('../assets/ui/Sprint.png');
 		this.defaultFont = new IgeFontSheet('../assets/textures/fonts/verdana_12pt.png', 0);		
 	},
+
 	init: function () {
 		//ige.addComponent(IgeEditorComponent);
 		ige.globalSmoothing(true);
@@ -60,6 +65,21 @@ var Client = IgeClass.extend({
         self.highlightedCharacter = undefined;
 		self.isInitialized = false;
 		self.currentAction = Move;
+
+		self.spawnEffect = function(tileX, tileY, effectIndex)
+		{
+            const randRange = 40;
+            const randX = Math.floor(Math.random() * randRange) - (randRange / 2);
+            const randY = Math.floor(Math.random() * randRange) - (randRange / 2);
+            const effect = new BulletImpact(self.gameTexture.effects[effectIndex])
+                .layer(6)
+                .isometric(true)
+                .mount(self.tilemap)
+                .translateToTile(tileX, tileY, 0)
+                .translateBy(randX, randY, 0);
+		};
+
+
         self.characterById = function(charId) {
             for (var i = 0; i < self.characters; i++) {
                 if (self.characters[i].getCharId() == charId) {
@@ -474,6 +494,8 @@ var Client = IgeClass.extend({
 
 			ige.input.on('mouseUp', function (event, x, y, button) {
 				const mouseTile = self.tilemap.mouseToTile();
+
+				self.spawnEffect(mouseTile.x, mouseTile.y, 0);
 
 				if (self.tilemap.isTileOccupied(mouseTile.x, mouseTile.y))
                 {

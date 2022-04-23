@@ -1,6 +1,7 @@
 var igeClientConfig = {
 	include: [
 		/* Your custom game JS scripts */
+		'./gameClasses/BulletImpact.js',
 		'./gameClasses/HealthBar.js',
 		'./gameClasses/FocusBar.js',
 		'./gameClasses/CharacterIso.js',
