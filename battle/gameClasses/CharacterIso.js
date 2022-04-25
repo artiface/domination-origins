@@ -1,7 +1,19 @@
 // Define our player character container classes
 var Character = IgeEntity.extend({
 	classId: 'Character',
-
+	hasAttacked: function (hasAttacked) {
+        if (hasAttacked === undefined) {
+            return (this.getStat('hasAttackedThisTurn') === 'true');
+        }
+        this.setStat('hasAttackedThisTurn', hasAttacked);
+        return this;
+    },
+    canMove: function() {
+        return this.getStat('stepsTakenThisTurn') < this.getStat('agility');
+    },
+    canAct: function() {
+        return !this.hasAttacked() || this.canMove();
+    },
 	init: function () {
 		IgeEntity.prototype.init.call(this);
 
@@ -18,10 +30,14 @@ var Character = IgeEntity.extend({
 			.bounds3d(60, 60, 60);
 
 	},
-	clientIsOwner: function () {
-        return this._clientIsOwner;
+    nextTurn: function() {
+        this.hasAttacked(false);
+        this.setStat('stepsTakenThisTurn', 0);
     },
     clientIsOwner: function (isOwner) {
+        if (isOwner === undefined) {
+            return this._clientIsOwner;
+        }
         this._clientIsOwner = isOwner;
         return this;
     },
@@ -97,58 +113,6 @@ var Character = IgeEntity.extend({
 			speed = 0.1,
 			time = (distance / speed),
 			direction = '';
-
-		// Set the animation based on direction - these are modified
-		// for isometric views
-		if (distY < 0) {
-			direction += 'N';
-		}
-
-		if (distY > 0) {
-			direction += 'S';
-		}
-
-		if (distX > 0) {
-			direction += 'E';
-		}
-
-		if (distX < 0) {
-			direction += 'W';
-		}
-
-		switch (direction) {
-			case 'N':
-				this.animation.select('walkRight');
-				break;
-
-			case 'S':
-				this.animation.select('walkLeft');
-				break;
-
-			case 'E':
-				this.animation.select('walkRight');
-				break;
-
-			case 'W':
-				this.animation.select('walkLeft');
-				break;
-
-			case 'SE':
-				this.animation.select('walkDown');
-				break;
-
-			case 'NW':
-				this.animation.select('walkUp');
-				break;
-
-			case 'NE':
-				this.animation.select('walkRight');
-				break;
-
-			case 'SW':
-				this.animation.select('walkLeft');
-				break;
-		}
 
 		// Start tweening the little person to their destination
 		this._translate.tween()

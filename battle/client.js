@@ -84,7 +84,7 @@ var Client = IgeClass.extend({
 
 
         self.characterById = function(charId) {
-            for (var i = 0; i < self.characters; i++) {
+            for (var i = 0; i < self.characters.length; i++) {
                 if (self.characters[i].getCharId() === charId) {
                     return self.characters[i];
                 }
@@ -460,22 +460,23 @@ var Client = IgeClass.extend({
 			};
 
 			var selectCharacter = function(char) {
+			    self.currentAction = Move;
                 self.selectedCharacter = char;
                 self.debugText.value("Character Selected: " + char.id());
                 self.selectedCharacter.player.showReachableTiles();
             };
 
-            var deselectCharacter = function() {
+            self.deselectCharacter = function() {
                 self.debugText.value("Character Deselected");
                 self.selectedCharacter.player.hideReachableTiles();
                 self.selectedCharacter = null;
             };
 
-            var getOwnCharIndex = function(char) {
+            var getOwnCharIndex = function(ownChar) {
                 for (let i = 0; i < self.ownCharacters.length; i++)
                 {
-                    let char = self.characters[i];
-                    if (char === self.selectedCharacter)
+                    let char = self.ownCharacters[i];
+                    if (char === ownChar)
                     {
                         return i;
                     }
@@ -483,17 +484,17 @@ var Client = IgeClass.extend({
                 return -1;
             };
 
-            var selectNextActionableCharacter = function() {
+            self.selectNextActionableCharacter = function() {
                 let startIndex = 0;
                 if (self.selectedCharacter)
                 {
                     startIndex = (getOwnCharIndex(self.selectedCharacter) + 1) % self.ownCharacters.length;
-                    deselectCharacter();
+                    self.deselectCharacter();
                 }
                 for (let i = 0; i < self.ownCharacters.length; i++)
                 {
                     let char = self.ownCharacters[(i + startIndex) % self.ownCharacters.length];
-                    if (char.player.canAct())
+                    if (char.canAct())
                     {
                         selectCharacter(char);
                         return;
@@ -539,6 +540,10 @@ var Client = IgeClass.extend({
                     self.currentAction = Move;
                     selectCharacter(self.selectedCharacter);
                 }
+                else if (event.key === " ") {
+                    // deselect the character
+                    self.selectNextActionableCharacter();
+                }
             });
 
 			ige.input.on('mouseUp', function (event, x, y, button) {
@@ -549,12 +554,12 @@ var Client = IgeClass.extend({
                     const char = self.tilemap.tileOccupiedBy(mouseTile.x, mouseTile.y);
                     if (self.currentAction == Move)
                     {
-                        if (self.selectedCharacter)
+                        if (self.selectedCharacter && char.clientIsOwner())
                         {
-                            deselectCharacter();
+                            self.deselectCharacter();
+                            selectCharacter(char);
                         }
-
-                        if (char.clientIsOwner())
+                        else if (!self.selectedCharacter && char.clientIsOwner())
                         {
                             selectCharacter(char);
                         }
@@ -577,7 +582,8 @@ var Client = IgeClass.extend({
 			self.vp1._resizeEvent(null);
 		};
 
-		self.requestEndTurn = function(){
+		self.requestEndTurn = function() {
+		    self.deselectCharacter();
 			var request = {
 				'message': 'endTurn',		
 			};
@@ -612,10 +618,11 @@ var Client = IgeClass.extend({
             const defender = self.tilemap.tileOccupiedBy(targetTile.x, targetTile.y);
             self.spawnBulletImpacts(targetTile.x, targetTile.y, 3);
             defender.healthbar.changeHealth(-damage);
-            const attacker = self.characterById(data['attacker_id']);
+            const attacker = self.characterById(data['attacker']);
+            attacker.hasAttacked(true);
             if (attacker === self.selectedCharacter)
             {
-                selectNextActionableCharacter();
+                self.selectNextActionableCharacter();
             }
         };
 
@@ -680,18 +687,18 @@ var Client = IgeClass.extend({
 					if (turnOfPlayer === matchData['user_wallet'])
 					{
 						nextTurnText = 'IT IS YOUR TURN!';
-
 					}
 					// reset the steps taken this turn stat for each character where the ownerWallet matches the turnOfPlayer
                     for (var i = 0; i < self.characters.length; i++)
                     {
                         if (self.characters[i].getStat('ownerWallet') === turnOfPlayer)
                         {
-                            self.characters[i].setStat('stepsTakenThisTurn', 0);
+                            self.characters[i].nextTurn();
                         }
                     }
 					self.debugText.value(nextTurnText);
 
+					self.selectNextActionableCharacter();
 					break;
 			}
 		};
