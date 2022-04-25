@@ -117,6 +117,10 @@ class GameServer:
             create_task(player.respond({'message': 'attack', 'error': 'attacked already.'}))
             return
 
+        if char.position[0] == targetPos['x'] and char.position[1] == targetPos['y']:
+            create_task(player.respond({'message': 'attack', 'error': 'cannot attack self.'}))
+            return
+
         isMeleeAttack = char.isNextTo(targetPos)
 
         if not char.canAttackMelee() and isMeleeAttack:
@@ -128,7 +132,11 @@ class GameServer:
             return
 
         otherChar = self.charByPos(player, targetPos['x'], targetPos['y'])
+
         if otherChar:
+            if otherChar.ownerWallet == player.wallet:
+                create_task(player.respond({'message': 'attack', 'error': 'this unit is friendly.'}))
+                return
             if isMeleeAttack:
                 create_task(self.state(player).meleeAttack(char, otherChar))
             else:

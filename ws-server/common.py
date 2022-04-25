@@ -1,4 +1,5 @@
 import math
+import random
 from asyncio import create_task
 
 from vector import Vector
@@ -9,6 +10,9 @@ from chain import ChainLoader
 
 def manhattan(a, b):
     return sum(abs(val1-val2) for val1, val2 in zip(a, b))
+
+def dist(a, b):
+    return math.sqrt(sum((val1-val2)**2 for val1, val2 in zip(a, b)))
 
 class LoadOut:
     def __init__(self, troopselection):
@@ -54,7 +58,7 @@ class Player:
 
 class Weapon:
     def __init__(self, ownerWallet: str, tokenId):
-        self.dna = None
+        self.name = None
         self.ownerWallet = ownerWallet
         self.tokenId = tokenId
         self.weaponType = None
@@ -71,7 +75,7 @@ class Weapon:
         chain = ChainLoader()
         tokenData = chain.loadLocalNFT('weapon', self.tokenId)
 
-        self.dna = tokenData['dna']
+        self.name = tokenData['name']
         self.weaponType = tokenData['attributes']['Weapon Type']
         self.effect = tokenData['attributes']['Effect']
         self.minimumDamage = tokenData['attributes']['Minimum Damage']
@@ -80,6 +84,11 @@ class Weapon:
         self.criticalChance = tokenData['attributes']['Crit Chance']
         self.accuracy = tokenData['attributes']['Accuracy']
 
+    def damage(self):
+        multiplier = 1
+        if random.randint(0, 100) < self.criticalChance:
+            multiplier = 2
+        return random.randint(self.minimumDamage, self.maximumDamage) * multiplier
 
 class Character:
     def __init__(self, ownerWallet: str, tokenId):
@@ -149,7 +158,7 @@ class Character:
             'attributeBoost': self.attributeBoost,
             'powerBoost': self.powerBoost,
             'staminaBoost': self.staminaBoost,
-            'weapon': self.weapon,
+            'weapon': self.weapon.tokenId if self.weapon else None,
             'armor': self.armor,
             'items': self.items,
             'skills': self.skills
@@ -181,6 +190,8 @@ class Character:
         char.armor = objData['armor']
         char.items = objData['items']
         char.skills = objData['skills']
+        if objData['weapon']:
+            char.setWeapon(objData['weapon'])
         return char
 
     def loadTokenData(self):
@@ -222,8 +233,8 @@ class Character:
         resolution = max - min  # 100
         length = math.floor(math.log2(resolution)) + 1 # 7
         binary_part = binary_dna[start:start+length]
-        value = int(binary_part, base=2) # 0..127
+        dna_raw_value = int(binary_part, base=2) # 0..127
         max_value = 2 ** length - 1
-        value = (value / max_value) * max  # 0..100
+        value = (dna_raw_value / max_value) * resolution  # 0..100
         value += min  # 100..200
-        return length, value
+        return length, int(value)

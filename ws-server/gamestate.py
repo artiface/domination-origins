@@ -1,14 +1,12 @@
 import asyncio
 import json
-import math
-import pickle
 import secrets
 from asyncio import create_task
 
 from pytmx import pytmx
 
 from vector import Vector
-from common import Character, CharacterState, Player
+from common import Character, CharacterState, dist
 
 
 class Tile:
@@ -43,6 +41,7 @@ class GameState:
 		self.turnOfPlayerIndex = -1
 		self.teamSpawns = dict()
 		self.playerMap = dict()
+		self.turnCount = 0
 
 		self.wallData = None
 		self.connectedPlayers = []
@@ -73,7 +72,8 @@ class GameState:
 		self.teamSpawns[team].append(position)
 
 	def nextTurn(self):
-		self.turnOfPlayerIndex = (self.turnOfPlayerIndex + 1) % len(self.connectedPlayers)
+		self.turnCount += 1
+		self.turnOfPlayerIndex = self.turnCount % len(self.connectedPlayers)
 		# reset steps
 		for char in self.allCharacters:
 			if char.ownerWallet == self.turnOfPlayer().wallet:
@@ -87,7 +87,9 @@ class GameState:
 		troopList = []
 		for slot, troopInfo in troops.items():
 			troopTokenId = troopInfo['troops']
-			troopList.append(Character(player.wallet, troopTokenId))
+			spawnedTroop = Character(player.wallet, troopTokenId)
+			spawnedTroop.setWeapon('2729')  # hand pistol
+			troopList.append(spawnedTroop)
 
 		playerIndex = len(self.connectedPlayers)
 		spawnIndex = playerIndex + 1
@@ -255,6 +257,7 @@ class GameState:
 		charData = [char.toObject() for char in self.allCharacters]
 		state = {
 			'message': 'initialize',
+			'turnCount': self.turnCount,
 			'turnOfPlayer': self.turnOfPlayerIndex,
 			'error': '',
 			'map_data': {
@@ -266,7 +269,6 @@ class GameState:
 		}
 		return state
 
-	# use pickle to serialize the complete class to a file
 	async def saveToDisk(self):
 		with open('./battlecache/bs_{}.json'.format(self.battleId), 'w', encoding='utf-8') as f:
 			json.dump(self.toObject(), f, ensure_ascii=False, indent=4)
@@ -325,7 +327,7 @@ class GameState:
 		chanceToHit = attacker.intelligence * attacker.level
 
 		attacker.hasAttackedThisTurn = True
-		damage = attacker.weapon.damage()
+		damage = attacker.weapon.damage() if attacker.weapon else 0
 		hit = secrets.randbelow(100) < chanceToHit
 		killed = False
 		if hit:
@@ -333,10 +335,10 @@ class GameState:
 		response = {
 			'message': 'meleeAttack',
 			'error': '',
-			'attacker_tile': attacker.position,
+			'attacker_tile': attacker.position.toObject(),
 			'attacker': attacker.charId,
 			'attacker_health': attacker.currentHealth,
-			'defender_tile': defender.position,
+			'defender_tile': defender.position.toObject(),
 			'defender': defender.charId,
 			'defender_health': defender.currentHealth,
 			'hit': hit,
@@ -346,9 +348,13 @@ class GameState:
 		create_task(self.broadcast(response))
 
 	async def rangedAttack(self, attacker, defender):
-		dist = math.dist(attacker.position, defender.position)
-		chanceToHit = (attacker.dexterity * attacker.level) - 5 * dist
-
+		distance = dist(attacker.position, defender.position)
+		chanceToHit = (2 * attacker.dexterity * (attacker.level + 2)) - 5 * distance
+		# l1, d1 => 2*1*(1+2) = 6
+		# l2, d2 => 2*2*(2+2) = 12
+		# l1, d10 => 2*10*(1+2) = 60
+		# l10, d1 => 2*1*(10+2) = 24
+		# l10, d10 => 2*10*(10+2) = 240
 		attacker.hasAttackedThisTurn = True
 		damage = attacker.weapon.damage()
 		hit = secrets.randbelow(100) < chanceToHit
@@ -358,16 +364,17 @@ class GameState:
 		response = {
 			'message': 'rangedAttack',
 			'error': '',
-			'attacker_tile': attacker.position,
+			'attacker_tile': attacker.position.toObject(),
 			'attacker': attacker.charId,
 			'attacker_health': attacker.currentHealth,
-			'defender_tile': defender.position,
+			'defender_tile': defender.position.toObject(),
 			'defender': defender.charId,
 			'defender_health': defender.currentHealth,
 			'hit': hit,
 			'damage': damage if hit else 0,
 			'killed': killed
 		}
+		print("ranged attack:", response)
 		create_task(self.broadcast(response))
 
 	async def sendBattleEnd(self, winner):

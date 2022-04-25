@@ -7,7 +7,7 @@ var image = {
         const width = char._bounds2d.x;
         const leftWidth = width * health;
         const rightWidth = width - leftWidth;
-        const leftColor = '#56cf00';
+        let leftColor = '#56cf00';
         if (health < 0.75 && health > 0.5) {
             leftColor = '#cfc800';
         }

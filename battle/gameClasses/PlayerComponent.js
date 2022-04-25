@@ -15,7 +15,6 @@ var PlayerComponent = IgeClass.extend({
 		// Store any options that were passed to us
 		this._options = options;
 	},
-
 	showReachableTiles: function() {
 	    this.updateReachableTiles();
 	    const tilemap = this._entity._parent;

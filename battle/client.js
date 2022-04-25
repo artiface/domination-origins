@@ -66,23 +66,26 @@ var Client = IgeClass.extend({
 		self.isInitialized = false;
 		self.currentAction = Move;
 
-		self.spawnEffect = function(tileX, tileY, effectIndex)
+		self.spawnBulletImpacts = function(tileX, tileY, count)
 		{
-            const randRange = 40;
-            const randX = Math.floor(Math.random() * randRange) - (randRange / 2);
-            const randY = Math.floor(Math.random() * randRange) - (randRange / 2);
-            const effect = new BulletImpact(self.gameTexture.effects[effectIndex])
-                .layer(6)
-                .isometric(true)
-                .mount(self.tilemap)
-                .translateToTile(tileX, tileY, 0)
-                .translateBy(randX, randY, 0);
+		    for (var i = 0; i < count; i++)
+		    {
+                const randRange = 40;
+                const randX = Math.floor(Math.random() * randRange) - (randRange / 2);
+                const randY = Math.floor(Math.random() * randRange) - (randRange / 2);
+                const effect = new BulletImpact(self.gameTexture.effects[0])
+                    .layer(6)
+                    .isometric(true)
+                    .mount(self.tilemap)
+                    .translateToTile(tileX, tileY, 0)
+                    .translateBy(randX, randY, 0);
+            }
 		};
 
 
         self.characterById = function(charId) {
             for (var i = 0; i < self.characters; i++) {
-                if (self.characters[i].getCharId() == charId) {
+                if (self.characters[i].getCharId() === charId) {
                     return self.characters[i];
                 }
             }
@@ -111,26 +114,21 @@ var Client = IgeClass.extend({
                 .layer(2)
                 .id('char_' + charId.toString())
                 .setTokenId(troopTokenId)
+                .clientIsOwner(isOwner)
+                .mount(self.tilemap)
+                .translateToTile(pos.x, pos.y, 0)
                 .setCharId(charId)
                 .setCharData(charData)
+                .addComponent(HealthBarComponent)
                 .drawBounds(false)
-                .drawBoundsData(false)
-                .mount(self.tilemap)
-                .translateToTile(pos.x, pos.y, 0);
+                .drawBoundsData(false);
 
             self.tilemap.occupyTile(pos.x, pos.y, 1, 1, char);
 
             const boardPiece = new CharacterPiece()
                 .layer(2)
-                .clientIsOwner(isOwner)
-                .mount(char);
-
-            const healthBar = new HealthBar()
-                .setMaxHealth(charData['maxHealth'])
-                .layer(10)
-                .character(char)
                 .mount(char)
-                .setCurrentHealth(charData['currentHealth']);
+                .clientIsOwner(isOwner);
 
             const focusBar = new FocusBar()
                 .setMaxFocus(charData['maxFocus'])
@@ -149,6 +147,9 @@ var Client = IgeClass.extend({
 
             if (state === 0)
                 char.kill();
+            if (isOwner){
+                self.ownCharacters.push(char);
+            }
             self.characters.push(char);
 
             char.addComponent(IgePathComponent).path
@@ -458,6 +459,48 @@ var Client = IgeClass.extend({
                 char._tooltip.hide();
 			};
 
+			var selectCharacter = function(char) {
+                self.selectedCharacter = char;
+                self.debugText.value("Character Selected: " + char.id());
+                self.selectedCharacter.player.showReachableTiles();
+            };
+
+            var deselectCharacter = function() {
+                self.debugText.value("Character Deselected");
+                self.selectedCharacter.player.hideReachableTiles();
+                self.selectedCharacter = null;
+            };
+
+            var getOwnCharIndex = function(char) {
+                for (let i = 0; i < self.ownCharacters.length; i++)
+                {
+                    let char = self.characters[i];
+                    if (char === self.selectedCharacter)
+                    {
+                        return i;
+                    }
+                }
+                return -1;
+            };
+
+            var selectNextActionableCharacter = function() {
+                let startIndex = 0;
+                if (self.selectedCharacter)
+                {
+                    startIndex = (getOwnCharIndex(self.selectedCharacter) + 1) % self.ownCharacters.length;
+                    deselectCharacter();
+                }
+                for (let i = 0; i < self.ownCharacters.length; i++)
+                {
+                    let char = self.ownCharacters[(i + startIndex) % self.ownCharacters.length];
+                    if (char.player.canAct())
+                    {
+                        selectCharacter(char);
+                        return;
+                    }
+                }
+            };
+
 			ige.input.on('mouseMove', function (event, x, y, button) {
 			    const mouseTile = self.tilemap.mouseToTile();
 
@@ -479,7 +522,7 @@ var Client = IgeClass.extend({
                 }
 			});
 
-			document.addEventListener("keypress", function onEvent(event) {
+			document.addEventListener("keyup", function onEvent(event) {
                 if (event.key === "f") {
                     // Toggle the stats
                     if (!document.fullscreenElement) {
@@ -490,12 +533,16 @@ var Client = IgeClass.extend({
                         }
                     }
                 }
+                // wait for "Escape"
+                else if (event.key === "Escape") {
+                    // deselect the character
+                    self.currentAction = Move;
+                    selectCharacter(self.selectedCharacter);
+                }
             });
 
 			ige.input.on('mouseUp', function (event, x, y, button) {
 				const mouseTile = self.tilemap.mouseToTile();
-
-				self.spawnEffect(mouseTile.x, mouseTile.y, 0);
 
 				if (self.tilemap.isTileOccupied(mouseTile.x, mouseTile.y))
                 {
@@ -504,12 +551,13 @@ var Client = IgeClass.extend({
                     {
                         if (self.selectedCharacter)
                         {
-                            self.selectedCharacter.player.hideReachableTiles();
+                            deselectCharacter();
                         }
-                        self.selectedCharacter = char;
-                        self.selectedCharacter.player.showReachableTiles();
 
-                        self.debugText.value("Selected: " + self.selectedCharacter.getCharId());
+                        if (char.clientIsOwner())
+                        {
+                            selectCharacter(char);
+                        }
                     }
                     else if (self.currentAction == Attack && self.selectedCharacter)
                     {
@@ -558,6 +606,19 @@ var Client = IgeClass.extend({
 	  		self.socket.send(requestAsJson);
 		};
 
+        self.handleRangedAttack = function(data) {
+            const targetTile = data['defender_tile'];
+            const damage = data['damage'];
+            const defender = self.tilemap.tileOccupiedBy(targetTile.x, targetTile.y);
+            self.spawnBulletImpacts(targetTile.x, targetTile.y, 3);
+            defender.healthbar.changeHealth(-damage);
+            const attacker = self.characterById(data['attacker_id']);
+            if (attacker === self.selectedCharacter)
+            {
+                selectNextActionableCharacter();
+            }
+        };
+
 		self.handleServerResponse = async function(message) {
 			if (message['error'])
 			{
@@ -566,6 +627,9 @@ var Client = IgeClass.extend({
 			}
 			switch (message['message'])
 			{
+			    case 'rangedAttack':
+                    self.handleRangedAttack(message);
+                    break;
 		        case 'auth':
                     const flatSig = await signer.signMessage(message['siwe_message']);
 
@@ -634,6 +698,7 @@ var Client = IgeClass.extend({
 		
 
 		self.characters = [];
+		self.ownCharacters = [];
 		self.selectedCharacter = null;
 
 

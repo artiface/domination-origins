@@ -18,7 +18,13 @@ var Character = IgeEntity.extend({
 			.bounds3d(60, 60, 60);
 
 	},
-
+	clientIsOwner: function () {
+        return this._clientIsOwner;
+    },
+    clientIsOwner: function (isOwner) {
+        this._clientIsOwner = isOwner;
+        return this;
+    },
 	/* Function for setting the token id */
     setTokenId: function (id) {
         this._tokenId = id;

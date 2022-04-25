@@ -1,9 +1,16 @@
 // Define our player character container classes
-var HealthBar = IgeEntity.extend({
-	classId: 'HealthBar',
-
-	init: function () {
+var HealthBarComponent = IgeEntity.extend({
+	classId: 'HealthBarComponent',
+    componentId: 'healthbar',
+	init: function (entity, options) {
 		IgeEntity.prototype.init.call(this);
+        this._entity = entity;
+
+        this.setMaxHealth(entity.getStat('maxHealth'))
+            .layer(10)
+            .character(entity)
+            .mount(entity)
+            .setCurrentHealth(entity.getStat('currentHealth'));
 
 		var self = this;
 		self.isometric(true)
@@ -38,8 +45,11 @@ var HealthBar = IgeEntity.extend({
         return this;
 	},
     getHealthAsPercent: function () {
+        if (this._health <= 0) {
+            return 0;
+        }
         return this._health / this._maxHealth;
     },
 });
 
-if (typeof(module) !== 'undefined' && typeof(module.exports) !== 'undefined') { module.exports = HealthBar; }
+if (typeof(module) !== 'undefined' && typeof(module.exports) !== 'undefined') { module.exports = HealthBarComponent; }

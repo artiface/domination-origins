@@ -87,10 +87,11 @@ Graphics needed from Kazuko:
 
 ## Needed for Alpha Battles
  - Weapon Slots - ITEM NFTs currently CANNOT BE ITERATED OVER
- - Health Bars & Focus Bars
- - Turn Counter
  - Basic Animations
  - First Three Skills
+ - Damage Numbers
+ - Display Hit Chance
+ - Highlight selected character
  - Hit Chance & Damage Calculations
    - Base Chance to Hit:
      - Melee: Intelligence * Level [1, 80]

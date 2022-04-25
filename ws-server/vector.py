@@ -5,6 +5,12 @@ class Vector(object):
         """ Create a vector, example: v = Vector(1,2) """
         self.values = (x, y)
 
+    def toObject(self):
+        return {
+            'x': self.values[0],
+            'y': self.values[1]
+        }
+
     def norm(self):
         """ Returns the norm (length, magnitude) of the vector """
         return math.sqrt(sum( x*x for x in self ))
