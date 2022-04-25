@@ -154,20 +154,4 @@ var IgeUiTooltip = IgeUiElement.extend({
 
 		return this;
 	},
-
-	/**
-	 * Gets / sets the font sheet (texture) that the text box will
-	 * use when rendering text inside the box.
-	 * @param fontSheet
-	 * @return {*}
-	 */
-	fontSheet: function (fontSheet) {
-		if (fontSheet !== undefined) {
-			// Set the font sheet as the texture for our font entity
-			this.fontEntityTitle.texture(fontSheet);
-			this.fontEntityText.texture(fontSheet);
-		}
-		return this;
-	},
-
 });

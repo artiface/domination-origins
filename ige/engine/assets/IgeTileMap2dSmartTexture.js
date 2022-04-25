@@ -111,13 +111,14 @@ var IgeTileMap2dSmartTexture = {
 		}
 
 		if (entity._highlightTiles) {
-			ctx.fillStyle = "rgba(10, 240, 120, 0.34)";
+		    const colorList = ["rgba(10, 240, 120, 0.34)", "rgba(240, 10, 120, 0.34)"];
 			for (y in entity.map._layerData) {
 				if (entity.map._layerData[y]) {
 					for (x in entity.map._layerData[y]) {
 						if (entity.map._layerData[y][x]) {
 							// Tile should be highlighted
 							var tileId = entity.map._layerData[y][x]; // TODO: Decide on color based on value
+							ctx.fillStyle = colorList[tileId - 1];
 							tilePoint = new IgePoint2d(tileWidth * x, tileHeight * y);
 
 							// TODO: Abstract out the tile drawing method so that it can be overridden for other projections etc

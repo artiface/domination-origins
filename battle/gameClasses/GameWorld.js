@@ -1,0 +1,373 @@
+"use strict";
+var GameWorld = {
+    spawnBulletImpacts: function(tileX, tileY, count)
+    {
+        for (var i = 0; i < count; i++)
+        {
+            const randRange = 40;
+            const randX = Math.floor(Math.random() * randRange) - (randRange / 2);
+            const randY = Math.floor(Math.random() * randRange) - (randRange / 2);
+            const effect = new BulletImpact(this.gameTexture.effects[0])
+                .layer(6)
+                .isometric(true)
+                .mount(this.tilemap)
+                .translateToTile(tileX, tileY, 0)
+                .translateBy(randX, randY, 0);
+        }
+    },
+    getOwnCharIndex: function(ownChar) {
+        for (let i = 0; i < self.ownCharacters.length; i++)
+        {
+            let char = self.ownCharacters[i];
+            if (char === ownChar)
+            {
+                return i;
+            }
+        }
+        return -1;
+    },
+    characterById: function(charId) {
+        for (var i = 0; i < this.characters.length; i++) {
+            if (this.characters[i].getCharId() === charId) {
+                return this.characters[i];
+            }
+        }
+        return null;
+    },
+
+    loadCharacters: function(charData) {
+        // call destroy() on all existing characters
+        for (var i = 0; i < this.characters.length; i++) {
+            this.characters[i].destroy();
+        }
+        for (var i = 0; i < charData.length; i++) {
+            this.createCharacter(charData[i]);
+        }
+    },
+
+    createCharacter: function(charData) {
+        const pos = charData['pos'];
+        const state = charData['state'];
+        const troopTokenId = charData['tokenId'];
+        const charId = charData['charId'];
+        // check if we are the owner of the character
+        const isOwner = charData['ownerWallet'] == userAddress;
+
+        const char = new Character()
+            .layer(2)
+            .id('char_' + charId.toString())
+            .setTokenId(troopTokenId)
+            .clientIsOwner(isOwner)
+            .mount(this.tilemap)
+            .translateToTile(pos.x, pos.y, 0)
+            .setCharId(charId)
+            .setCharData(charData)
+            .addComponent(HealthBarComponent)
+            .drawBounds(false)
+            .drawBoundsData(false);
+
+        this.tilemap.occupyTile(pos.x, pos.y, 1, 1, char);
+
+        const boardPiece = new CharacterPiece()
+            .layer(2)
+            .mount(char)
+            .clientIsOwner(isOwner)
+            .drawBounds(false)
+            .drawBoundsData(false);
+
+        const focusBar = new FocusBar()
+            .setMaxFocus(charData['maxFocus'])
+            .layer(10)
+            .character(char)
+            .mount(char)
+            .setCurrentFocus(charData['currentFocus']);
+
+        const statString =
+        'Level: ' + char.getStat('level') + '\n' +
+        'Agility: ' + char.getStat('agility') + '\n' +
+        'Strength: ' + char.getStat('strength') + '\n' +
+        'Intelligence: ' + char.getStat('intelligence');
+
+        const toolTip = new IgeUiTooltip(char, 100, 90, ['#' + troopTokenId, statString]).layer(22);
+
+        if (state === 0)
+            char.kill();
+        if (isOwner){
+            this.ownCharacters.push(char);
+        }
+        this.characters.push(char);
+
+        char.addComponent(IgePathComponent).path
+            .finder(this.pathFinder)
+            .tileMap(this.tilemap)
+            .tileChecker(function (tileData, tileX, tileY, node, prevNodeX, prevNodeY, dynamic) {
+                const bounds = this.tilemap._gridSize;
+                // check if the tile is in bounds
+                if (tileX < 0 || tileX >= bounds.x || tileY < 0 || tileY >= bounds.y) {
+                    return false;
+                }
+                return tileData === null;
+            })
+            .lookAheadSteps(3)
+            .dynamic(true)
+            .allowSquare(true) // Allow north, south, east and west movement
+            .allowDiagonal(false) // Allow north-east, north-west, south-east, south-west movement
+            .drawPath(true) // Enable debug drawing the paths
+            .drawPathGlow(true) // Enable path glowing (eye candy)
+            .drawPathText(false); // Enable path text output
+
+        char.path.on('pathComplete', function(){
+            char.player.showReachableTiles();
+            const pos = char.player.tilePosition();
+            this.tilemap.occupyTile(pos.x, pos.y, 1, 1, this._entity);
+        });
+    },
+
+	createWorld: function(mapData, charData) {
+
+	    let overFunc = function () {
+            this.highlight(true);
+            ige.input.stopPropagation();
+        };
+
+        let outFunc = function () {
+            this.highlight(false);
+            ige.input.stopPropagation();
+        };
+
+        const wallData = mapData['wall_data'];
+        const mapSize = mapData['size'];
+        const textureMapData = mapData['texture_data'];
+        const tileWidth = 60;
+        const tileHeight = 60;
+
+        this.gridSize = mapSize;
+
+        // Create the scene
+        this.mainScene = new IgeScene2d()
+            .id('mainScene')
+            .autoSize(true)
+            .drawBounds(false)
+            .drawBoundsData(false);
+
+        this.objectScene = new IgeScene2d()
+            .id('objectScene')
+            .depth(0)
+            .autoSize(true)
+            .drawBounds(false)
+            .drawBoundsData(false)
+            .depthSortMode(2)
+            .mount(this.mainScene);
+
+        this.uiScene = new IgeScene2d()
+            .id('uiScene')
+            .depth(1)
+            .autoSize(true)
+            .drawBounds(false)
+            .drawBoundsData(false)
+            .ignoreCamera(true) // We don't want the UI scene to be affected by the viewport's camera
+            .mount(this.mainScene);
+
+        // Create the main viewport
+        this.vp1 = new IgeViewport()
+            .id('vp1')
+            .autoSize(true)
+            .scene(this.mainScene)
+            .drawMouse(true)
+            .drawBounds(false)
+            .drawBoundsData(false)
+            .mount(ige);
+
+        this.textureMap1 = new IgeTextureMap()
+            .depth(-2)
+//				.translateTo(200, 0, 0)
+            .tileWidth(tileWidth)
+            .tileHeight(tileHeight)
+            .gridSize(this.gridSize.width, this.gridSize.height)
+            .drawGrid(true)
+            //.drawMouse(true)
+            .drawBounds(false)
+            .isometricMounts(true)
+            .autoSection(3)
+            .mount(this.objectScene);
+
+        // Create an isometric tile map
+        this.tilemap = new IgeTileMap2d()
+            .id('tilemap')
+            .isometricMounts(true)
+            .tileWidth(tileWidth)
+            .tileHeight(tileHeight)
+            .gridSize(this.gridSize.width, this.gridSize.height)
+//				.drawGrid(5)
+            .loadMap(wallData)
+            .highlightOccupied(false) // Draws a red tile wherever a tile is "occupied"
+            .highlightTiles(true)
+//				.backgroundPattern(this.gameTexture.grassTile, 'repeat', true, true)
+            .drawMouse(true)
+            .drawBounds(false)
+            .drawBoundsData(false)
+            .mount(this.objectScene);
+
+        for (let i = 0; i < this.gameTexture.tiles.length; i++)
+        {
+            this.textureMap1.addTexture(this.gameTexture.tiles[i]);
+        }
+
+        for (let x = 0; x < this.gridSize.width; x++)
+        {
+            for (let y = 0; y < this.gridSize.height; y++)
+            {
+                var textureIndex = textureMapData[y][x];
+                this.textureMap1.paintTile(x, y, textureIndex, 1);
+            }
+        }
+
+        this.loadCharacters(charData);
+
+        var self = this;
+
+        this.endTurnButton = new IgeUiLabel()
+            .id('endTurnButton')
+            .depth(1)
+            .paddingLeft(0)
+            .bottom(3)
+            .right(20)
+            .width(60)
+            .height(60)
+            .texture(this.endTurnButtonTexture)
+            .allowHover(true)
+            .mouseOver(overFunc)
+            .mouseOut(outFunc)
+            .mouseMove(function () { ige.input.stopPropagation(); })
+            .mouseUp(function () { self.requestEndTurn(); ige.input.stopPropagation(); })
+            .mount(this.uiScene);
+
+        this.attackButton = new IgeUiLabel()
+            .id('attackButton')
+            .depth(1)
+            .paddingLeft(0)
+            .bottom(3)
+            .left(70)
+            .width(60)
+            .height(60)
+            .texture(this.attackButonTexture)
+            .allowHover(true)
+            .mouseOver(overFunc)
+            .mouseOut(outFunc)
+            .mouseMove(function () { ige.input.stopPropagation(); })
+            .mouseUp(function () {
+                self.attackMode();
+                ige.input.stopPropagation();
+            })
+            .mount(this.uiScene);
+
+        this.sprintButton = new IgeUiLabel()
+            .id('sprintButton')
+            .depth(1)
+            .paddingLeft(0)
+            .bottom(3)
+            .left(140)
+            .width(60)
+            .height(60)
+            .texture(this.sprintButtonTexture)
+            .allowHover(true)
+            .mouseOver(overFunc)
+            .mouseOut(outFunc)
+            .mouseMove(function () { ige.input.stopPropagation(); })
+            .mouseUp(function () {
+                self.debugText.value("Sprint Activated!");
+                ige.input.stopPropagation();
+            })
+            .mount(this.uiScene);
+
+        this.skillOneButton = new IgeUiLabel()
+            .id('skillOneButton')
+            .depth(1)
+            .paddingLeft(0)
+            .bottom(3)
+            .left(210)
+            .width(60)
+            .height(60)
+            .texture(this.buttonTexture)
+            .value('Skill 1')
+            .color('white')
+            .font('12px Verdana')
+            .allowHover(true)
+            .mouseOver(overFunc)
+            .mouseOut(outFunc)
+            .mouseMove(function () { ige.input.stopPropagation(); })
+            .mouseUp(function () {
+                self.debugText.value("Skill 1 Activated!");
+                ige.input.stopPropagation();
+            })
+            .mount(this.uiScene);
+
+        this.skillTwoButton = new IgeUiLabel()
+            .id('skillTwoButton')
+            .depth(1)
+            .paddingLeft(0)
+            .bottom(3)
+            .left(280)
+            .width(60)
+            .height(60)
+            .texture(this.buttonTexture)
+            .value('Skill 2')
+            .color('white')
+            .font('12px Verdana')
+            .allowHover(true)
+            .mouseOver(overFunc)
+            .mouseOut(outFunc)
+            .mouseMove(function () { ige.input.stopPropagation(); })
+            .mouseUp(function () {
+                self.debugText.value("Skill 2 Activated!");
+                ige.input.stopPropagation();
+            })
+            .mount(this.uiScene);
+
+        this.skillThreeButton = new IgeUiLabel()
+            .id('skillThreeButton')
+            .depth(1)
+            .paddingLeft(0)
+            .bottom(3)
+            .left(350)
+            .width(60)
+            .height(60)
+            .texture(this.buttonTexture)
+            .value('Skill 3')
+            .color('white')
+            .font('12px Verdana')
+            .allowHover(true)
+            .mouseOver(overFunc)
+            .mouseOut(outFunc)
+            .mouseMove(function () { ige.input.stopPropagation(); })
+            .mouseUp(function () {
+                self.debugText.value("Skill 3 Activated!");
+                ige.input.stopPropagation();
+            })
+            .mount(this.uiScene);
+        this.skillOneButton._fontEntity.textAlignX(1).textAlignY(1).left(5).top(1);
+        this.skillTwoButton._fontEntity.textAlignX(1).textAlignY(1).left(5).top(1);
+        this.skillThreeButton._fontEntity.textAlignX(1).textAlignY(1).left(5).top(1);
+
+
+        ige.ui.style('#debugText', {
+            'top': 0,
+            'left': 0,
+            'backgroundColor': '#ccc'
+        });
+        this.test = new Label()
+            .mount(this.uiScene);
+
+        this.debugText = new IgeUiLabel()
+            .cache(true)
+            .id('debugText')
+            .depth(1)
+            .width(280)
+            .height(50)
+            .value('Verdana 10px and this is not a native font :)')
+            .top(1)
+            .drawBounds(false)
+            .drawBoundsData(false)
+            .mount(this.uiScene);
+	}
+};

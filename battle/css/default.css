@@ -6,3 +6,6 @@
 	top: 10px;
 	background-image: url(../../assets/ui/Logo_Circle.png);
 }
+body {
+    background-image: url(../../assets/ui/backgr.png);
+}
