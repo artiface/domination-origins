@@ -95,6 +95,13 @@ var GameWorld = {
             })
             .mount(char);
         char.setInfoLabel(infoLabel);
+
+        const headLabel = new Label()
+            .setFontSize(30)
+            .setStrokeColor('#000')
+            .mount(char);
+        char.setHeadLabel(headLabel);
+
         if (state === 0)
             char.kill();
         if (isOwner){

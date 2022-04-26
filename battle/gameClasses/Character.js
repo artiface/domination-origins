@@ -112,6 +112,10 @@ var Character = IgeEntity.extend({
         this._infoLabel = infoLabel;
         return this;
     },
+    setHeadLabel: function (headLabel) {
+        this._headLabel = headLabel;
+        return this;
+    },
 	/**
 	 * Tweens the character to the specified world co-ordinates.
 	 * @param x

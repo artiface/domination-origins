@@ -13,7 +13,8 @@ var FloatingText = IgeEntity.extend({
 			.depth(30)
 			.layer(30)
 			.bounds3d(40, 40, 20)
-			.anchor(0, 0);
+			.anchor(0, 0)
+			.scaleTo(3, 3, 3);
 
 		this._labelTexture = new IgeTexture('../assets/smart/Label.js');
         this._labelTexture.on('loaded', function () {
@@ -21,23 +22,39 @@ var FloatingText = IgeEntity.extend({
             self.texture(self._labelTexture).height(20);
             self.texture(self._labelTexture).localAabb(true);
 		}, false, true);
-		let duration = 1700;
-        this._translate.tween()
-            .stepBy({
-                z: 50
+
+		let duration = 2000;
+
+		this._scale.tween()
+            .duration(250)
+            .properties({
+                x: 1,
+                y: 1,
+                z: 1
             })
-            .duration(duration)
+            .easing('outElastic')
+            .afterTween(function () {
+                self._translate.tween()
+                    .stepBy({
+                        z: 50
+                    })
+                    .duration(duration)
+                    .start();
+                self.tween()
+                    .properties({
+                        _opacity: 0.0
+                    })
+                    .duration(duration)
+                    .afterTween(function () {
+                        self.destroy();
+                    })
+                    .start();
+            })
             .start();
 
-		this.tween()
-            .properties({
-                _opacity: 0.0
-            })
-            .duration(duration)
-            .afterTween(function () {
-                self.destroy();
-            })
-            .start();
+
+
+
 	},
 	getLabelOptions: function () {
         return {
@@ -47,6 +64,7 @@ var FloatingText = IgeEntity.extend({
             fontColor: '#ff0011',
             offsetX: 0,
             offsetY: -60,
+            strokeColor: '#fff',
         };
     },
 });

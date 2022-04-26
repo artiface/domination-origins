@@ -89,7 +89,6 @@ Graphics needed from Kazuko:
  - Weapon Slots - ITEM NFTs currently CANNOT BE ITERATED OVER
  - First Three Skills
  - Find the text rendering problem (See viewport drawMouse())
-    - Damage Numbers
     - Display Hit Chance
  - Show valid targets when attacking
  - Hit Chance & Damage Calculations
