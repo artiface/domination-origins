@@ -38,6 +38,7 @@ var Input = {
         this.debugText.value("Character Selected: " + char.id());
         this.selectedCharacter.hidePossibleTargets();
         this.selectedCharacter.showReachableTiles();
+        this.selectedCharacter._boardPiece.setSelected(true);
     },
 
     deselectCharacter: function() {
@@ -45,6 +46,8 @@ var Input = {
             this.debugText.value("Character Deselected");
             this.selectedCharacter.hideReachableTiles();
             this.selectedCharacter.hidePossibleTargets();
+            this.selectedCharacter._boardPiece.setSelected(false);
+
             this.selectedCharacter = null;
         }
     },

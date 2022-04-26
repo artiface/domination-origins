@@ -11,6 +11,7 @@ var igeClientConfig = {
 		'./gameClasses/FocusBarComponent.js',
 		'./gameClasses/Character.js',
 		'./gameClasses/BoardPiece.js',
+		'./gameClasses/SelectableBoardPiece.js',
 		/* Standard game scripts */
 		'./client.js',
 		'./index.js'

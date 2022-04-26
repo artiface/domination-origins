@@ -67,13 +67,23 @@ var GameWorld = {
             .drawBoundsData(false);
 
         this.tilemap.occupyTile(pos.x, pos.y, 1, 1, char);
-
-        const boardPiece = new BoardPiece()
-            .layer(2)
-            .mount(char)
-            .clientIsOwner(isOwner)
-            .drawBounds(false)
-            .drawBoundsData(false);
+        if (isOwner) {
+            const boardPiece = new SelectableBoardPiece()
+                .layer(2)
+                .mount(char)
+                .clientIsOwner(isOwner)
+                .drawBounds(false)
+                .drawBoundsData(false);
+            char.setBoardPiece(boardPiece);
+        }
+        else {
+            const boardPiece = new BoardPiece()
+                .layer(2)
+                .mount(char)
+                .clientIsOwner(isOwner)
+                .drawBounds(false)
+                .drawBoundsData(false);
+        }
 
         const statString =
         'Level: ' + char.getStat('level') + '\n' +
@@ -348,8 +358,8 @@ var GameWorld = {
             'left': 0,
             'backgroundColor': '#ccc'
         });
-        this.test = new Label()
-            .mount(this.uiScene);
+        //this.test = new Label()
+        //    .mount(this.uiScene);
 
         this.debugText = new IgeUiLabel()
             .cache(true)

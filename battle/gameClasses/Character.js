@@ -91,6 +91,10 @@ var Character = IgeEntity.extend({
             .speed(5)
             .start();
 	},
+	setBoardPiece: function (boardPiece) {
+        this._boardPiece = boardPiece;
+        return this;
+    },
 	/**
 	 * Tweens the character to the specified world co-ordinates.
 	 * @param x
