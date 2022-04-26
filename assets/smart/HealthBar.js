@@ -1,6 +1,6 @@
 var image = {
 	render: function (ctx, entity) {
-        const char = entity._character;
+        const char = entity._entity;
         const drawOffsetY = -54;
         const height = 6;
         const health = entity.getHealthAsPercent(); // [0,0..1,0]

@@ -6,11 +6,11 @@ var igeClientConfig = {
 		'./gameClasses/Network.js',
 		'./gameClasses/Label.js',
 		'./gameClasses/BulletImpact.js',
+		'./gameClasses/Highlighting.js',
 		'./gameClasses/HealthBarComponent.js',
-		'./gameClasses/FocusBar.js',
-		'./gameClasses/CharacterIso.js',
-		'./gameClasses/IsoCharacterPiece.js',
-		'./gameClasses/PlayerComponent.js',
+		'./gameClasses/FocusBarComponent.js',
+		'./gameClasses/Character.js',
+		'./gameClasses/BoardPiece.js',
 		/* Standard game scripts */
 		'./client.js',
 		'./index.js'

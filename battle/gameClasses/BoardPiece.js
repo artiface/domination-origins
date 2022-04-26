@@ -1,6 +1,7 @@
+"use strict";
 // Define our player character container classes
-var CharacterPiece = IgeEntity.extend({
-	classId: 'CharacterPiece',
+var BoardPiece = IgeEntity.extend({
+	classId: 'BoardPiece',
 
 	init: function () {
 		IgeEntity.prototype.init.call(this);
@@ -27,4 +28,4 @@ var CharacterPiece = IgeEntity.extend({
     },
 });
 
-if (typeof(module) !== 'undefined' && typeof(module.exports) !== 'undefined') { module.exports = CharacterPiece; }
+if (typeof(module) !== 'undefined' && typeof(module.exports) !== 'undefined') { module.exports = BoardPiece; }

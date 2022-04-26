@@ -1,3 +1,4 @@
+"use strict";
 // Define our player character container classes
 var BulletImpact = IgeEntity.extend({
 	classId: 'BulletImpact',

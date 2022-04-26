@@ -1,4 +1,4 @@
-// Define our player character container classes
+"use strict";
 var HealthBarComponent = IgeEntity.extend({
 	classId: 'HealthBarComponent',
     componentId: 'healthbar',
@@ -6,11 +6,8 @@ var HealthBarComponent = IgeEntity.extend({
 		IgeEntity.prototype.init.call(this);
         this._entity = entity;
 
-        this.setMaxHealth(entity.getStat('maxHealth'))
-            .layer(10)
-            .character(entity)
-            .mount(entity)
-            .setCurrentHealth(entity.getStat('currentHealth'));
+        this.layer(10)
+            .mount(entity);
 
 		var self = this;
 		self.isometric(true)
@@ -27,28 +24,26 @@ var HealthBarComponent = IgeEntity.extend({
 		}, false, true);
 		return this;
 	},
-	character: function (character) {
-        this._character = character;
-        return this;
+	getCurrentHealth: function () {
+        return this._entity.getStat('currentHealth');
+    },
+    getMaxHealth: function () {
+        return this._entity.getStat('maxHealth');
     },
 	changeHealth: function(byAmount) {
-        this._health += byAmount;
+        let newHealthValue = this.getCurrentHealth() + byAmount;
+        this.setCurrentHealth(newHealthValue);
         return this;
     },
     setCurrentHealth: function(health) {
-        this._health = health;
+        this._entity.setStat('currentHealth', health);
         return this;
     },
-	setMaxHealth: function(maxHealth) {
-	    this._maxHealth = maxHealth;
-        this._health = maxHealth;
-        return this;
-	},
     getHealthAsPercent: function () {
-        if (this._health <= 0) {
+        if (this.getCurrentHealth() <= 0) {
             return 0;
         }
-        return this._health / this._maxHealth;
+        return this.getCurrentHealth() / this.getMaxHealth();
     },
 });
 

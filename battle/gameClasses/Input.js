@@ -4,8 +4,8 @@ var Input = {
 
     attackMode: function() {
         if (this.selectedCharacter) {
-            this.selectedCharacter.player.hideReachableTiles();
-            this.selectedCharacter.player.showPossibleTargets(this.characters);
+            this.selectedCharacter.hideReachableTiles();
+            this.selectedCharacter.showPossibleTargets(this.characters);
             this.currentAction = Attack;
         }
     },
@@ -36,15 +36,15 @@ var Input = {
         this.currentAction = Move;
         this.selectedCharacter = char;
         this.debugText.value("Character Selected: " + char.id());
-        this.selectedCharacter.player.hidePossibleTargets();
-        this.selectedCharacter.player.showReachableTiles();
+        this.selectedCharacter.hidePossibleTargets();
+        this.selectedCharacter.showReachableTiles();
     },
 
     deselectCharacter: function() {
         if (this.selectedCharacter) {
             this.debugText.value("Character Deselected");
-            this.selectedCharacter.player.hideReachableTiles();
-            this.selectedCharacter.player.hidePossibleTargets();
+            this.selectedCharacter.hideReachableTiles();
+            this.selectedCharacter.hidePossibleTargets();
             this.selectedCharacter = null;
         }
     },

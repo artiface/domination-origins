@@ -16,9 +16,9 @@ var GameWorld = {
         }
     },
     getOwnCharIndex: function(ownChar) {
-        for (let i = 0; i < self.ownCharacters.length; i++)
+        for (let i = 0; i < this.ownCharacters.length; i++)
         {
-            let char = self.ownCharacters[i];
+            let char = this.ownCharacters[i];
             if (char === ownChar)
             {
                 return i;
@@ -68,19 +68,12 @@ var GameWorld = {
 
         this.tilemap.occupyTile(pos.x, pos.y, 1, 1, char);
 
-        const boardPiece = new CharacterPiece()
+        const boardPiece = new BoardPiece()
             .layer(2)
             .mount(char)
             .clientIsOwner(isOwner)
             .drawBounds(false)
             .drawBoundsData(false);
-
-        const focusBar = new FocusBar()
-            .setMaxFocus(charData['maxFocus'])
-            .layer(10)
-            .character(char)
-            .mount(char)
-            .setCurrentFocus(charData['currentFocus']);
 
         const statString =
         'Level: ' + char.getStat('level') + '\n' +
@@ -96,12 +89,12 @@ var GameWorld = {
             this.ownCharacters.push(char);
         }
         this.characters.push(char);
-
+        var self = this;
         char.addComponent(IgePathComponent).path
             .finder(this.pathFinder)
             .tileMap(this.tilemap)
             .tileChecker(function (tileData, tileX, tileY, node, prevNodeX, prevNodeY, dynamic) {
-                const bounds = this.tilemap._gridSize;
+                const bounds = self.tilemap._gridSize;
                 // check if the tile is in bounds
                 if (tileX < 0 || tileX >= bounds.x || tileY < 0 || tileY >= bounds.y) {
                     return false;
@@ -117,9 +110,9 @@ var GameWorld = {
             .drawPathText(false); // Enable path text output
 
         char.path.on('pathComplete', function(){
-            char.player.showReachableTiles();
-            const pos = char.player.tilePosition();
-            this.tilemap.occupyTile(pos.x, pos.y, 1, 1, this._entity);
+            char.showReachableTiles();
+            const pos = char.tilePosition();
+            self.tilemap.occupyTile(pos.x, pos.y, 1, 1, this._entity);
         });
     },
 

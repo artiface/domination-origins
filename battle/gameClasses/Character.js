@@ -1,3 +1,4 @@
+"use strict";
 // Define our player character container classes
 var Character = IgeEntity.extend({
 	classId: 'Character',
@@ -16,19 +17,18 @@ var Character = IgeEntity.extend({
     },
 	init: function () {
 		IgeEntity.prototype.init.call(this);
-
-		var self = this;
 		this._charData = {};
 		// Create a character entity as a child of this container
-		self.addComponent(PlayerComponent)
+		this.addComponent(HealthBarComponent)
+		    .addComponent(FocusBarComponent)
             .isometric(true)
             .isometricMounts(true)
 			.addComponent(IgeAnimationComponent)
 			.addComponent(IgeVelocityComponent)
 			.depth(1)
-			.setType(3)
 			.bounds3d(60, 60, 60);
 
+		this.implement(Highlighting);
 	},
     nextTurn: function() {
         this.hasAttacked(false);
@@ -82,18 +82,15 @@ var Character = IgeEntity.extend({
 	kill: function () {
 		this.rotate().z(Math.radians(85));
 	},
-	/**
-	 * Sets the type of character which determines the character's
-	 * animation sequences and appearance.
-	 * @param {Number} type From 0 to 7, determines the character's
-	 * appearance.
-	 * @return {*}
-	 */
-	setType: function (type) {
-        // TODO: add this back when we have sprite sheet animations
-		return this;
-	},
+	moveTo: function (toTileX, toTileY) {
+	    const tilemap = this._parent;
+		var startTile = this.tilePosition();
+        tilemap.unOccupyTile(startTile.x, startTile.y, 1, 1);
 
+		this.path.set(startTile.x, startTile.y, 0, toTileX, toTileY, 0)
+            .speed(5)
+            .start();
+	},
 	/**
 	 * Tweens the character to the specified world co-ordinates.
 	 * @param x
@@ -126,7 +123,10 @@ var Character = IgeEntity.extend({
 
 		return this;
 	},
-
+    tilePosition: function()
+    {
+        return this._parent.pointToTile(this._translate);
+    },
 	tick: function (ctx) {
 		// Set the depth to the y co-ordinate which basically
 		// makes the entity appear further in the foreground

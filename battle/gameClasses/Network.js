@@ -90,7 +90,7 @@ var Network = {
                 var charIndex = message['characterId'];
                 var destination = message['destination'];
                 this.characters[charIndex].setStat('stepsTakenThisTurn', message['stepsTakenThisTurn']);
-                this.characters[charIndex].player.moveTo(destination.x, destination.y);
+                this.characters[charIndex].moveTo(destination.x, destination.y);
 
                 break;
             case 'death':
