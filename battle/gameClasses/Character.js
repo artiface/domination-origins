@@ -26,9 +26,22 @@ var Character = IgeEntity.extend({
 			.addComponent(IgeAnimationComponent)
 			.addComponent(IgeVelocityComponent)
 			.depth(1)
+			//.compositeCache(true)
 			.bounds3d(60, 60, 60);
 
 		this.implement(Highlighting);
+	},
+	getToolTipText: function () {
+	    return [
+	        '#' + this._tokenId,
+	        'Level: ' + this.getStat('level'),
+	        'Health: ' + this.getStat('currentHealth') + '/' + this.getStat('maxHealth'),
+	        'Focus: ' + this.getStat('currentFocus') + '/' + this.getStat('maxFocus'),
+            'Strength: ' + this.getStat('strength'),
+            'Agility: ' + this.getStat('agility'),
+            'Intelligence: ' + this.getStat('intelligence'),
+            'Dexterity: ' + this.getStat('dexterity'),
+	    ];
 	},
     nextTurn: function() {
         this.hasAttacked(false);
@@ -93,6 +106,10 @@ var Character = IgeEntity.extend({
 	},
 	setBoardPiece: function (boardPiece) {
         this._boardPiece = boardPiece;
+        return this;
+    },
+    setInfoLabel: function (infoLabel) {
+        this._infoLabel = infoLabel;
         return this;
     },
 	/**

@@ -16,20 +16,20 @@ var Input = {
             this.highlightedCharacter = char;
             // delay showing the tooltip
             var self = this;
-            char._tooltip._timeout = setTimeout(function() {
+            char._infoLabel._timeout = setTimeout(function() {
                 // if the mouse is still over that character..
                 const mouseTile = self.tilemap.mouseToTile();
                 const charUnderMouse = self.tilemap.tileOccupiedBy(mouseTile.x, mouseTile.y);
                 if (char === charUnderMouse)
                 {
-                    char._tooltip.show();
+                    char._infoLabel.show();
                 }
             }, this.charTooltipDelay);
         }
     },
 	onMouseLeavingCharacter: function(char) {
         char.highlight(false);
-        char._tooltip.hide();
+        char._infoLabel.hide();
     },
 
     selectCharacter: function(char) {

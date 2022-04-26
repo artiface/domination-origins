@@ -84,15 +84,12 @@ var GameWorld = {
                 .drawBounds(false)
                 .drawBoundsData(false);
         }
-
-        const statString =
-        'Level: ' + char.getStat('level') + '\n' +
-        'Agility: ' + char.getStat('agility') + '\n' +
-        'Strength: ' + char.getStat('strength') + '\n' +
-        'Intelligence: ' + char.getStat('intelligence');
-
-        const toolTip = new IgeUiTooltip(char, 100, 90, ['#' + troopTokenId, statString]).layer(22);
-
+        const infoLabel = new Label()
+            .setTextFunction(function() {
+                return char.getToolTipText();
+            })
+            .mount(char);
+        char.setInfoLabel(infoLabel);
         if (state === 0)
             char.kill();
         if (isOwner){
@@ -358,8 +355,7 @@ var GameWorld = {
             'left': 0,
             'backgroundColor': '#ccc'
         });
-        //this.test = new Label()
-        //    .mount(this.uiScene);
+
 
         this.debugText = new IgeUiLabel()
             .cache(true)

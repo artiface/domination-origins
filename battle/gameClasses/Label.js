@@ -5,30 +5,30 @@ var Label = IgeEntity.extend({
 	init: function () {
 		IgeEntity.prototype.init.call(this);
 		var self = this;
-	},
-    tick: function (ctx) {
-		ctx.save();
-        var mp = {'x': 20, 'y': 20},
-            text,
-            mx,
-            my,
-            textMeasurement;
+		this.depth(20).layer(20);
+		this.hide();
+		//this.cache(true);
 
-        // Re-scale the context to ensure that output is always 1:1
-        ctx.scale(1, 1);
-
-        // Work out the re-scale mouse position
-        mx = Math.floor(mp.x);
-        my = Math.floor(mp.y);
-        ctx.font = '20px Arial';
-        text = "HALLO\nWELT";
-        textMeasurement = ctx.measureText(text);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-        ctx.fillRect(Math.floor(mx - textMeasurement.width / 2 - 5), Math.floor(my - 25), Math.floor(textMeasurement.width + 10), 14);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(text, mx - textMeasurement.width / 2, my - 15);
-        ctx.restore();
+		this._labelTexture = new IgeTexture('../assets/smart/Label.js');
+        this._labelTexture.on('loaded', function () {
+			self.texture(self._labelTexture).width(120);
+            self.texture(self._labelTexture).height(20);
+            self.texture(self._labelTexture).localAabb(true);
+		}, false, true);
 	},
+	setTextFunction: function(textFunction) {
+        this._textFunction = textFunction;
+        return this;
+    },
+	getLabelOptions: function () {
+        return {
+            fontFamily: 'Arial',
+            fontSize: 12,
+            offsetX: 0,
+            offsetY: -80,
+            text: this._textFunction(),
+        };
+    },
 });
 
 if (typeof(module) !== 'undefined' && typeof(module.exports) !== 'undefined') { module.exports = Label; }

@@ -91,7 +91,6 @@ Graphics needed from Kazuko:
  - Find the text rendering problem (See viewport drawMouse())
     - Damage Numbers
     - Display Hit Chance
- - Highlight selected character
  - Show valid targets when attacking
  - Hit Chance & Damage Calculations
    - Base Chance to Hit:

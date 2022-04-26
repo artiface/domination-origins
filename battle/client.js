@@ -53,7 +53,7 @@ var Client = IgeClass.extend({
 
 	init: function () {
 		//ige.addComponent(IgeEditorComponent);
-		ige.globalSmoothing(false);
+		ige.globalSmoothing(true);
 
 		// Load our textures
 		var self = this;
