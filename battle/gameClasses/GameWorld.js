@@ -1,5 +1,10 @@
 "use strict";
 var GameWorld = {
+    spawnFloatingText: function (tileX, tileY, text, color) {
+        const float = new FloatingText(text)
+            .mount(this.tilemap)
+            .translateToTile(tileX, tileY);
+    },
     spawnBulletImpacts: function(tileX, tileY, count)
     {
         for (var i = 0; i < count; i++)

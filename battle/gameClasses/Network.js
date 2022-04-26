@@ -33,6 +33,8 @@ var Network = {
         const damage = data['damage'];
         const defender = this.tilemap.tileOccupiedBy(targetTile.x, targetTile.y);
         this.spawnBulletImpacts(targetTile.x, targetTile.y, 3);
+        let damageText = damage > 0 ? damage.toString() : 'miss';
+        this.spawnFloatingText(targetTile.x, targetTile.y, damageText, '#ff0000');
         defender.healthbar.changeHealth(-damage);
         const attacker = this.characterById(data['attacker']);
         attacker.hasAttacked(true);

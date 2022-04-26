@@ -14,6 +14,7 @@ var image = {
         my = options.offsetY || 0;// -70;
         let fontSize = options.fontSize || 20;
         let fontFamily = options.fontFamily || 'Arial';
+        let fontColor = options.fontColor || '#fff';
         ctx.font = fontSize + 'px ' + fontFamily;
         text = options.text;
 
@@ -29,9 +30,13 @@ var image = {
         let contentHeight = lineHeight * text.length;
 
         ctx.fillRect(mx - halfLineWidth, my - contentHeight + lineHeight, lineWidth, contentHeight);
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = fontColor;
 
-        let startY = my - contentHeight + (fontSize * 2) + padding;
+
+        let startY = my;
+        if (text.length > 1) {
+            startY = my - contentHeight + (fontSize * 2) + padding;
+        }
         for (let i = 0; i < text.length; i++) {
             let nextY = startY + (lineHeight * i);
             ctx.fillText(text[i], mx - halfLineWidth + padding, nextY);

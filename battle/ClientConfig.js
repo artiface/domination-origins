@@ -1,6 +1,7 @@
 var igeClientConfig = {
 	include: [
 		/* Your custom game JS scripts */
+		'./gameClasses/FloatingText.js',
 		'./gameClasses/GameWorld.js',
 		'./gameClasses/Input.js',
 		'./gameClasses/Network.js',
