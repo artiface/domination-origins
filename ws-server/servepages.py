@@ -14,6 +14,7 @@ def render(template, data):
 def prepareTroopData(generation, char):
     templateData = char.toObject()
     templateData['faction'] = str(templateData['faction']).replace('Faction.', '')
+    templateData['skillString'] = ', '.join(templateData['skills']) if templateData['skills'] else 'None'
     templateData = create_nav_links(char, generation, templateData)
     return templateData
 

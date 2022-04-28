@@ -4,7 +4,7 @@ from asyncio import create_task
 
 from vector import Vector
 
-from enum import IntEnum
+from enum import IntEnum, Enum
 import json
 from chain import loadLocalNFT
 
@@ -20,10 +20,10 @@ def valueFromBinary(binary_dna, start, min, max):  # 100..200
     return length, int(value)
 
 
-class Faction(IntEnum):
-    Wolf = 0,
-    Dragon = 1,
-    Snake = 2,
+class Faction(Enum):
+    Wolf = 1,
+    Dragon = 2,
+    Snake = 3,
 
 def manhattan(a, b):
     return sum(abs(val1-val2) for val1, val2 in zip(a, b))
@@ -165,6 +165,27 @@ class Character:
 
         if self.faction == Faction.Wolf:
             self.assignWolfFactionSkills(factionSkillAssignmentCode)
+        elif self.faction == Faction.Dragon:
+            self.assignDragonFactionSkills(factionSkillAssignmentCode)
+        elif self.faction == Faction.Snake:
+            self.assignSnakeFactionSkills(factionSkillAssignmentCode)
+
+    def getBattlePointValue(self):
+        healthValue = (self.maxHealth / 200) * 10
+        focusValue = self.maxFocus
+        strengthValue = self.strength
+        agilityValue = self.agility
+        dexterityValue = self.dexterity
+        intelligenceValue = self.intelligence
+        attributeBoostValue = self.attributeBoost
+        powerBoostValue = (self.powerBoost / 100) * 10
+        staminaBoostValue = (self.staminaBoost / 100) * 10
+        levelValue = self.level
+        skillsValue = len(self.skills) * 10
+
+        # sum all values
+        bp = healthValue + focusValue + strengthValue + agilityValue + dexterityValue + intelligenceValue + attributeBoostValue + powerBoostValue + staminaBoostValue + levelValue + skillsValue
+        return int(bp)
 
     def setWeapon(self, weaponTokenId):
         self.weapon = Weapon(self.ownerWallet, weaponTokenId)
@@ -198,6 +219,7 @@ class Character:
             'armor': self.armor,
             'items': self.items,
             'skills': self.skills,
+            'battlePointValue': self.getBattlePointValue(),
         }
 
     @classmethod
@@ -280,12 +302,32 @@ class Character:
     def assignWolfFactionSkills(self, factionSkillAssignmentCode):
         if factionSkillAssignmentCode == 0:
             self.skills = []
-        #elif factionSkillAssignmentCode == 1:
-        #    self.skills = [WolfClaws()]
-        #elif factionSkillAssignmentCode == 2:
-        #    self.skills = [WolfProtection()]
-        #elif factionSkillAssignmentCode == 3:
-        #    self.skills = [WolfClaws(), WolfProtection()]
+        elif factionSkillAssignmentCode == 1:
+            self.skills = ['WolfClaws()']
+        elif factionSkillAssignmentCode == 2:
+            self.skills = ['WolfProtection()']
+        elif factionSkillAssignmentCode == 3:
+            self.skills = ['WolfClaws()', 'WolfProtection()']
+
+    def assignSnakeFactionSkills(self, factionSkillAssignmentCode):
+        if factionSkillAssignmentCode == 0:
+            self.skills = []
+        elif factionSkillAssignmentCode == 1:
+            self.skills = ['PoisonCloud()']
+        elif factionSkillAssignmentCode == 2:
+            self.skills = ['SnakeBite()']
+        elif factionSkillAssignmentCode == 3:
+            self.skills = ['PoisonCloud()', 'SnakeBite()']
+
+    def assignDragonFactionSkills(self, factionSkillAssignmentCode):
+        if factionSkillAssignmentCode == 0:
+            self.skills = []
+        elif factionSkillAssignmentCode == 1:
+            self.skills = ['DragonHide()']
+        elif factionSkillAssignmentCode == 2:
+            self.skills = ['DragonStrike()']
+        elif factionSkillAssignmentCode == 3:
+            self.skills = ['DragonHide()', 'DragonStrike()']
 
 if __name__ == '__main__':
     _, zero = valueFromBinary('00', 0, 0, 3)
