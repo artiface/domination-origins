@@ -105,6 +105,11 @@ class GameServer:
         create_task(self.state(player).broadcast(response))
 
     async def handleUseSkill(self, player, char, message):
+        # check if this character of this faction even has this skill
+        # check if this character has enough focus to use this skill
+        # check if the skill is ready to be used (eg. cooldown, etc)
+        # check if a valid target has been given
+
         isBroadCast, response = self.skillHandler.handleSkillUsage(char, message)
         if isBroadCast:
             create_task(self.state(player).broadcast(response))
@@ -147,7 +152,7 @@ class GameServer:
     async def isOwnerOfLoadout(self, player, loadout: LoadOut):
         chain = ChainLoader()
         for slot, troopInfo in loadout.troopselection.items():
-            troopTokenId = troopInfo['troops']
+            troopTokenId = troopInfo['css']
             if not chain.isOwnerOf(player.wallet, 'char', troopTokenId):
                 return False
         return True
@@ -279,7 +284,7 @@ class GameServer:
         validated = self.siwe.validate(user_wallet, signature)
         is_owner_of_loadout = await self.isOwnerOfLoadout(player, loadout)
         # TODO: add further checks for the loadout
-        #  - check for duplicate troops
+        #  - check for duplicate css
 
         if not validated or not is_owner_of_loadout:
             create_task(player.respond({'message': 'siwe', 'error': 'Login failed.'}))

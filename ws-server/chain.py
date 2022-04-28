@@ -7,20 +7,22 @@ import json
 from pathlib import Path
 import os
 
+
+def flattenAttributes(attributes):
+    flat = {}
+    for item in attributes:
+        key = item['trait_type']
+        value = item['value']
+        flat[key] = value
+    return flat
+
 class ChainLoader:
     def __init__(self):
-        targetPath = './WeaponNFTs'
+        targetPath = './TroopNFTs'
         self.targetPath = targetPath
         self.chainProvider = 'https://rpc.ankr.com/polygon'
         self.ipfsGateway = 'https://gateway.ipfs.io/' #'https://ipfs.io/'
 
-    def flattenAttributes(self, attributes):
-        flat = {}
-        for item in attributes:
-            key = item['trait_type']
-            value = item['value']
-            flat[key] = value
-        return flat
 
     def getContract(self, tokenType):
         addressMap = {
@@ -75,7 +77,6 @@ class ChainLoader:
         if tokenExists and not imageExists:# and imageExists:
             try:
                 data = json.loads(tokenFile.read_text())
-
                 urllib.request.urlretrieve(data['image'], imagePath)
                 print('Saved token %s' % tokenId)
                 return data
@@ -86,29 +87,29 @@ class ChainLoader:
                 #    tokenFile.unlink()
                 return False
 
-    def loadLocalNFT(self, type, tokenId):
-        dirmap = {
-            'char': 'TroopNFTs',
-            'weapon': 'WeaponNFTs',
-        }
-        dir = dirmap[type]
-        try:
-            with open('../{}/{}.json'.format(dir, tokenId), 'r') as f:
-                data = json.load(f)
-                # flatten attributes
-                data['attributes'] = self.flattenAttributes(data['attributes'])
-                return data
-        except FileNotFoundError:
-            return False
+def loadLocalNFT(type, tokenId):
+    dirmap = {
+        'char': 'TroopNFTs',
+        'weapon': 'WeaponNFTs',
+    }
+    dir = dirmap[type]
+    try:
+        with open('../{}/{}.json'.format(dir, tokenId), 'r') as f:
+            data = json.load(f)
+            # flatten attributes
+            data['attributes'] = flattenAttributes(data['attributes'])
+            return data
+    except FileNotFoundError:
+        return False
 
 
 if __name__ == "__main__":
-    Path('./WeaponNFTs').mkdir(parents=True, exist_ok=True)
+    Path('./TroopNFTs').mkdir(parents=True, exist_ok=True)
 
     loader = ChainLoader()
 
     for i in range(10000):
         try:
-            loader.storeToken('item', i)
+            loader.storeToken('char', i)
         except ContractLogicError as e:
             print('No token for id %s' % i)

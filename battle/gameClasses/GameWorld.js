@@ -1,5 +1,9 @@
 "use strict";
 var GameWorld = {
+    spawnMessageText: function (text, color) {
+        const float = new MessageText(text)
+            .translateTo(100, 100, 0);
+    },
     spawnFloatingText: function (tileX, tileY, text, color) {
         const float = new FloatingText(text)
             .mount(this.tilemap)
@@ -12,12 +16,15 @@ var GameWorld = {
             const randRange = 40;
             const randX = Math.floor(Math.random() * randRange) - (randRange / 2);
             const randY = Math.floor(Math.random() * randRange) - (randRange / 2);
-            const effect = new BulletImpact(this.gameTexture.effects[0])
+            const randomTimer = Math.floor(Math.random() * 500);
+            setTimeout(() => {
+                const effect = new BulletImpact(this.gameTexture.effects[0])
                 .layer(6)
                 .isometric(true)
                 .mount(this.tilemap)
                 .translateToTile(tileX, tileY, 0)
                 .translateBy(randX, randY, 0);
+            }, randomTimer);
         }
     },
     getOwnCharIndex: function(ownChar) {

@@ -1,5 +1,3 @@
-from vector import Vector
-
 class PushingBlow:
 	def __init__(self, gameMap, executingCharacter):
 		self.char = executingCharacter

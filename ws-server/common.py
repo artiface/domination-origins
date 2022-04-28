@@ -6,7 +6,24 @@ from vector import Vector
 
 from enum import IntEnum
 import json
-from chain import ChainLoader
+from chain import loadLocalNFT
+
+
+def valueFromBinary(binary_dna, start, min, max):  # 100..200
+    resolution = (max - min) # 100
+    length = math.floor(math.log2(resolution)) + 1 # 7
+    binary_part = binary_dna[start:start + length]
+    dna_raw_value = int(binary_part, base=2)  # 0..127
+    max_value = 2 ** length - 1
+    value = (dna_raw_value / max_value) * resolution # 0..100
+    value += min  # 100..200
+    return length, int(value)
+
+
+class Faction(IntEnum):
+    Wolf = 0,
+    Dragon = 1,
+    Snake = 2,
 
 def manhattan(a, b):
     return sum(abs(val1-val2) for val1, val2 in zip(a, b))
@@ -72,8 +89,7 @@ class Weapon:
         self.loadTokenData()
 
     def loadTokenData(self):
-        chain = ChainLoader()
-        tokenData = chain.loadLocalNFT('weapon', self.tokenId)
+        tokenData = loadLocalNFT('weapon', self.tokenId)
 
         self.name = tokenData['name']
         self.weaponType = tokenData['attributes']['Weapon Type']
@@ -96,10 +112,14 @@ class Character:
         self.currentHealth = 0
         self.ownerWallet = ownerWallet
         self.charId = -1
+
         self.tokenId = tokenId
         self.position = Vector(-1, -1)
         self.state = CharacterState.Alive
         self.stepsTakenThisTurn = 0
+        self.backgroundHint = None
+        self.origin = None
+        self.faction = None
         self.hasAttackedThisTurn = False
         self.hasSprinted = False
         self.level = 0
@@ -127,10 +147,24 @@ class Character:
     def startDNADerivation(self):
         integer_dna = int(self.dna, base=16)
         binary_dna = str(bin(integer_dna))[2:]
-        bits_used, self.maxHealth = self.valueFromBinary(binary_dna, 0, 100, 200)
+        startingBit = 2
+        bits_used, factionDice = valueFromBinary(binary_dna, startingBit, 0, 2)
+        startingBit += bits_used
+        bits_used, self.maxHealth = valueFromBinary(binary_dna, startingBit, 100, 200)
         self.currentHealth = self.maxHealth
-        bits_used, self.maxFocus = self.valueFromBinary(binary_dna, bits_used, 1, 10)
+        startingBit += bits_used
+        bits_used, self.maxFocus = valueFromBinary(binary_dna, startingBit, 1, 10)
         self.currentFocus = self.maxFocus
+        startingBit += bits_used
+
+        bits_used, factionSkillAssignmentCode = valueFromBinary(binary_dna, startingBit, 0, 3)
+        startingBit += bits_used
+        if not self.faction:
+            #print('Faction not set, choosing DNA faction from factionDice: {}'.format(factionDice))
+            self.faction = [Faction.Wolf, Faction.Dragon, Faction.Snake][factionDice]
+
+        if self.faction == Faction.Wolf:
+            self.assignWolfFactionSkills(factionSkillAssignmentCode)
 
     def setWeapon(self, weaponTokenId):
         self.weapon = Weapon(self.ownerWallet, weaponTokenId)
@@ -140,6 +174,8 @@ class Character:
             'ownerWallet': self.ownerWallet,
             'tokenId': self.tokenId,
             'charId': self.charId,
+            'faction': self.faction,
+            'origin': self.origin,
             'pos': {'x': self.position[0], 'y': self.position[1]},
             'state': self.state,
             'stepsTakenThisTurn': self.stepsTakenThisTurn,
@@ -161,7 +197,7 @@ class Character:
             'weapon': self.weapon.tokenId if self.weapon else None,
             'armor': self.armor,
             'items': self.items,
-            'skills': self.skills
+            'skills': self.skills,
         }
 
     @classmethod
@@ -190,6 +226,8 @@ class Character:
         char.armor = objData['armor']
         char.items = objData['items']
         char.skills = objData['skills']
+        char.origin = objData['origin']
+        char.faction = objData['faction']
         if objData['weapon']:
             char.setWeapon(objData['weapon'])
         return char
@@ -197,10 +235,10 @@ class Character:
     def loadTokenData(self):
         # we just load the token data from the local directory and json file
         # load a file from disk
-        chain = ChainLoader()
-        tokenData = chain.loadLocalNFT('char', self.tokenId)
-
+        tokenData = loadLocalNFT('char', self.tokenId)
+        self.backgroundHint = tokenData['attributes']['Background Pattern'] if 'Background Pattern' in tokenData['attributes'] else False
         self.level = tokenData['attributes']['Level']
+        self.origin = tokenData['attributes']['Origin']
         self.dna = tokenData['dna']
         self.agility = tokenData['attributes']['Agility']
         self.intelligence = tokenData['attributes']['Intelligence']
@@ -209,6 +247,15 @@ class Character:
         self.attributeBoost = tokenData['attributes']['Attributes Increase']
         self.powerBoost = tokenData['attributes']['Power Increase']
         self.staminaBoost = tokenData['attributes']['Stamina Increase']
+
+        factionMap = {
+            'Ryu': Faction.Dragon,
+            'Hebi': Faction.Snake,
+            'Kaze': Faction.Wolf
+        }
+
+        if self.backgroundHint and self.backgroundHint in factionMap:
+            self.faction = factionMap[self.backgroundHint]
 
     def isNextTo(self, position):
         return manhattan(self.position, [position['x'], position['y']]) <= 1
@@ -229,12 +276,26 @@ class Character:
             return self.tokenId == other.tokenId
         return False
 
-    def valueFromBinary(self, binary_dna, start, min, max): # 100..200
-        resolution = max - min  # 100
-        length = math.floor(math.log2(resolution)) + 1 # 7
-        binary_part = binary_dna[start:start+length]
-        dna_raw_value = int(binary_part, base=2) # 0..127
-        max_value = 2 ** length - 1
-        value = (dna_raw_value / max_value) * resolution  # 0..100
-        value += min  # 100..200
-        return length, int(value)
+
+    def assignWolfFactionSkills(self, factionSkillAssignmentCode):
+        if factionSkillAssignmentCode == 0:
+            self.skills = []
+        #elif factionSkillAssignmentCode == 1:
+        #    self.skills = [WolfClaws()]
+        #elif factionSkillAssignmentCode == 2:
+        #    self.skills = [WolfProtection()]
+        #elif factionSkillAssignmentCode == 3:
+        #    self.skills = [WolfClaws(), WolfProtection()]
+
+if __name__ == '__main__':
+    _, zero = valueFromBinary('00', 0, 0, 3)
+    assert zero == 0
+    _, one = valueFromBinary('01', 0, 0, 3)
+    assert one == 1
+    _, two = valueFromBinary('10', 0, 0, 3)
+    assert two == 2
+    _, three = valueFromBinary('11', 0, 0, 3)
+    assert three == 3
+    for i in range(1, 10000):
+        c = Character('', i)
+        print(c.faction)

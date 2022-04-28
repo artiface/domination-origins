@@ -118,7 +118,7 @@ var Input = {
         ige.input.on('mouseUp', function (event, x, y, button) {
             const mouseTile = self.tilemap.mouseToTile();
 
-            self.spawnFloatingText(mouseTile.x, mouseTile.y, "123", '#f00');
+            self.spawnMessageText("123", '#f00');
 
             if (self.tilemap.isTileOccupied(mouseTile.x, mouseTile.y))
             {

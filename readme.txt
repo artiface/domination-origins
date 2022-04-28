@@ -87,10 +87,10 @@ Graphics needed from Kazuko:
 
 ## Needed for Alpha Battles
  - Weapon Slots - ITEM NFTs currently CANNOT BE ITERATED OVER
+ - Battle Points System
+ - Test Sprinting
+ - Melee and Ranged Attack Animation
  - First Three Skills
- - Find the text rendering problem (See viewport drawMouse())
-    - Display Hit Chance
- - Show valid targets when attacking
  - Hit Chance & Damage Calculations
    - Base Chance to Hit:
      - Melee: Intelligence * Level [1, 80]
