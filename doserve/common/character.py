@@ -1,110 +1,42 @@
-import math
-import random
-from asyncio import create_task
-
-from vector import Vector
-
-from enum import IntEnum, Enum
-import json
-from chain import loadLocalNFT
-
-
-def valueFromBinary(binary_dna, start, min, max):  # 100..200
-    resolution = (max - min) # 100
-    length = math.floor(math.log2(resolution)) + 1 # 7
-    binary_part = binary_dna[start:start + length]
-    dna_raw_value = int(binary_part, base=2)  # 0..127
-    max_value = 2 ** length - 1
-    value = (dna_raw_value / max_value) * resolution # 0..100
-    value += min  # 100..200
-    return length, int(value)
+from doserve.chain import loadLocalNFT
+from doserve.common.enums import Faction, DamageType, CharacterState
+from doserve.common.helper import manhattan, valueFromBinary
+from doserve.common.player import Weapon
+import doserve.skills.dragon_hide
+import doserve.skills.snake_bite
+from doserve.skills.skill import Skill
+from doserve.vector import Vector
 
 
-class Faction(Enum):
-    Wolf = 1,
-    Dragon = 2,
-    Snake = 3,
+def assignWolfFactionSkills(char, factionSkillAssignmentCode):
+    if factionSkillAssignmentCode == 0:
+        char.skills = []
+    elif factionSkillAssignmentCode == 1:
+        char.skills = ['WolfClaws()']
+    elif factionSkillAssignmentCode == 2:
+        char.skills = ['WolfProtection()']
+    elif factionSkillAssignmentCode == 3:
+        char.skills = ['WolfClaws()', 'WolfProtection()']
 
-def manhattan(a, b):
-    return sum(abs(val1-val2) for val1, val2 in zip(a, b))
+def assignSnakeFactionSkills(char, factionSkillAssignmentCode):
+    if factionSkillAssignmentCode == 0:
+        char.skills = []
+    elif factionSkillAssignmentCode == 1:
+        char.skills = ['PoisonCloud()']
+    elif factionSkillAssignmentCode == 2:
+        char.skills = [doserve.skills.snake_bite.SnakeBite()]
+    elif factionSkillAssignmentCode == 3:
+        char.skills = ['PoisonCloud()', doserve.skills.snake_bite.SnakeBite()]
 
-def dist(a, b):
-    return math.sqrt(sum((val1-val2)**2 for val1, val2 in zip(a, b)))
-
-class LoadOut:
-    def __init__(self, troopselection):
-        self.troopselection = troopselection
-
-    def toString(self):
-        return json.dumps(self.__dict__)
-
-class CharacterState(IntEnum):
-    Dead = 0
-    Alive = 1
-
-class Player:
-    def __init__(self, wallet, websocket):
-        self.wallet = wallet
-        self.currentBattle = None
-        self.socket = websocket
-        self.playerIndex = -1
-
-    def toObject(self):
-        return {
-            'wallet': self.wallet,
-            'playerIndex': self.playerIndex,
-            'currentBattle': self.currentBattle
-        }
-
-    async def respond(self, response):
-        if self.socket is not None and self.socket.open:
-            jsonResponse = json.dumps(response)
-            create_task(self.socket.send(jsonResponse))
-            print('Sent to player with wallet: ' + self.wallet)
-            print('Response: {}'.format(jsonResponse))
-
-    def __hash__(self):
-        """Overrides the default implementation"""
-        return hash(self.wallet)
-
-    def __eq__(self, other):
-        """Overrides the default implementation"""
-        if isinstance(other, Player):
-            return self.wallet == other.wallet
-        return False
-
-class Weapon:
-    def __init__(self, ownerWallet: str, tokenId):
-        self.name = None
-        self.ownerWallet = ownerWallet
-        self.tokenId = tokenId
-        self.weaponType = None
-        self.effect = None
-        self.minimumDamage = 0
-        self.maximumDamage = 0
-        self.levelRequirement = 0
-        self.criticalChance = 0
-        self.accuracy = 0
-
-        self.loadTokenData()
-
-    def loadTokenData(self):
-        tokenData = loadLocalNFT('weapon', self.tokenId)
-
-        self.name = tokenData['name']
-        self.weaponType = tokenData['attributes']['Weapon Type']
-        self.effect = tokenData['attributes']['Effect']
-        self.minimumDamage = tokenData['attributes']['Minimum Damage']
-        self.maximumDamage = tokenData['attributes']['Maximum Damage']
-        self.levelRequirement = tokenData['attributes']['Level Requirement']
-        self.criticalChance = tokenData['attributes']['Crit Chance']
-        self.accuracy = tokenData['attributes']['Accuracy']
-
-    def damage(self):
-        multiplier = 1
-        if random.randint(0, 100) < self.criticalChance:
-            multiplier = 2
-        return random.randint(self.minimumDamage, self.maximumDamage) * multiplier
+def assignDragonFactionSkills(char, factionSkillAssignmentCode):
+    if factionSkillAssignmentCode == 0:
+        char.skills = []
+    elif factionSkillAssignmentCode == 1:
+        char.skills = [doserve.skills.dragon_hide.DragonHide()]
+    elif factionSkillAssignmentCode == 2:
+        char.skills = ['DragonStrike()']
+    elif factionSkillAssignmentCode == 3:
+        char.skills = [doserve.skills.dragon_hide.DragonHide(), 'DragonStrike()']
 
 class Character:
     def __init__(self, ownerWallet: str, tokenId):
@@ -141,6 +73,13 @@ class Character:
         self.items = []
         self.skills = []
 
+        self.poisonLevel = 0
+        self.resistance = {
+            DamageType.Melee: 0,
+            DamageType.Ranged: 0,
+            DamageType.Poison: 0
+        }
+
         self.loadTokenData()
         self.startDNADerivation()
 
@@ -164,11 +103,11 @@ class Character:
             self.faction = [Faction.Wolf, Faction.Dragon, Faction.Snake][factionDice]
 
         if self.faction == Faction.Wolf:
-            self.assignWolfFactionSkills(factionSkillAssignmentCode)
+            assignWolfFactionSkills(self, factionSkillAssignmentCode)
         elif self.faction == Faction.Dragon:
-            self.assignDragonFactionSkills(factionSkillAssignmentCode)
+            assignDragonFactionSkills(self, factionSkillAssignmentCode)
         elif self.faction == Faction.Snake:
-            self.assignSnakeFactionSkills(factionSkillAssignmentCode)
+            assignSnakeFactionSkills(self, factionSkillAssignmentCode)
 
     def getBattlePointValue(self):
         healthValue = (self.maxHealth / 200) * 10
@@ -220,6 +159,10 @@ class Character:
             'items': self.items,
             'skills': self.skills,
             'battlePointValue': self.getBattlePointValue(),
+            'base_resistances:': self.resistance,
+            'resistance_poison': self.getResistance(DamageType.Poison),
+            'resistance_melee': self.getResistance(DamageType.Melee),
+            'resistance_ranged': self.getResistance(DamageType.Ranged),
         }
 
     @classmethod
@@ -250,6 +193,7 @@ class Character:
         char.skills = objData['skills']
         char.origin = objData['origin']
         char.faction = objData['faction']
+        char.poisonLevel = objData['poisonLevel']
         if objData['weapon']:
             char.setWeapon(objData['weapon'])
         return char
@@ -299,45 +243,19 @@ class Character:
         return False
 
 
-    def assignWolfFactionSkills(self, factionSkillAssignmentCode):
-        if factionSkillAssignmentCode == 0:
-            self.skills = []
-        elif factionSkillAssignmentCode == 1:
-            self.skills = ['WolfClaws()']
-        elif factionSkillAssignmentCode == 2:
-            self.skills = ['WolfProtection()']
-        elif factionSkillAssignmentCode == 3:
-            self.skills = ['WolfClaws()', 'WolfProtection()']
+    def getSkill(self, skillId):
+        for skill in self.skills:
+            if skill.identifier == skillId:
+                return skill
+        return None
 
-    def assignSnakeFactionSkills(self, factionSkillAssignmentCode):
-        if factionSkillAssignmentCode == 0:
-            self.skills = []
-        elif factionSkillAssignmentCode == 1:
-            self.skills = ['PoisonCloud()']
-        elif factionSkillAssignmentCode == 2:
-            self.skills = ['SnakeBite()']
-        elif factionSkillAssignmentCode == 3:
-            self.skills = ['PoisonCloud()', 'SnakeBite()']
-
-    def assignDragonFactionSkills(self, factionSkillAssignmentCode):
-        if factionSkillAssignmentCode == 0:
-            self.skills = []
-        elif factionSkillAssignmentCode == 1:
-            self.skills = ['DragonHide()']
-        elif factionSkillAssignmentCode == 2:
-            self.skills = ['DragonStrike()']
-        elif factionSkillAssignmentCode == 3:
-            self.skills = ['DragonHide()', 'DragonStrike()']
-
-if __name__ == '__main__':
-    _, zero = valueFromBinary('00', 0, 0, 3)
-    assert zero == 0
-    _, one = valueFromBinary('01', 0, 0, 3)
-    assert one == 1
-    _, two = valueFromBinary('10', 0, 0, 3)
-    assert two == 2
-    _, three = valueFromBinary('11', 0, 0, 3)
-    assert three == 3
-    for i in range(1, 10000):
-        c = Character('', i)
-        print(c.faction)
+    def getResistance(self, damageType):
+        total_resistance = 0
+        base_resistance = self.resistance[damageType]
+        # TODO: add armor resistances..
+        total_resistance += base_resistance
+        for skill in self.skills:
+            if issubclass(skill.__class__, Skill):
+                skill_resistance = skill.getResistance(damageType)
+                total_resistance += skill_resistance
+        return total_resistance

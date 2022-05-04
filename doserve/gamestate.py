@@ -5,8 +5,10 @@ from asyncio import create_task
 
 from pytmx import pytmx
 
+import doserve.common.character
+from doserve.common.enums import CharacterState, DamageType
+from doserve.common.helper import dist
 from vector import Vector
-from common import Character, CharacterState, dist
 
 
 class Tile:
@@ -29,7 +31,7 @@ class Tile:
 		tile = Tile(Vector(obj['position']['x'], obj['position']['y']))
 		tile.textureIndex = obj['textureIndex']
 		tile.isWall = obj['isWall']
-		tile.character = Character.fromObject(obj['character']) if obj['character'] is not None else None
+		tile.character = doserve.common.character.Character.fromObject(obj['character']) if obj['character'] is not None else None
 
 class GameState:
 	def __init__(self, battleId, width, height):
@@ -87,7 +89,7 @@ class GameState:
 		troopList = []
 		for slot, troopInfo in troops.items():
 			troopTokenId = troopInfo['css']
-			spawnedTroop = Character(player.wallet, troopTokenId)
+			spawnedTroop = doserve.common.character.Character(player.wallet, troopTokenId)
 			spawnedTroop.setWeapon('2729')  # hand pistol
 			troopList.append(spawnedTroop)
 
@@ -120,7 +122,7 @@ class GameState:
 	def inBounds(self, x, y):
 		return 0 <= x < self.width and 0 <= y < self.height
 
-	def getTile(self, x, y):
+	def getTile(self, x, y) -> Tile:
 		if not self.inBounds(x, y):
 			return False
 		return self.tileMap[y][x]
@@ -156,7 +158,7 @@ class GameState:
 		char.charId = len(self.allCharacters)
 		self.allCharacters.append(char)
 
-	def moveChar(self, char: Character, destination: Vector):
+	def moveChar(self, char: doserve.common.character.Character, destination: Vector):
 		oldTile = self.getTile(char.position[0], char.position[1])	
 		newTile = self.getTile(destination[0], destination[1])		
 		char.position = destination
@@ -281,7 +283,7 @@ class GameState:
 			state = GameState(gameStateObj['battleId'], gameStateObj['width'], gameStateObj['height'])
 			state.playerMap = gameStateObj['playerMap']
 			state.turnOfPlayerIndex = gameStateObj['turnOfPlayerIndex']
-			state.allCharacters = [Character.fromObject(char) for char in gameStateObj['allCharacters']]
+			state.allCharacters = [doserve.common.character.Character.fromObject(char) for char in gameStateObj['allCharacters']]
 			state.tileMapFromObject(gameStateObj['tileMap'])
 			return state
 
@@ -316,22 +318,25 @@ class GameState:
 				discPlayers.append(player)
 		return discPlayers
 
-	def dealDamage(self, attacker, defender, damage):
+	def dealDamage(self, attacker: doserve.common.character.Character, defender: doserve.common.character.Character, in_damage: int, damage_type: DamageType) -> (bool, int):
+		resistance = defender.getResistance(damage_type)
+		damage = max(0, in_damage - resistance)
+
 		defender.currentHealth -= damage
 		if defender.currentHealth <= 0:
 			defender.state = CharacterState.Dead
-			return True
-		return False
+			return True, damage
+		return False, damage
 
 	async def meleeAttack(self, attacker, defender):
 		chanceToHit = attacker.intelligence * attacker.level
 
 		attacker.hasAttackedThisTurn = True
-		damage = attacker.weapon.damage() if attacker.weapon else 0
+		damage, damage_type = attacker.weapon.damage() if attacker.weapon else (0, DamageType.Melee)
 		hit = secrets.randbelow(100) < chanceToHit
 		killed = False
 		if hit:
-			killed = self.dealDamage(attacker, defender, damage)
+			killed, damage = self.dealDamage(attacker, defender, damage, damage_type)
 		response = {
 			'message': 'meleeAttack',
 			'error': '',
@@ -349,6 +354,7 @@ class GameState:
 
 	async def rangedAttack(self, attacker, defender):
 		distance = dist(attacker.position, defender.position)
+
 		chanceToHit = (2 * attacker.dexterity * (attacker.level + 2)) - 5 * distance
 		# l1, d1 => 2*1*(1+2) = 6
 		# l2, d2 => 2*2*(2+2) = 12
@@ -356,11 +362,11 @@ class GameState:
 		# l10, d1 => 2*1*(10+2) = 24
 		# l10, d10 => 2*10*(10+2) = 240
 		attacker.hasAttackedThisTurn = True
-		damage = attacker.weapon.damage()
+		damage, damage_type = attacker.weapon.damage()
 		hit = secrets.randbelow(100) < chanceToHit
 		killed = False
 		if hit:
-			killed = self.dealDamage(attacker, defender, damage)
+			killed, damage = self.dealDamage(attacker, defender, damage, damage_type)
 		response = {
 			'message': 'rangedAttack',
 			'error': '',

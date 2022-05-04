@@ -2,14 +2,16 @@
 
 import asyncio
 import os
+from asyncio import create_task
 
 import websockets
+
+from doserve.common.player import Player
 from siweman import SignInManager
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 
 from skillhandler import SkillHandler
-from common import *
 from vector import Vector
 from gamestate import GameState
 from storage import Storage
@@ -105,14 +107,10 @@ class GameServer:
         create_task(self.state(player).broadcast(response))
 
     async def handleUseSkill(self, player, char, message):
-        # check if this character of this faction even has this skill
-        # check if this character has enough focus to use this skill
-        # check if the skill is ready to be used (eg. cooldown, etc)
-        # check if a valid target has been given
-
-        isBroadCast, response = self.skillHandler.handleSkillUsage(char, message)
+        state = self.state(player)
+        isBroadCast, response = self.skillHandler.handleSkillUsage(state, char, message)
         if isBroadCast:
-            create_task(self.state(player).broadcast(response))
+            create_task(state.broadcast(response))
         else:
             create_task(player.respond(response))
             

@@ -1,6 +1,8 @@
 import flask
 from string import Template
-from common import Character
+
+from doserve.common.character import Character
+
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
 
@@ -14,6 +16,9 @@ def render(template, data):
 def prepareTroopData(generation, char):
     templateData = char.toObject()
     templateData['faction'] = str(templateData['faction']).replace('Faction.', '')
+    # cast all skill to str
+    to_str = lambda x: str(x)
+    templateData['skills'] = map(to_str, templateData['skills'])
     templateData['skillString'] = ', '.join(templateData['skills']) if templateData['skills'] else 'None'
     templateData = create_nav_links(char, generation, templateData)
     return templateData
