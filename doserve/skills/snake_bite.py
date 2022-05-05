@@ -1,6 +1,6 @@
 
 from doserve.common.enums import DamageType
-from doserve.skills.skill import Skill, SkillType
+from doserve.skills.skill import Skill, SkillType, TargetMode
 
 
 class SnakeBite(Skill):
@@ -10,6 +10,7 @@ class SnakeBite(Skill):
             "Snake Bite",
             "Poisonous melee attack",
             SkillType.ACTIVE,
+            TargetMode.ENEMIES_ONLY,
             cooldown=3,
             cost=3
         )

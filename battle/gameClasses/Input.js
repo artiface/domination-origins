@@ -2,13 +2,20 @@
 var Input = {
     charTooltipDelay: 800,
     enemySelector: function(tile) {
-        const isTileOccupied = this.tilemap.isTileOccupied(tile.x, tile.y);
-        if (!isTileOccupied) {
+        if (this.emptySelector(tile)) {
             return false;
         }
         const char = this.tilemap.tileOccupiedBy(tile.x, tile.y);
         const isOwner = char.clientIsOwner();
         return !isOwner;
+    },
+    allySelector: function(tile) {
+        if (this.emptySelector(tile)) {
+            return false;
+        }
+        const char = this.tilemap.tileOccupiedBy(tile.x, tile.y);
+        const isOwner = char.clientIsOwner();
+        return isOwner;
     },
     emptySelector: function(tile) {
         const isTileOccupied = this.tilemap.isTileOccupied(tile.x, tile.y);
@@ -18,7 +25,8 @@ var Input = {
         var self = this;
         if (this.selectedCharacter) {
             this.selectedCharacter.hideReachableTiles();
-            this.selectedCharacter.showPossibleTargets(this.characters);
+            this.selectedCharacter.setRangedChanceToHit();
+            this.selectedCharacter.showPossibleTargets(function(tile){return self.isValidTarget(tile)});
             this.currentAction = function(character, tile) {
                 self.requestAttack(character.getCharId(), tile.x, tile.y);
             };
@@ -34,16 +42,28 @@ var Input = {
             this.isValidTarget = this.emptySelector;
         }
     },
-    skillTargetMode: function(skillIdentifier) {
+    skillTargetMode: function(skillDefinition) {
         var self = this;
-        var skillId = skillIdentifier;
+        var skillId = skillDefinition.identifier;
         if (this.selectedCharacter) {
+            switch (skillDefinition.targetMode) {
+                case 1: // enemies only
+                    self.isValidTarget = this.enemySelector;
+                    break;
+                case 2: // allies only
+                    self.isValidTarget = this.allySelector;
+                    break;
+                case 3: // empty tiles only
+                    self.isValidTarget = this.emptySelector;
+                    break;
+            }
             this.selectedCharacter.hideReachableTiles();
-            this.selectedCharacter.showPossibleTargets(this.characters);
+            this.selectedCharacter.chanceToHit = function(otherChar){ return 100; };
+            this.selectedCharacter.showPossibleTargets(function(tile){return self.isValidTarget(tile)});
             this.currentAction = function(character, tile) {
                 self.requestSkillActivation(character.getCharId(), skillId, tile);
             };
-            this.isValidTarget = this.enemySelector;
+
         }
     },
     onMouseOnCharacter: function(char) {

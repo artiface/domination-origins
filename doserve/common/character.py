@@ -163,7 +163,7 @@ class Character:
             'weapon': self.weapon.tokenId if self.weapon else None,
             'armor': self.armor,
             'items': self.items,
-            'skills': [skill.identifier for skill in self.skills],
+            'skills': [skill.toObject() for skill in self.skills],
             'battlePointValue': self.getBattlePointValue(),
             'base_resistances:': self.resistance,
             'resistance_poison': self.getResistance(DamageType.Poison),
@@ -196,7 +196,7 @@ class Character:
         char.weapon = objData['weapon']
         char.armor = objData['armor']
         char.items = objData['items']
-        char.skills = [createSkillFromIdentifier(skillId) for skillId in objData['skills']]
+        char.skills = [createSkillFromIdentifier(skillDef['identifier']) for skillDef in objData['skills']]
         char.origin = objData['origin']
         char.faction = objData['faction']
         if objData['weapon']:

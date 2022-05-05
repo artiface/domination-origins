@@ -75,6 +75,7 @@ class ChainLoader:
         imageExists = Path(imagePath).exists()
 
         if tokenExists and not imageExists:# and imageExists:
+            print('Missing image for token %s' % tokenId)
             try:
                 data = json.loads(tokenFile.read_text())
                 urllib.request.urlretrieve(data['image'], imagePath)
@@ -83,9 +84,11 @@ class ChainLoader:
             except (json.decoder.JSONDecodeError, urllib.error.ContentTooShortError, urllib.error.HTTPError) as e:
                 if Path(imagePath).exists():
                     Path(imagePath).unlink()
+                #print('Failed to download image for token %s' % tokenId)
                 #if tokenFile.exists():
                 #    tokenFile.unlink()
                 return False
+        return True
 
 def loadLocalNFT(type, tokenId):
     dirmap = {
@@ -108,8 +111,9 @@ if __name__ == "__main__":
 
     loader = ChainLoader()
 
-    for i in range(10000):
+    for i in range(1,10000):
         try:
-            loader.storeToken('char', i)
+            while not loader.storeToken('char', i):
+                print('Failed to store token %s. Trying again.' % i)
         except ContractLogicError as e:
             print('No token for id %s' % i)

@@ -318,8 +318,8 @@ var GameWorld = {
             .mouseUp(function () {
                 self.debugText.value("Skill 1 Activated!");
                 // depending on the targeting mode, we need to change the UI state first
-                const skillId = self.selectedCharacter.getSkillId(0);
-                self.skillTargetMode(skillId);
+                const skillDef = self.selectedCharacter.getSkillDefinition(0);
+                self.skillTargetMode(skillDef);
                 ige.input.stopPropagation();
             })
             .mount(this.uiScene);
