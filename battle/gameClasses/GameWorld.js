@@ -317,6 +317,9 @@ var GameWorld = {
             .mouseMove(function () { ige.input.stopPropagation(); })
             .mouseUp(function () {
                 self.debugText.value("Skill 1 Activated!");
+                // depending on the targeting mode, we need to change the UI state first
+                const skillId = self.selectedCharacter.getSkillId(0);
+                self.skillTargetMode(skillId);
                 ige.input.stopPropagation();
             })
             .mount(this.uiScene);
@@ -339,6 +342,7 @@ var GameWorld = {
             .mouseMove(function () { ige.input.stopPropagation(); })
             .mouseUp(function () {
                 self.debugText.value("Skill 2 Activated!");
+                self.requestSkillActivation(self.selectedCharacter, 2);
                 ige.input.stopPropagation();
             })
             .mount(this.uiScene);
@@ -361,6 +365,7 @@ var GameWorld = {
             .mouseMove(function () { ige.input.stopPropagation(); })
             .mouseUp(function () {
                 self.debugText.value("Skill 3 Activated!");
+                self.requestSkillActivation(self.selectedCharacter, 3);
                 ige.input.stopPropagation();
             })
             .mount(this.uiScene);

@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 
 import asyncio
+import json
 import os
 from asyncio import create_task
 
 import websockets
 
+from doserve.common.character import Character
+from doserve.common.enums import CharacterState
+from doserve.common.loadout import LoadOut
 from doserve.common.player import Player
 from siweman import SignInManager
 from pathfinding.core.grid import Grid
@@ -21,6 +25,7 @@ from chain import ChainLoader
 class GameServer:
 
     def __init__(self, hostname, port):
+        self.ownershipChecks = False
         self.battlecache = './battlecache/'
         self.siwe = SignInManager()
         self.port = port
@@ -148,9 +153,11 @@ class GameServer:
             create_task(player.respond({'message': 'attack', 'error': 'no target.'}))
 
     async def isOwnerOfLoadout(self, player, loadout: LoadOut):
+        if not self.ownershipChecks:
+            return True
         chain = ChainLoader()
         for slot, troopInfo in loadout.troopselection.items():
-            troopTokenId = troopInfo['css']
+            troopTokenId = troopInfo['troops']
             if not chain.isOwnerOf(player.wallet, 'char', troopTokenId):
                 return False
         return True
@@ -284,8 +291,11 @@ class GameServer:
         # TODO: add further checks for the loadout
         #  - check for duplicate css
 
-        if not validated or not is_owner_of_loadout:
-            create_task(player.respond({'message': 'siwe', 'error': 'Login failed.'}))
+        if not validated:
+            create_task(player.respond({'message': 'siwe', 'error': 'Login failed. (siwe)'}))
+            return
+        if not is_owner_of_loadout:
+            create_task(player.respond({'message': 'siwe', 'error': "You don't own all the tokens in this loadout."}))
             return
 
         create_task(self.postAuthentication(player, loadout))

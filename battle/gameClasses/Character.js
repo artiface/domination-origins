@@ -43,6 +43,9 @@ var Character = IgeEntity.extend({
             'Dexterity: ' + this.getStat('dexterity'),
 	    ];
 	},
+	getSkillId: function(skillIndex) {
+        return this._charData.skills[skillIndex];
+    },
     nextTurn: function() {
         this.hasAttacked(false);
         this.setStat('stepsTakenThisTurn', 0);

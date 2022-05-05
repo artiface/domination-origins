@@ -2,29 +2,40 @@
 var Network = {
     requestEndTurn: function() {
         this.deselectCharacter();
-        var request = {
+        const request = {
             'message': 'endTurn',
         };
-        var requestAsJson = JSON.stringify(request);
+        const requestAsJson = JSON.stringify(request);
         this.socket.send(requestAsJson);
     },
     requestMovement: function(characterId, tileX, tileY){
-        var request = {
+        const request = {
             'message': 'movement',
             'characterId': characterId,
             'destination': {'x': tileX, 'y': tileY}
         };
-        var requestAsJson = JSON.stringify(request);
+        const requestAsJson = JSON.stringify(request);
         this.socket.send(requestAsJson);
     },
 
     requestAttack: function(characterId, tileX, tileY){
-        var request = {
+        const request = {
             'message': 'attack',
             'characterId': characterId,
             'target': {'x': tileX, 'y': tileY}
         };
-        var requestAsJson = JSON.stringify(request);
+        const requestAsJson = JSON.stringify(request);
+        this.socket.send(requestAsJson);
+    },
+
+    requestSkillActivation: function(characterId, skillId, targetTile) {
+        const request = {
+            'message': 'useSkill',
+            'characterId': characterId,
+            'skill_id': skillId,
+            'target_tile': {'x': targetTile.x, 'y': targetTile.y}
+        }
+        const requestAsJson = JSON.stringify(request);
         this.socket.send(requestAsJson);
     },
 
@@ -43,6 +54,24 @@ var Network = {
             this.selectNextActionableCharacter();
         }
     },
+    handleUseSkill: function(data) {
+        const effect = data['skill_effect'];
+        const targetTile = effect['defender_tile'];
+        const damage = effect['damage'];
+        const defender = this.tilemap.tileOccupiedBy(targetTile.x, targetTile.y);
+        //this.spawnBulletImpacts(targetTile.x, targetTile.y, 3);
+        let damageText = damage > 0 ? damage.toString() : 'miss';
+        this.spawnFloatingText(targetTile.x, targetTile.y, damageText, '#ff0000');
+        defender.healthbar.changeHealth(-damage);
+        //const attacker = this.characterById(data['attacker']);
+        //attacker.hasAttacked(true);
+        /*
+        if (attacker === this.selectedCharacter)
+        {
+            this.selectNextActionableCharacter();
+        }
+        */
+    },
     
     handleServerResponse: async function(message) {
         if (message['error'])
@@ -54,6 +83,9 @@ var Network = {
         {
             case 'rangedAttack':
                 this.handleRangedAttack(message);
+                break;
+            case 'useSkill':
+                this.handleUseSkill(message);
                 break;
             case 'auth':
                 const flatSig = await signer.signMessage(message['siwe_message']);

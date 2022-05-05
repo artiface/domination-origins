@@ -11,32 +11,38 @@ from doserve.vector import Vector
 def assignWolfFactionSkills(char, factionSkillAssignmentCode):
     if factionSkillAssignmentCode == 0:
         char.skills = []
-    elif factionSkillAssignmentCode == 1:
-        char.skills = ['WolfClaws()']
-    elif factionSkillAssignmentCode == 2:
-        char.skills = ['WolfProtection()']
-    elif factionSkillAssignmentCode == 3:
-        char.skills = ['WolfClaws()', 'WolfProtection()']
+    #elif factionSkillAssignmentCode == 1:
+    #    char.skills = ['WolfClaws()']
+    #elif factionSkillAssignmentCode == 2:
+    #    char.skills = ['WolfProtection()']
+    #elif factionSkillAssignmentCode == 3:
+    #    char.skills = ['WolfClaws()', 'WolfProtection()']
 
 def assignSnakeFactionSkills(char, factionSkillAssignmentCode):
-    if factionSkillAssignmentCode == 0:
-        char.skills = []
-    elif factionSkillAssignmentCode == 1:
-        char.skills = ['PoisonCloud()']
-    elif factionSkillAssignmentCode == 2:
-        char.skills = [doserve.skills.snake_bite.SnakeBite()]
-    elif factionSkillAssignmentCode == 3:
-        char.skills = ['PoisonCloud()', doserve.skills.snake_bite.SnakeBite()]
+    #if factionSkillAssignmentCode == 0:
+    #    char.skills = []
+    #elif factionSkillAssignmentCode == 1:
+    #    char.skills = ['PoisonCloud()']
+    #elif factionSkillAssignmentCode == 2:
+    char.skills = [doserve.skills.snake_bite.SnakeBite()]
+    #elif factionSkillAssignmentCode == 3:
+    #    char.skills = ['PoisonCloud()', doserve.skills.snake_bite.SnakeBite()]
 
 def assignDragonFactionSkills(char, factionSkillAssignmentCode):
     if factionSkillAssignmentCode == 0:
         char.skills = []
     elif factionSkillAssignmentCode == 1:
         char.skills = [doserve.skills.dragon_hide.DragonHide()]
-    elif factionSkillAssignmentCode == 2:
-        char.skills = ['DragonStrike()']
-    elif factionSkillAssignmentCode == 3:
-        char.skills = [doserve.skills.dragon_hide.DragonHide(), 'DragonStrike()']
+    #elif factionSkillAssignmentCode == 2:
+    #    char.skills = ['DragonStrike()']
+    #elif factionSkillAssignmentCode == 3:
+    #    char.skills = [doserve.skills.dragon_hide.DragonHide(), 'DragonStrike()']
+
+def createSkillFromIdentifier(skillIdentifier):
+    if skillIdentifier == 'dragon_hide':
+        return doserve.skills.dragon_hide.DragonHide()
+    elif skillIdentifier == 'snake_bite':
+        return doserve.skills.snake_bite.SnakeBite()
 
 class Character:
     def __init__(self, ownerWallet: str, tokenId):
@@ -102,12 +108,12 @@ class Character:
             #print('Faction not set, choosing DNA faction from factionDice: {}'.format(factionDice))
             self.faction = [Faction.Wolf, Faction.Dragon, Faction.Snake][factionDice]
 
-        if self.faction == Faction.Wolf:
-            assignWolfFactionSkills(self, factionSkillAssignmentCode)
-        elif self.faction == Faction.Dragon:
-            assignDragonFactionSkills(self, factionSkillAssignmentCode)
-        elif self.faction == Faction.Snake:
-            assignSnakeFactionSkills(self, factionSkillAssignmentCode)
+        #if self.faction == Faction.Wolf:
+        #    assignWolfFactionSkills(self, factionSkillAssignmentCode)
+        #elif self.faction == Faction.Dragon:
+        #    assignDragonFactionSkills(self, factionSkillAssignmentCode)
+        #elif self.faction == Faction.Snake:
+        assignSnakeFactionSkills(self, factionSkillAssignmentCode)
 
     def getBattlePointValue(self):
         healthValue = (self.maxHealth / 200) * 10
@@ -157,7 +163,7 @@ class Character:
             'weapon': self.weapon.tokenId if self.weapon else None,
             'armor': self.armor,
             'items': self.items,
-            'skills': self.skills,
+            'skills': [skill.identifier for skill in self.skills],
             'battlePointValue': self.getBattlePointValue(),
             'base_resistances:': self.resistance,
             'resistance_poison': self.getResistance(DamageType.Poison),
@@ -190,10 +196,9 @@ class Character:
         char.weapon = objData['weapon']
         char.armor = objData['armor']
         char.items = objData['items']
-        char.skills = objData['skills']
+        char.skills = [createSkillFromIdentifier(skillId) for skillId in objData['skills']]
         char.origin = objData['origin']
         char.faction = objData['faction']
-        char.poisonLevel = objData['poisonLevel']
         if objData['weapon']:
             char.setWeapon(objData['weapon'])
         return char

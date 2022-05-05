@@ -2,6 +2,7 @@
 from doserve.common.enums import DamageType
 from doserve.skills.skill import Skill, SkillType
 
+
 class SnakeBite(Skill):
     def __init__(self):
         super().__init__(

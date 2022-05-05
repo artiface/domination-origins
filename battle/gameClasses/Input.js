@@ -1,12 +1,49 @@
 "use strict";
 var Input = {
     charTooltipDelay: 800,
-
+    enemySelector: function(tile) {
+        const isTileOccupied = this.tilemap.isTileOccupied(tile.x, tile.y);
+        if (!isTileOccupied) {
+            return false;
+        }
+        const char = this.tilemap.tileOccupiedBy(tile.x, tile.y);
+        const isOwner = char.clientIsOwner();
+        return !isOwner;
+    },
+    emptySelector: function(tile) {
+        const isTileOccupied = this.tilemap.isTileOccupied(tile.x, tile.y);
+        return !isTileOccupied;
+    },
     attackMode: function() {
+        var self = this;
         if (this.selectedCharacter) {
             this.selectedCharacter.hideReachableTiles();
             this.selectedCharacter.showPossibleTargets(this.characters);
-            this.currentAction = Attack;
+            this.currentAction = function(character, tile) {
+                self.requestAttack(character.getCharId(), tile.x, tile.y);
+            };
+            this.isValidTarget = this.enemySelector;
+        }
+    },
+    moveMode: function() {
+        var self = this;
+        if (this.selectedCharacter) {
+            this.currentAction = function(character, tile) {
+                self.requestMovement(character.getCharId(), tile.x, tile.y);
+            };
+            this.isValidTarget = this.emptySelector;
+        }
+    },
+    skillTargetMode: function(skillIdentifier) {
+        var self = this;
+        var skillId = skillIdentifier;
+        if (this.selectedCharacter) {
+            this.selectedCharacter.hideReachableTiles();
+            this.selectedCharacter.showPossibleTargets(this.characters);
+            this.currentAction = function(character, tile) {
+                self.requestSkillActivation(character.getCharId(), skillId, tile);
+            };
+            this.isValidTarget = this.enemySelector;
         }
     },
     onMouseOnCharacter: function(char) {
@@ -33,12 +70,12 @@ var Input = {
     },
 
     selectCharacter: function(char) {
-        this.currentAction = Move;
         this.selectedCharacter = char;
         this.debugText.value("Character Selected: " + char.id());
         this.selectedCharacter.hidePossibleTargets();
         this.selectedCharacter.showReachableTiles();
         this.selectedCharacter._boardPiece.setSelected(true);
+        this.moveMode();
     },
 
     deselectCharacter: function() {
@@ -110,42 +147,22 @@ var Input = {
                 self.selectCharacter(self.selectedCharacter);
             }
             else if (event.key === " ") {
-                // deselect the character
                 self.selectNextActionableCharacter();
             }
         });
 
         ige.input.on('mouseUp', function (event, x, y, button) {
             const mouseTile = self.tilemap.mouseToTile();
-
+            const char = self.tilemap.tileOccupiedBy(mouseTile.x, mouseTile.y);
+            // debug tests..
             self.spawnMessageText("123", '#f00');
 
-            if (self.tilemap.isTileOccupied(mouseTile.x, mouseTile.y))
-            {
-                const char = self.tilemap.tileOccupiedBy(mouseTile.x, mouseTile.y);
-                if (self.currentAction == Move)
-                {
-                    if (self.selectedCharacter && char.clientIsOwner())
-                    {
-                        self.deselectCharacter();
-                        self.selectCharacter(char);
-                    }
-                    else if (!self.selectedCharacter && char.clientIsOwner())
-                    {
-                        self.selectCharacter(char);
-                    }
-                }
-                else if (self.currentAction == Attack && self.selectedCharacter)
-                {
-                    self.requestAttack(self.selectedCharacter.getCharId(), mouseTile.x, mouseTile.y);
-                }
+            if (self.isValidTarget(mouseTile) && self.selectedCharacter) {
+                self.currentAction(self.selectedCharacter, mouseTile);
             }
-            else
-            {
-                if (self.currentAction == Move && self.selectedCharacter)
-                {
-                    self.requestMovement(self.selectedCharacter.getCharId(), mouseTile.x, mouseTile.y);
-                }
+            else if (char && char.clientIsOwner() && char != self.selectedCharacter) {
+                self.deselectCharacter();
+                self.selectCharacter(char);
             }
         });
     },

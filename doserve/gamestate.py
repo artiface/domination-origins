@@ -88,7 +88,7 @@ class GameState:
 
 		troopList = []
 		for slot, troopInfo in troops.items():
-			troopTokenId = troopInfo['css']
+			troopTokenId = troopInfo['troops']
 			spawnedTroop = doserve.common.character.Character(player.wallet, troopTokenId)
 			spawnedTroop.setWeapon('2729')  # hand pistol
 			troopList.append(spawnedTroop)

@@ -1,12 +1,12 @@
 from enum import Enum, IntEnum
 
 
-class Faction(Enum):
+class Faction(IntEnum):
     Wolf = 1,
     Dragon = 2,
     Snake = 3,
 
-class DamageType(Enum):
+class DamageType(IntEnum):
     Melee = 1,
     Ranged = 2,
     Poison = 3,

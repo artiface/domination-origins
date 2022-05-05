@@ -66,7 +66,7 @@ var Client = IgeClass.extend({
 
         self.highlightedCharacter = undefined;
 		self.isInitialized = false;
-		self.currentAction = Move;
+
 
 		self.startSetup = function(mapData, charData) {
 
@@ -75,6 +75,8 @@ var Client = IgeClass.extend({
 
 			self.vp1.camera.translateTo(0, 300, 0);
 			self.vp1._resizeEvent(null);
+			self.selectNextActionableCharacter();
+			self.moveMode();
 		};
 
 		self.characters = [];
