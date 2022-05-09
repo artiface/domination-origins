@@ -47,8 +47,7 @@ var Highlighting = {
         const distance = Math.distance(ourPos.x, ourPos.y, targetPos.x, targetPos.y);
         const dexterity = this.getStat('dexterity');
         const level = this.getStat('level');
-        const chanceToHit = (2 * dexterity * (level + 2)) - 5 * distance;
-        return chanceToHit;
+        return (2 * dexterity * (level + 2)) - 5 * distance;
     },
     meleeChanceToHit: function(targetCharacter) {
         const intelligence = this.getStat('intelligence');

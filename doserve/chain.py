@@ -111,7 +111,7 @@ if __name__ == "__main__":
 
     loader = ChainLoader()
 
-    for i in range(1,10000):
+    for i in range(1,10001):
         try:
             while not loader.storeToken('char', i):
                 print('Failed to store token %s. Trying again.' % i)
