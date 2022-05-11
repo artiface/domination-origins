@@ -1,6 +1,7 @@
 
 from doserve.common.enums import DamageType
 from doserve.skills.skill import Skill, SkillType, TargetMode
+from doserve.status.poisoned import Poisoned
 
 
 class SnakeBite(Skill):
@@ -15,7 +16,7 @@ class SnakeBite(Skill):
             cost=3
         )
 
-    def activate(self, state, char, arguments):
+    def use(self, state, char, arguments):
         # gather the required data
         target_tile = arguments["target_tile"]
         tile = state.getTile(target_tile['x'], target_tile['y'])
@@ -26,8 +27,9 @@ class SnakeBite(Skill):
         # apply changes to world state
         char.currentFocus -= self.cost
         killed, damage = state.dealDamage(char, target_char, damage, damage_type)
-        # TODO: add status effect
 
+        p = Poisoned(state, char, target_char, 5)
+        char.addStatusEffect(p)
         # return the resulting delta
         response = {
             'attacker': char.charId,

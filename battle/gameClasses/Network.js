@@ -54,8 +54,7 @@ var Network = {
             this.selectNextActionableCharacter();
         }
     },
-    handleUseSkill: function(data) {
-        const effect = data['skill_effect'];
+    handleUseSkill: function(effect) {
         const targetTile = effect['defender_tile'];
         const damage = effect['damage'];
         const defender = this.tilemap.tileOccupiedBy(targetTile.x, targetTile.y);
@@ -72,7 +71,9 @@ var Network = {
         }
         */
     },
-    
+    endBattle: function(winner) {
+        alert(winner + ' won the battle!');
+    },
     handleServerResponse: async function(message) {
         if (message['error'])
         {
@@ -81,11 +82,14 @@ var Network = {
         }
         switch (message['message'])
         {
+            case 'battleEnd':
+                this.endBattle(message['winner']);
+                break;
             case 'rangedAttack':
                 this.handleRangedAttack(message);
                 break;
             case 'useSkill':
-                this.handleUseSkill(message);
+                this.handleUseSkill(message['skill_effect']);
                 break;
             case 'auth':
                 const flatSig = await signer.signMessage(message['siwe_message']);
@@ -138,6 +142,13 @@ var Network = {
                 {
                     nextTurnText = 'IT IS YOUR TURN!';
                 }
+
+                const listOfEffects = message['effects'];
+                for (var i = 0; i < listOfEffects.length; i++) {
+                    const effect = listOfEffects[i];
+                    this.handleUseSkill(effect);
+                }
+
                 // reset the steps taken this turn stat for each character where the ownerWallet matches the turnOfPlayer
                 for (var i = 0; i < this.characters.length; i++)
                 {

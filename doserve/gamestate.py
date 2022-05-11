@@ -77,10 +77,13 @@ class GameState:
 		self.turnCount += 1
 		self.turnOfPlayerIndex = self.turnCount % len(self.connectedPlayers)
 		# reset steps
+		effects = []
 		for char in self.allCharacters:
 			if char.ownerWallet == self.turnOfPlayer().wallet:
-				char.stepsTakenThisTurn = 0
-				char.hasAttackedThisTurn = False
+				effectMessages = char.nextTurn()
+				effects.extend(effectMessages)
+
+		return effects
 
 	def spawnTroopsOfPlayer(self, player, troops):
 		if player in self.connectedPlayers or len(self.teamSpawns) == 0:
@@ -390,3 +393,4 @@ class GameState:
 			'winner': winner
 		}
 		create_task(self.broadcast(response))
+		# TODO: remove battle from list of battles

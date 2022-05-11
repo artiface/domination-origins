@@ -1,0 +1,347 @@
+/* @import url('https://rsms.me/inter/inter.css'); */
+body {
+    color:white;
+    /*background:url("./image/bg.png") no-repeat center;*/
+    background-size: cover;
+}
+
+.header, .nft-name {
+    text-align: center;
+    color: #00cfec;
+    margin: 10px 0px;
+    font-size: 20px;
+}
+
+.header {
+    margin: 40px 0 30px 0;
+}
+
+.filter {
+    margin-top: 15px
+}
+
+.filter > input {
+    width:100px;
+    margin-left:15px;
+}
+
+.amount-progress {
+    width: 87%;
+}
+
+.nft-image {
+    position:relative;
+}
+
+.start-game {
+    text-align: center;
+}
+
+.small_portrait {
+    width: 100%;
+    border-radius: 10px;
+}
+
+.nft-info {
+    text-align: right;
+    background-color: #00cfec;
+    border-radius: 50%;
+}
+
+.nft-info:hover {
+    cursor: pointer;
+    background-color: #d3b501;
+}
+
+.troop_container {
+    display:flex;
+}
+
+.nft-selection, .nft-item {
+    display: flex;
+}
+
+.nft-selection-w, .nft-selection-a {
+    width: 50%;
+    margin: 5%;
+}
+
+.nft-selection-I1, .nft-selection-I2 {
+    width: 50%;
+    margin: 5%;
+}
+
+div.column {
+    margin:20px;
+    padding: 7px;
+    width: 20%;
+    border: solid 3px #d3b501;
+    border-radius: 10px;
+}
+
+.launch-button {
+    margin:30px;
+    text-align: center;
+}
+
+.start-game {
+    background-color: initial;
+    background-image: linear-gradient(-180deg, #d3b501, #323819);
+    border-radius: 6px;
+    box-shadow: rgba(0, 0, 0, 0.1) 0 2px 4px;
+    color: #FFFFFF;
+    width: 110px;
+    cursor: pointer;
+    display: inline-block;
+    font-family: Inter,-apple-system,system-ui,Roboto,"Helvetica Neue",Arial,sans-serif;
+    height: 45px;
+    line-height: 45px;
+    outline: 0;
+    overflow: hidden;
+    font-size: medium;
+    padding: 0 20px;
+    pointer-events: auto;
+    position: relative;
+    text-align: center;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    vertical-align: top;
+    white-space: nowrap;
+    border: 0;
+    transition: box-shadow .2s;
+}
+
+.start-game:hover {
+    box-shadow: #d3b501 0 3px 8px;
+}
+
+div[class^="nft-selection-"] {
+    padding: 15px 10px 15px 10px;
+    background: black;
+    font-size:16px;
+    border: solid 2px black;
+    text-align:center;
+    color:#00cfec;
+    border-radius: 10px;
+}
+
+div[class^="nft-selection-"]:hover {
+    cursor: pointer;
+    color:#d3b501;
+    border: solid 2px #d3b501;
+    border-color: #d3b501;
+}
+
+.health-bar {
+    text-align: center;
+    margin: 10px 0;
+}
+
+.tooltiptext > ul {
+    margin-left: -7px;
+}
+
+.tooltip {
+    position: absolute;
+    display: inline-block;
+    top: 21px;
+    right: 2px;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    z-index: 1;
+    top: -5px;
+    right: 110%;
+}
+
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    margin-top: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent transparent black;
+}
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+}
+
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.profile-img {
+    padding:30px;
+}
+  /* Modal Content */
+.modal-content {
+    position: relative;
+    background-color: black;
+    margin: auto;
+    padding: 0;
+    border: 1px solid #888;
+    width: 65%;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+    -webkit-animation-name: animatetop;
+    -webkit-animation-duration: 0.4s;
+    animation-name: animatetop;
+    animation-duration: 0.4s
+}
+
+  /* Add Animation */
+@-webkit-keyframes animatetop {
+    from {top:-300px; opacity:0}
+    to {top:0; opacity:1}
+}
+
+@keyframes animatetop {
+    from {top:-300px; opacity:0}
+    to {top:0; opacity:1}
+}
+
+  /* The Close Button */
+.close {
+    color: white;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.modal-header {
+    padding: 2px 16px;
+    background-color: #00cfec;
+    color: white;
+}
+
+.modal-body {padding: 2px 16px;}
+
+.modal-footer {
+    padding: 2px 16px;
+    background-color: #5cb85c;
+    color: white;
+}
+
+.nft-profile-name {
+    font-size: 32px;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.nft-list:hover {
+    cursor: pointer;
+    border-color:#00cfec;
+}
+
+.modal-right {
+    padding:25px;
+}
+
+.modal-left {
+    padding: 15px;
+}
+
+.nft-profile-level {
+    padding: 20px;
+}
+
+.nft-profile-properties,
+.nft-profile,
+.nft-list {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.nft-profile-properties {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.nft-list-img {
+    width: 80px;
+}
+
+.modal-title {
+    font-size: 20px;
+    margin: 10px;
+}
+
+.nft-list-progress-bar {
+    text-align: center;
+}
+
+.modal-body-content {
+    display:flex;
+    justify-content: space-between;
+}
+
+.nft-list {
+    border: solid 3px #d3b501;
+    border-radius: 10px;
+    padding: 0 15px;
+}
+
+.nft-list-name {
+    padding: 5px;
+    width: 120px;
+    text-align: center;
+}
+
+.lebel-progress-bar,
+.health-progress-bar {
+    margin: 8px 0;
+    max-width: 85px;
+}
+
+input[type=text] {
+    padding: 7px 6px;
+    box-sizing: border-box;
+    border: 2px solid #d3b501;
+    -webkit-transition: 0.5s;
+    transition: 0.5s;
+    background-color: black;
+    color: white;
+    outline: none;
+    border-radius: 5px;
+}
+
+input[type=text]:focus {
+    border: 2px solid #00cfec;
+}
+
+@media screen and (max-width: 1024px){
+}
+
+@media screen and (max-width: 767px){
+}

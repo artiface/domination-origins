@@ -78,6 +78,7 @@ class Character:
         self.armor = {}
         self.items = []
         self.skills = []
+        self.statusEffects = []
 
         self.poisonLevel = 0
         self.resistance = {
@@ -228,6 +229,9 @@ class Character:
         if self.backgroundHint and self.backgroundHint in factionMap:
             self.faction = factionMap[self.backgroundHint]
 
+    def addStatusEffect(self, statusEffect):
+        self.statusEffects.append(statusEffect)
+
     def isNextTo(self, position):
         return manhattan(self.position, [position['x'], position['y']]) <= 1
 
@@ -236,6 +240,23 @@ class Character:
 
     def canAttackRanged(self):
         return True
+
+    def nextTurn(self):
+        self.stepsTakenThisTurn = 0
+        self.hasAttackedThisTurn = False
+        for skill in self.skills:
+            skill.nextTurn()
+
+        statusEffectMessages = []
+
+        for i in range(len(self.statusEffects)-1, -1, -1):
+            statusEffect = self.statusEffects[i]
+            effectMessage = statusEffect.nextTurn()
+            statusEffectMessages.append(effectMessage)
+            if statusEffect.isExpired():
+                self.statusEffects.remove(statusEffect)
+
+        return statusEffectMessages
 
     def __hash__(self):
         """Overrides the default implementation"""

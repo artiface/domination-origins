@@ -26,11 +26,12 @@ var Input = {
         if (this.selectedCharacter) {
             this.selectedCharacter.hideReachableTiles();
             this.selectedCharacter.setRangedChanceToHit();
-            this.selectedCharacter.showPossibleTargets(function(tile){return self.isValidTarget(tile)});
+            this.isValidTarget = this.enemySelector;
+            this.selectedCharacter.showPossibleTargets(function(tile){return self.enemySelector(tile)});
             this.currentAction = function(character, tile) {
                 self.requestAttack(character.getCharId(), tile.x, tile.y);
             };
-            this.isValidTarget = this.enemySelector;
+
         }
     },
     moveMode: function() {
@@ -91,7 +92,7 @@ var Input = {
 
     selectCharacter: function(char) {
         this.selectedCharacter = char;
-        this.debugText.value("Character Selected: " + char.id());
+        this.updateButtons();
         this.selectedCharacter.hidePossibleTargets();
         this.selectedCharacter.showReachableTiles();
         this.selectedCharacter._boardPiece.setSelected(true);

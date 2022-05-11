@@ -234,8 +234,8 @@ class GameServer:
             if winner:
                 create_task(self.state(player).sendBattleEnd(winner))
             else:
-                self.state(player).nextTurn()
-                response = {'message': messageType, 'error': '', 'turnOfPlayer': self.state(player).turnOfPlayer().wallet}
+                effectMessages = self.state(player).nextTurn()
+                response = {'message': messageType, 'effects': effectMessages, 'error': '', 'turnOfPlayer': self.state(player).turnOfPlayer().wallet}
                 create_task(self.state(player).broadcast(response))
             return
 

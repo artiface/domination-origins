@@ -141,7 +141,22 @@ var GameWorld = {
             self.tilemap.occupyTile(pos.x, pos.y, 1, 1, this._entity);
         });
     },
+    updateButtons: function() {
+        if (!this.selectedCharacter) return;
 
+        const char = this.selectedCharacter;
+        //const noButtonVisible = char.isDead();
+
+        const attackButtonVisible = !char.hasAttacked();
+        //const moveButtonVisible = char.canMove();
+        if (attackButtonVisible) {
+            this.attackButton.show();
+        }
+        else {
+            this.attackButton.hide();
+        }
+
+    },
 	createWorld: function(mapData, charData) {
 
 	    let overFunc = function () {

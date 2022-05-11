@@ -4,7 +4,7 @@ var Character = IgeEntity.extend({
 	classId: 'Character',
 	hasAttacked: function (hasAttacked) {
         if (hasAttacked === undefined) {
-            return (this.getStat('hasAttackedThisTurn') === 'true');
+            return (this.getStat('hasAttackedThisTurn'));
         }
         this.setStat('hasAttackedThisTurn', hasAttacked);
         return this;
@@ -94,9 +94,15 @@ var Character = IgeEntity.extend({
     getCharId: function () {
         return this._charId;
     },
-	
 	kill: function () {
 		this.rotate().z(Math.radians(85));
+        this.isDead(true);
+	},
+	isDead: function (isDead) {
+        if (isDead === undefined) {
+            return this._isDead;
+        }
+        this._isDead = isDead;
 	},
 	moveTo: function (toTileX, toTileY) {
 	    const tilemap = this._parent;
