@@ -11,14 +11,14 @@ class Vector(object):
             'y': self.values[1]
         }
 
-    def norm(self):
+    def length(self):
         """ Returns the norm (length, magnitude) of the vector """
         return math.sqrt(sum( x*x for x in self ))
         
     def argument(self, radians=False):
         """ Returns the argument of the vector, the angle clockwise from +y. In degress by default, 
             set radians=True to get the result in radians. This only works for 2D vectors. """
-        arg_in_rad = math.acos(Vector(0, 1)*self/self.norm())
+        arg_in_rad = math.acos(Vector(0, 1) * self / self.length())
         if radians:
             return arg_in_rad
         arg_in_deg = math.degrees(arg_in_rad)
@@ -29,7 +29,7 @@ class Vector(object):
 
     def normalize(self):
         """ Returns a normalized unit vector """
-        norm = self.norm()
+        norm = self.length()
         normed = tuple( x / norm for x in self )
         return self.__class__(*normed)
     

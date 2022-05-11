@@ -45,11 +45,12 @@ def createSkillFromIdentifier(skillIdentifier):
         return doserve.skills.snake_bite.SnakeBite()
 
 class Character:
-    def __init__(self, ownerWallet: str, tokenId):
+    def __init__(self, ownerWallet: str, tokenId, parent_state=None):
         self.maxHealth = 0
         self.currentHealth = 0
         self.ownerWallet = ownerWallet
         self.charId = -1
+        self.parent_gamestate = parent_state
 
         self.tokenId = tokenId
         self.position = Vector(-1, -1)
@@ -268,7 +269,6 @@ class Character:
             return self.tokenId == other.tokenId
         return False
 
-
     def getSkill(self, skillId):
         for skill in self.skills:
             if skill.identifier == skillId:
@@ -281,7 +281,6 @@ class Character:
         # TODO: add armor resistances..
         total_resistance += base_resistance
         for skill in self.skills:
-            if issubclass(skill.__class__, Skill):
-                skill_resistance = skill.getResistance(damageType)
-                total_resistance += skill_resistance
+            skill_resistance = skill.getResistance(self, damageType)
+            total_resistance += skill_resistance
         return total_resistance

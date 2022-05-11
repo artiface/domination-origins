@@ -28,7 +28,7 @@ class Skill:
     def __str__(self):
         return self.identifier
 
-    def getResistance(self, damage_type: DamageType):
+    def getResistance(self, char, damage_type: DamageType):
         return 0
 
     def activate(self, state, char, arguments):

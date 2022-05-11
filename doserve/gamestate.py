@@ -31,6 +31,8 @@ class Tile:
 		tile = Tile(Vector(obj['position']['x'], obj['position']['y']))
 		tile.textureIndex = obj['textureIndex']
 		tile.isWall = obj['isWall']
+
+		# restoring another instance of the character could be problematic # todo
 		tile.character = doserve.common.character.Character.fromObject(obj['character']) if obj['character'] is not None else None
 
 class GameState:
@@ -92,8 +94,8 @@ class GameState:
 		troopList = []
 		for slot, troopInfo in troops.items():
 			troopTokenId = troopInfo['troops']
-			spawnedTroop = doserve.common.character.Character(player.wallet, troopTokenId)
-			spawnedTroop.setWeapon('2729')  # hand pistol
+			spawnedTroop = doserve.common.character.Character(player.wallet, troopTokenId, self)
+			spawnedTroop.setWeapon('2729')  # hand pistol # TODO: make this dynamic
 			troopList.append(spawnedTroop)
 
 		playerIndex = len(self.connectedPlayers)
@@ -124,6 +126,23 @@ class GameState:
 
 	def inBounds(self, x, y):
 		return 0 <= x < self.width and 0 <= y < self.height
+
+	def queryMap(self, x, y, radius):
+		result = []
+		for yOffset in range(-radius, radius + 1):
+			for xOffset in range(-radius, radius + 1):
+				if self.inBounds(x + xOffset, y + yOffset):
+					result.append(self.getTile(x + xOffset, y + yOffset))
+		return result
+
+	def getCharsInRadius(self, x, y, radius):
+		result = []
+		tiles = self.queryMap(x, y, radius)
+		for tile in tiles:
+			dist = (tile.position - Vector(x, y)).length()
+			if tile.character and dist <= radius:
+				result.append(tile.character)
+		return result
 
 	def getTile(self, x, y) -> Tile:
 		if not self.inBounds(x, y):
