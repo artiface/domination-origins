@@ -1,14 +1,13 @@
 from doserve.common.enums import DamageType
 from doserve.skills.skill import Skill, SkillType, TargetMode
-from doserve.status.poisoned import Poisoned
 
 
-class SnakeBite(Skill):
+class PackClaws(Skill):
     def __init__(self):
         super().__init__(
-            "snake_bite",
-            "Snake Bite",
-            "Poisonous melee attack",
+            "pack_claws",
+            "Pack Claws",
+            "More damage for each nearby ally.",
             SkillType.ACTIVE,
             TargetMode.ENEMIES_ONLY,
             cooldown=3,
@@ -20,17 +19,21 @@ class SnakeBite(Skill):
         target_tile = arguments["target_tile"]
         tile = state.getTile(target_tile['x'], target_tile['y'])
         target_char = tile.character
-        damage = 20
-        damage_type = DamageType.Poison
+
+        charsNearby = state.getCharsInRadius(char.position[0], char.position[1], 2)
+        alliesNearby = 0
+        for c in charsNearby:
+            if c.ownerWallet == char.ownerWallet:
+                alliesNearby += 1
+
+        damage = 20 + alliesNearby * 10
+        damage_type = DamageType.Melee
 
         # apply changes to world state
         char.currentFocus -= self.cost
         killed, damage = state.dealDamage(char, target_char, damage, damage_type)
 
-        p = Poisoned(state, char, target_char, 5)
-        char.addStatusEffect(p)
         # return the resulting delta
-
         response = {
             'attacker': char.charId,
             'attacker_tile': char.position.toObject(),
@@ -39,7 +42,7 @@ class SnakeBite(Skill):
                 'damage': damage,
                 'damage_type': damage_type,
                 'killed': killed,
-                'effects': ['melee_attack', 'poison_defender']
+                'effects': ['melee_attack', 'claws']
             }],
         }
         return response

@@ -16,7 +16,7 @@ class Poisoned:
             'attacker': self.source_char.charId,
             'defender': self.target_char.charId,
             'attacker_tile': self.source_char.position.toObject(),
-            'defender_tile': self.target_char.position.toObject(),
+            'aoe_tiles': [self.target_char.position.toObject()],
             'attacker_health': self.source_char.currentHealth,
             'defender_health': self.target_char.currentHealth,
             'damage': damage,

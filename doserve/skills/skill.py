@@ -1,17 +1,16 @@
 import enum
-
 from doserve.common.enums import DamageType
+
 
 class SkillType(enum.IntEnum):
     PASSIVE = 1,
     ACTIVE = 2
 
+
 class TargetMode(enum.IntEnum):
     ENEMIES_ONLY = 1,
     ALLIES_ONLY = 2,
     EMPTY_TILES_ONLY = 3,
-
-
 
 
 class Skill:

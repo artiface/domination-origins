@@ -4,6 +4,10 @@ from doserve.common.helper import manhattan, valueFromBinary
 from doserve.common.player import Weapon
 import doserve.skills.dragon_hide
 import doserve.skills.snake_bite
+import doserve.skills.dragon_strike
+import doserve.skills.poison_cloud
+import doserve.skills.pack_claws
+import doserve.skills.pack_protection
 from doserve.skills.skill import Skill
 from doserve.vector import Vector
 
@@ -11,38 +15,50 @@ from doserve.vector import Vector
 def assignWolfFactionSkills(char, factionSkillAssignmentCode):
     if factionSkillAssignmentCode == 0:
         char.skills = []
-    #elif factionSkillAssignmentCode == 1:
-    #    char.skills = ['WolfClaws()']
-    #elif factionSkillAssignmentCode == 2:
-    #    char.skills = ['WolfProtection()']
-    #elif factionSkillAssignmentCode == 3:
-    #    char.skills = ['WolfClaws()', 'WolfProtection()']
+    elif factionSkillAssignmentCode == 1:
+        char.skills = [doserve.skills.pack_claws.PackClaws()]
+    elif factionSkillAssignmentCode == 2:
+        char.skills = [doserve.skills.pack_protection.PackProtection()]
+    elif factionSkillAssignmentCode == 3:
+        char.skills = [doserve.skills.pack_claws.PackClaws(), doserve.skills.pack_protection.PackProtection()]
+
 
 def assignSnakeFactionSkills(char, factionSkillAssignmentCode):
-    #if factionSkillAssignmentCode == 0:
-    #    char.skills = []
-    #elif factionSkillAssignmentCode == 1:
-    #    char.skills = ['PoisonCloud()']
-    #elif factionSkillAssignmentCode == 2:
-    char.skills = [doserve.skills.snake_bite.SnakeBite()]
-    #elif factionSkillAssignmentCode == 3:
-    #    char.skills = ['PoisonCloud()', doserve.skills.snake_bite.SnakeBite()]
+    if factionSkillAssignmentCode == 0:
+        char.skills = []
+    elif factionSkillAssignmentCode == 1:
+        char.skills = [doserve.skills.poison_cloud.PoisonCloud()]
+    elif factionSkillAssignmentCode == 2:
+        char.skills = [doserve.skills.snake_bite.SnakeBite()]
+    elif factionSkillAssignmentCode == 3:
+        char.skills = [doserve.skills.poison_cloud.PoisonCloud(), doserve.skills.snake_bite.SnakeBite()]
+
 
 def assignDragonFactionSkills(char, factionSkillAssignmentCode):
     if factionSkillAssignmentCode == 0:
         char.skills = []
     elif factionSkillAssignmentCode == 1:
         char.skills = [doserve.skills.dragon_hide.DragonHide()]
-    #elif factionSkillAssignmentCode == 2:
-    #    char.skills = ['DragonStrike()']
-    #elif factionSkillAssignmentCode == 3:
-    #    char.skills = [doserve.skills.dragon_hide.DragonHide(), 'DragonStrike()']
+    elif factionSkillAssignmentCode == 2:
+        char.skills = [doserve.skills.dragon_strike.DragonStrike()]
+    elif factionSkillAssignmentCode == 3:
+        char.skills = [doserve.skills.dragon_hide.DragonHide(), doserve.skills.dragon_strike.DragonStrike()]
+
 
 def createSkillFromIdentifier(skillIdentifier):
     if skillIdentifier == 'dragon_hide':
         return doserve.skills.dragon_hide.DragonHide()
+    elif skillIdentifier == 'dragon_strike':
+        return doserve.skills.dragon_strike.DragonStrike()
     elif skillIdentifier == 'snake_bite':
         return doserve.skills.snake_bite.SnakeBite()
+    elif skillIdentifier == 'poison_cloud':
+        return doserve.skills.poison_cloud.PoisonCloud()
+    elif skillIdentifier == 'pack_claws':
+        return doserve.skills.pack_claws.PackClaws()
+    elif skillIdentifier == 'pack_protection':
+        return doserve.skills.pack_protection.PackProtection()
+
 
 class Character:
     def __init__(self, ownerWallet: str, tokenId, parent_state=None):
@@ -110,12 +126,12 @@ class Character:
             #print('Faction not set, choosing DNA faction from factionDice: {}'.format(factionDice))
             self.faction = [Faction.Wolf, Faction.Dragon, Faction.Snake][factionDice]
 
-        #if self.faction == Faction.Wolf:
-        #    assignWolfFactionSkills(self, factionSkillAssignmentCode)
-        #elif self.faction == Faction.Dragon:
-        #    assignDragonFactionSkills(self, factionSkillAssignmentCode)
-        #elif self.faction == Faction.Snake:
-        assignSnakeFactionSkills(self, factionSkillAssignmentCode)
+        if self.faction == Faction.Wolf:
+            assignWolfFactionSkills(self, factionSkillAssignmentCode)
+        elif self.faction == Faction.Dragon:
+            assignDragonFactionSkills(self, factionSkillAssignmentCode)
+        elif self.faction == Faction.Snake:
+            assignSnakeFactionSkills(self, factionSkillAssignmentCode)
 
     def getBattlePointValue(self):
         healthValue = (self.maxHealth / 200) * 10

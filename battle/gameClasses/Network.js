@@ -40,13 +40,18 @@ var Network = {
     },
 
     handleRangedAttack: function(data) {
-        const targetTile = data['defender_tile'];
-        const damage = data['damage'];
-        const defender = this.tilemap.tileOccupiedBy(targetTile.x, targetTile.y);
-        this.spawnBulletImpacts(targetTile.x, targetTile.y, 3);
-        let damageText = damage > 0 ? damage.toString() : 'miss';
-        this.spawnFloatingText(targetTile.x, targetTile.y, damageText, '#ff0000');
-        defender.healthbar.changeHealth(-damage);
+        const targetTiles = data['aoe'];
+        for (let i = 0; i < targetTiles.length; i++) {
+            const tileEffect = targetTiles[i];
+            const damage = tileEffect['damage'];
+            const targetTile = tileEffect['tile'];
+            const defender = this.tilemap.tileOccupiedBy(targetTile.x, targetTile.y);
+            this.spawnBulletImpacts(targetTile.x, targetTile.y, 3);
+            let damageText = damage > 0 ? damage.toString() : 'miss';
+            this.spawnFloatingText(targetTile.x, targetTile.y, damageText, '#ff0000');
+            defender.healthbar.changeHealth(-damage);
+        }
+
         const attacker = this.characterById(data['attacker']);
         attacker.hasAttacked(true);
         if (attacker === this.selectedCharacter)
@@ -55,13 +60,17 @@ var Network = {
         }
     },
     handleUseSkill: function(effect) {
-        const targetTile = effect['defender_tile'];
-        const damage = effect['damage'];
-        const defender = this.tilemap.tileOccupiedBy(targetTile.x, targetTile.y);
-        //this.spawnBulletImpacts(targetTile.x, targetTile.y, 3);
-        let damageText = damage > 0 ? damage.toString() : 'miss';
-        this.spawnFloatingText(targetTile.x, targetTile.y, damageText, '#ff0000');
-        defender.healthbar.changeHealth(-damage);
+        const targetTiles = effect['aoe'];
+        for (let i = 0; i < targetTiles.length; i++) {
+            const tileEffect = targetTiles[i];
+            const damage = tileEffect['damage'];
+            const targetTile = tileEffect['tile'];
+            const defender = this.tilemap.tileOccupiedBy(targetTile.x, targetTile.y);
+            //this.spawnBulletImpacts(targetTile.x, targetTile.y, 3);
+            let damageText = damage > 0 ? damage.toString() : 'miss';
+            this.spawnFloatingText(targetTile.x, targetTile.y, damageText, '#ff0000');
+            defender.healthbar.changeHealth(-damage);
+        }
         //const attacker = this.characterById(data['attacker']);
         //attacker.hasAttacked(true);
         /*

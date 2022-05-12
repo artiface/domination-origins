@@ -1,14 +1,13 @@
 from doserve.common.enums import DamageType
 from doserve.skills.skill import Skill, SkillType, TargetMode
-from doserve.status.poisoned import Poisoned
 
 
-class SnakeBite(Skill):
+class DragonStrike(Skill):
     def __init__(self):
         super().__init__(
-            "snake_bite",
-            "Snake Bite",
-            "Poisonous melee attack",
+            "dragon_strike",
+            "Dragon Strike",
+            "Massive melee damage.",
             SkillType.ACTIVE,
             TargetMode.ENEMIES_ONLY,
             cooldown=3,
@@ -20,17 +19,15 @@ class SnakeBite(Skill):
         target_tile = arguments["target_tile"]
         tile = state.getTile(target_tile['x'], target_tile['y'])
         target_char = tile.character
-        damage = 20
-        damage_type = DamageType.Poison
+
+        damage = 60
+        damage_type = DamageType.Melee
 
         # apply changes to world state
         char.currentFocus -= self.cost
         killed, damage = state.dealDamage(char, target_char, damage, damage_type)
 
-        p = Poisoned(state, char, target_char, 5)
-        char.addStatusEffect(p)
         # return the resulting delta
-
         response = {
             'attacker': char.charId,
             'attacker_tile': char.position.toObject(),
@@ -39,7 +36,7 @@ class SnakeBite(Skill):
                 'damage': damage,
                 'damage_type': damage_type,
                 'killed': killed,
-                'effects': ['melee_attack', 'poison_defender']
+                'effects': ['melee_attack', 'claws']
             }],
         }
         return response
