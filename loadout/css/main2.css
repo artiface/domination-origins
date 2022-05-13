@@ -1,0 +1,78 @@
+body {
+    padding: 0;
+    margin: 0;
+}
+
+img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+}
+
+.parent {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.card {
+    position: relative;
+    width: calc(100% / 5 - 50px);
+    max-height: 200%;
+    background-color: blue;
+    gap: 15px;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    border-radius: 15px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.card-title {
+    font-size: 150%;
+}
+
+.button {
+    width: 48%;
+    height: 48%;
+    background-color: #00bcd4;
+    margin: 1%;
+}
+
+.button-container {
+    aspect-ratio: 3 / 2;
+    width: 70%;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.health-bar {
+    position: absolute;
+    border-radius: 5px;
+    background-color: aquamarine;
+    width: 75%;
+}
+
+.health-bar-container {
+    position: relative;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    aspect-ratio: 20 / 1;
+    width: 70%;
+    border-radius: 5px;
+    background-color: blueviolet;
+}
+
+.info {
+    position: absolute;
+    aspect-ratio: 1 / 1;
+    width: 10%;
+    top: 5%;
+    left: 85%;
+    border-radius: 50%;
+    background-color: aquamarine;
+}
