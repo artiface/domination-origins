@@ -361,16 +361,15 @@ class GameState:
 			killed, damage = self.dealDamage(attacker, defender, damage, damage_type)
 		response = {
 			'message': 'meleeAttack',
-			'error': '',
-			'attacker_tile': attacker.position.toObject(),
 			'attacker': attacker.charId,
-			'attacker_health': attacker.currentHealth,
-			'aoe_tiles': [defender.position.toObject()],
-			'defender': defender.charId,
-			'defender_health': defender.currentHealth,
-			'hit': hit,
-			'damage': damage if hit else 0,
-			'killed': killed
+			'attacker_tile': attacker.position.toObject(),
+			'aoe': [{
+				'tile': defender.position.toObject(),
+				'damage': damage if hit else 0,
+				'damage_type': damage_type,
+				'killed': killed,
+				'effects': ['melee_attack', 'claws']
+			}],
 		}
 		create_task(self.broadcast(response))
 
@@ -391,16 +390,15 @@ class GameState:
 			killed, damage = self.dealDamage(attacker, defender, damage, damage_type)
 		response = {
 			'message': 'rangedAttack',
-			'error': '',
-			'attacker_tile': attacker.position.toObject(),
 			'attacker': attacker.charId,
-			'attacker_health': attacker.currentHealth,
-			'aoe_tiles': [defender.position.toObject()],
-			'defender': defender.charId,
-			'defender_health': defender.currentHealth,
-			'hit': hit,
-			'damage': damage if hit else 0,
-			'killed': killed
+			'attacker_tile': attacker.position.toObject(),
+			'aoe': [{
+				'tile': defender.position.toObject(),
+				'damage': damage if hit else 0,
+				'damage_type': damage_type,
+				'killed': killed,
+				'effects': ['melee_attack', 'claws']
+			}],
 		}
 		print("ranged attack:", response)
 		create_task(self.broadcast(response))

@@ -156,6 +156,18 @@ var GameWorld = {
             this.attackButton.hide();
         }
 
+        const skills = char.getSkills();
+        for (let i = 0; i < 3; i++) {
+            if (i < skills.length) {
+                const skillDef = skills[i];
+                const name = skillDef.name;
+                this.skillButtons[i].value(name);
+                this.skillButtons[i].show();
+            }
+            else {
+                this.skillButtons[i].hide();
+            }
+        }
     },
 	createWorld: function(mapData, charData) {
 
@@ -314,7 +326,8 @@ var GameWorld = {
             })
             .mount(this.uiScene);
 
-        this.skillOneButton = new IgeUiLabel()
+        this.skillButtons = [];
+        this.skillButtons.push(new IgeUiLabel()
             .id('skillOneButton')
             .depth(1)
             .paddingLeft(0)
@@ -337,9 +350,9 @@ var GameWorld = {
                 self.skillTargetMode(skillDef);
                 ige.input.stopPropagation();
             })
-            .mount(this.uiScene);
+            .mount(this.uiScene));
 
-        this.skillTwoButton = new IgeUiLabel()
+        this.skillButtons.push(new IgeUiLabel()
             .id('skillTwoButton')
             .depth(1)
             .paddingLeft(0)
@@ -357,12 +370,13 @@ var GameWorld = {
             .mouseMove(function () { ige.input.stopPropagation(); })
             .mouseUp(function () {
                 self.debugText.value("Skill 2 Activated!");
-                self.requestSkillActivation(self.selectedCharacter, 2);
+                const skillDef = self.selectedCharacter.getSkillDefinition(1);
+                self.skillTargetMode(skillDef);
                 ige.input.stopPropagation();
             })
-            .mount(this.uiScene);
+            .mount(this.uiScene));
 
-        this.skillThreeButton = new IgeUiLabel()
+        this.skillButtons.push(new IgeUiLabel()
             .id('skillThreeButton')
             .depth(1)
             .paddingLeft(0)
@@ -380,13 +394,16 @@ var GameWorld = {
             .mouseMove(function () { ige.input.stopPropagation(); })
             .mouseUp(function () {
                 self.debugText.value("Skill 3 Activated!");
-                self.requestSkillActivation(self.selectedCharacter, 3);
+                const skillDef = self.selectedCharacter.getSkillDefinition(2);
+                self.skillTargetMode(skillDef);
                 ige.input.stopPropagation();
             })
-            .mount(this.uiScene);
-        this.skillOneButton._fontEntity.textAlignX(1).textAlignY(1).left(5).top(1);
-        this.skillTwoButton._fontEntity.textAlignX(1).textAlignY(1).left(5).top(1);
-        this.skillThreeButton._fontEntity.textAlignX(1).textAlignY(1).left(5).top(1);
+            .mount(this.uiScene));
+
+        for (let i = 0; i < this.skillButtons.length; i++) {
+            this.skillButtons[i]._fontEntity.textAlignX(1).textAlignY(1).left(5).top(1);
+            this.skillButtons[i].hide();
+        }
 
 
         ige.ui.style('#debugText', {

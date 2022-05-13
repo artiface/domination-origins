@@ -97,6 +97,9 @@ var Network = {
             case 'rangedAttack':
                 this.handleRangedAttack(message);
                 break;
+            case 'meleeAttack':
+                this.handleRangedAttack(message);
+                break;
             case 'useSkill':
                 this.handleUseSkill(message['skill_effect']);
                 break;

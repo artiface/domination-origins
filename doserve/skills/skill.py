@@ -54,6 +54,10 @@ class Skill:
             'identifier': self.identifier,
             'targetMode': self.targetMode,
             'type': self.skill_type,
+            'name': self.name,
+            'description': self.description,
+            'cooldown': self.cooldown,
+            'cost': self.cost
         }
 
     def nextTurn(self):

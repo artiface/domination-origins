@@ -5,9 +5,6 @@
 		<meta charset="utf-8">
 		<title>Test Page</title>
 		<link rel="stylesheet" type="text/css" href="css/main.css" />
-		<script type="module" src="js/chainload.js">
-		</script>
-		<script type="module" src="js/main.js"></script>
 	</head>
 	<body> 
 		<p class="header">Welcome <span id="user_wallet"></span></p>
@@ -272,6 +269,14 @@
 			
 		</div>
 		</div-->
+		<script type="text/javascript" src="https://unpkg.com/web3@1.2.11/dist/web3.min.js"></script>
+		<script type="text/javascript" src="https://unpkg.com/web3modal@1.9.0/dist/index.js"></script>
+		<script type="text/javascript" src="https://unpkg.com/evm-chains@0.2.0/dist/umd/index.min.js"></script>
+		<script type="text/javascript" src="https://unpkg.com/@walletconnect/web3-provider@1.2.1/dist/umd/index.min.js"></script>
+		<script type="text/javascript" src="https://unpkg.com/fortmatic@2.0.6/dist/fortmatic.js"></script>
+
+		<script type="module" src="js/chainload.js"></script>
+		<script type="module" src="js/main.js"></script>
 	</body>
 </html>
 

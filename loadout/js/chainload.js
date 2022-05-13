@@ -1,8 +1,21 @@
 "use strict";
 
 import { ethers } from "./ethers-5.1.esm.min.js";
-export const provider = new ethers.providers.Web3Provider(window.ethereum, 'any')
-await provider.send("eth_requestAccounts", []);
+//import Web3Modal from "web3modal";
+const Web3Modal = window.Web3Modal.default;
+
+const providerOptions = {
+  /* See Provider Options Section */
+};
+const web3Modal = new Web3Modal({
+    network: "mainnet", // optional
+    cacheProvider: true, // optional
+    providerOptions // required
+});
+
+const instance = await web3Modal.connect();
+
+export const provider = new ethers.providers.Web3Provider(instance);
 export const signer = provider.getSigner();
 
 function getContract(type) {
