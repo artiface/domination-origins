@@ -4,7 +4,7 @@ import {getTokenCount, loadUserNFTs, loadNFT, signer, provider} from "./chainloa
 
 const network = await provider.getNetwork();
 const chainId = network.chainId;
-const battleUrl = "/battle/"
+const battleUrl = "/battle/";
 
 if (chainId === 137)
 {
@@ -77,7 +77,7 @@ if (chainId === 137)
         troopSelection = matchData['troop_selection'];
         updateTroopDisplay(troopSelection);
     }
-
+    preloadLists();
 	startUp();
  
 }
@@ -86,13 +86,85 @@ else
 	alert("Please connect to the Polygon MainNet");
 }
 
+function createTroopListItem(index) {
+    const html = `<div class="nft-list">
+                    <div class="nft-list-img">
+                        <img class="small_portrait" src="/assets/ui/browse.png" />
+                    </div>
+                    <div class="nft-list-name">
+                        &lt;none&gt;
+                    </div>
+                    <div class="nft-list-label">
+                        <p>Level</p>
+                        <p>Health</p>
+                    </div>
+                    <div class="nft-list-progress-bar">
+                        <progress class="lebel-progress-bar" value="950" max="1000">70 %</progress>
+                        <progress class="health-progress-bar" value="950" max="1000">70 %</progress>
+                    </div>
+                    <div class="nft-list-propertise">
+                        <p>Skills:</p>
+                        <p>DragonHide</p>
+                    </div>
+                </div>`;
+    return html;
+};
 
+async function preloadLists() {
+    const tokenList = document.getElementById('token-list');
+
+    const observer = new IntersectionObserver(onIntersection, {
+      root: tokenList,   // default is the viewport (=null)
+      threshold: .5 // percentage of taregt's visible area. Triggers "onIntersection"
+    })
+
+    // callback is called on intersection change
+    function onIntersection(entries, opts) {
+      entries.forEach(entry =>
+        entry.target.classList.toggle('visible', entry.isIntersecting)
+      )
+    }
+
+    const test = numberOfTroops.add(100);
+    for (let i = 0; test.gt(i); i++) {
+        tokenList.innerHTML += createTroopListItem(i);
+    }
+    observer.observe(document.querySelector('.nft-list'));
+};
 
 async function startUp() {
     
     const walletLabel = document.getElementById("user_wallet");
     walletLabel.innerHTML = userAddress;
 
+    const modal = document.getElementById("myModal");
+
+    // Get the <span> element that closes the modal
+    const span = document.getElementsByClassName("close")[0];
+
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function() {
+        modal.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    for (let i = 0; i < 5; i++) {
+        const col = document.getElementById("troop_container").children[i];
+        const image = col.querySelector('img.small_portrait');
+        image.onclick = function() {
+            currentTroopSelection = col + 1;
+            currentTokenType = 'troops';
+            modal.style.display = "block";
+        }
+    }
+
+    /*
     document.getElementById("pick_token").onclick = function () {
         var tokenSelect = document.getElementById("token_selection");
 
@@ -116,8 +188,8 @@ async function startUp() {
         tokens[currentTokenType].deploymentSet.add(tokenId);
         updateTroopDisplay();
     };
-
-
+    */
+    /*
     document.getElementById("find_match_button").onclick = async function () {
         if (!troopSelection.hasOwnProperty('1')) return;
         const matchData = {
@@ -129,6 +201,7 @@ async function startUp() {
         window.open(battleUrl, "_self");
     };
 
+
     document.getElementById("paging_back").onclick = function () {
         if (tokens[currentTokenType].currentPage > 0) tokens[currentTokenType].currentPage--;
         showTokenList(currentTokenType, tokens[currentTokenType].currentPage);
@@ -139,11 +212,7 @@ async function startUp() {
         showTokenList(currentTokenType, tokens[currentTokenType].currentPage);
     };
 
-    document.getElementById("select_troop_1").onclick = function () {
-        currentTroopSelection = 1;
-        currentTokenType = 'troops';
-        showTokenList(currentTokenType, tokens[currentTokenType].currentPage);
-    };
+
 
     document.getElementById("select_troop_2").onclick = function () {
         currentTroopSelection = 2;
@@ -198,6 +267,7 @@ async function startUp() {
         currentTokenType = 'weapons';
         showTokenList(currentTokenType, tokens[currentTokenType].currentPage);
     };
+    */
 }
 
 async function loadLocalNFT(type, tokenId) {
@@ -316,13 +386,18 @@ async function updateTroopDisplay() {
 			if (charTokenId)
 			{
                 const charData = await getTokenData('troops', charTokenId);
-                document.getElementById("image_" + i).src = charData['image'];
-                document.getElementById("name_" + i).innerHTML = charTokenId;
+                const col = document.getElementById("troop_container").children[i-1];
+                const image = col.querySelector('img.small_portrait');
+                image.src = charData.image;
+                const name = col.querySelector('div.nft-name');
+                name.innerHTML = charTokenId;
 			}
 			if (weaponTokenId)
 			{
+			    /*
 			    const tokenData = await getTokenData('weapons', charTokenId);
                 document.getElementById("weapon_image_" + i).src = tokenData['image'];
+                */
 			}
 		}
 	}	

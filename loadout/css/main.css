@@ -3,6 +3,7 @@ body {
     color:white;
     /*background:url("./image/bg.png") no-repeat center;*/
     background-size: cover;
+    background-color: black;
 }
 
 .header, .nft-name {
@@ -40,6 +41,7 @@ body {
 .small_portrait {
     width: 100%;
     border-radius: 10px;
+    cursor: pointer;
 }
 
 .nft-info {
@@ -53,7 +55,7 @@ body {
     background-color: #d3b501;
 }
 
-.troop_container {
+#troop_container {
     display:flex;
 }
 
@@ -84,7 +86,7 @@ div.column {
     text-align: center;
 }
 
-.start-game {
+button#start-game {
     background-color: initial;
     background-image: linear-gradient(-180deg, #d3b501, #323819);
     border-radius: 6px;
@@ -145,10 +147,13 @@ div[class^="nft-selection-"]:hover {
 .tooltip {
     position: absolute;
     display: inline-block;
-    top: 21px;
+    top: 3px;
     right: 2px;
 }
-
+.pointer
+{
+    cursor: pointer;
+}
 .tooltip .tooltiptext {
     visibility: hidden;
     width: 120px;
@@ -181,12 +186,14 @@ div[class^="nft-selection-"]:hover {
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
     z-index: 1; /* Sit on top */
-    padding-top: 100px; /* Location of the box */
+    margin-top: 64px; /* Location of the box */
+    margin-bottom: 64px;
     left: 0;
     top: 0;
+    bottom: 0;
     width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
+    height: calc(100% - 2*64px); /* Full height */
+    overflow: hidden; /* Enable scroll if needed */
     background-color: rgb(0,0,0); /* Fallback color */
     background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
 }
@@ -201,7 +208,8 @@ div[class^="nft-selection-"]:hover {
     margin: auto;
     padding: 0;
     border: 1px solid #888;
-    width: 65%;
+    width: 96%;
+    height: 100%;
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
     -webkit-animation-name: animatetop;
     -webkit-animation-duration: 0.4s;
@@ -239,9 +247,13 @@ div[class^="nft-selection-"]:hover {
     padding: 2px 16px;
     background-color: #00cfec;
     color: white;
+    height: 48px;
 }
 
-.modal-body {padding: 2px 16px;}
+.modal-body {
+    padding: 2px 16px;
+    height: calc(100% - 56px);
+}
 
 .modal-footer {
     padding: 2px 16px;
@@ -266,6 +278,7 @@ div[class^="nft-selection-"]:hover {
 
 .modal-left {
     padding: 15px;
+    overflow-y: scroll;
 }
 
 .nft-profile-level {

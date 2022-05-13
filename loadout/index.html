@@ -10,52 +10,253 @@
 		<script type="module" src="js/main.js"></script>
 	</head>
 	<body> 
-		<p>Welcome <span id="user_wallet"></span></p>
-		<div><button id="find_match_button">Find Match</button> as <input type="text" id="username" placeholder="username"/></div>
-		<div class="troop_container">
-			<div class="column_1">
-				<h3>Troop #1</h3>
-				<img class="small_portrait" id="image_1" src="" />
-				<img class="small_portrait" id="weapon_image_1" src="" />
-
-				<div id="name_1"></div>
-				<button id="select_troop_1">Troop</button>
-				<button id="select_weapon_1">Weapon</button>
+		<p class="header">Welcome <span id="user_wallet"></span></p>
+		<div id="troop_container">
+			<div class="column">
+				<div class="nft-image">
+					<div class="tooltip"><img class="nft-info" src="/assets/ui/icons8-info.svg" />
+						<span class="tooltiptext">
+						  <ul>
+							<li>Level: 1</li>
+							<li>Strength: 8</li>
+							<li>...</li>
+						  </ul>
+						</span>
+					</div>
+					<img class="small_portrait" src="/assets/ui/browse.png" />
+					<div class="nft-name">&lt;none&gt;</div>
+				</div>
+				<div class="nft-panel">
+					<div class="nft-selection">
+						<div class="nft-selection-w">
+							W
+						</div>
+						<div class="nft-selection-a">
+							A
+						</div>
+					</div>
+					<div class="nft-item">
+						<div class="nft-selection-I1">
+							I1
+						</div>
+						<div class="nft-selection-I2">
+							I2
+						</div>
+					</div>
+					<div class="health-bar">
+						<progress class="amount-progress" value="750" max="1000">70 %</progress>
+					</div>
+				</div>
 			</div>
-			<div class="column_2">
-				<h3>Troop #2</h3>
-				<img class="small_portrait" id="image_2" src="" />
-				<img class="small_portrait" id="weapon_image_2" src="" />
-				<div id="name_2"></div>
-				<button id="select_troop_2">Troop</button>
-				<button id="select_weapon_2">Weapon</button>
+			<div class="column">
+				<div class="nft-image">
+					<div class="tooltip"><img class="nft-info" src="/assets/ui/icons8-info.svg" />
+						<span class="tooltiptext">
+						  <ul>
+							<li>Level: 1</li>
+							<li>Strength: 8</li>
+							<li>...</li>
+						  </ul>
+						</span>
+					</div>
+					<img class="small_portrait" src="/assets/ui/browse.png" />
+					<div class="nft-name">&lt;none&gt;</div>
+				</div>
+				<div class="nft-panel">
+					<div class="nft-selection">
+						<div class="nft-selection-w">
+							W
+						</div>
+						<div class="nft-selection-a">
+							A
+						</div>
+					</div>
+					<div class="nft-item">
+						<div class="nft-selection-I1">
+							I1
+						</div>
+						<div class="nft-selection-I2">
+							I2
+						</div>
+					</div>
+				</div>
+				<div class="health-bar">
+					<progress class="amount-progress" value="950" max="1000">70 %</progress>
+				</div>
 			</div>
-			<div class="column_3">
-				<h3>Troop #3</h3>
-				<img class="small_portrait" id="image_3" src="" />
-				<img class="small_portrait" id="weapon_image_3" src="" />
-				<div id="name_3"></div>
-				<button id="select_troop_3">Troop</button>
-				<button id="select_weapon_3">Weapon</button>
+			<div class="column">
+				<div class="nft-image">
+					<div class="tooltip"><img class="nft-info" src="/assets/ui/icons8-info.svg" />
+						<span class="tooltiptext">
+						  <ul>
+							<li>Level: 1</li>
+							<li>Strength: 8</li>
+							<li>...</li>
+						  </ul>
+						</span>
+					</div>
+					<img class="small_portrait" src="/assets/ui/browse.png" />
+					<div class="nft-name">&lt;none&gt;</div>
+				</div>
+				<div class="nft-panel">
+					<div class="nft-selection">
+						<div class="nft-selection-w">
+							W
+						</div>
+						<div class="nft-selection-a">
+							A
+						</div>
+					</div>
+					<div class="nft-item">
+						<div class="nft-selection-I1">
+							I1
+						</div>
+						<div class="nft-selection-I2">
+							I2
+						</div>
+					</div>
+				</div>
+				<div class="health-bar">
+					<progress class="amount-progress" value="400" max="1000">70 %</progress>
+				</div>
 			</div>
-			<div class="column_4">
-				<h3>Troop #4</h3>
-				<img class="small_portrait" id="image_4" src="" />
-				<img class="small_portrait" id="weapon_image_4" src="" />
-				<div id="name_4"></div>
-				<button id="select_troop_4">Troop</button>
-				<button id="select_weapon_4">Weapon</button>
+			<div class="column">
+				<div class="nft-image">
+					<div class="tooltip"><img class="nft-info" src="/assets/ui/icons8-info.svg" />
+						<span class="tooltiptext">
+						  <ul>
+							<li>Level: 1</li>
+							<li>Strength: 8</li>
+							<li>...</li>
+						  </ul>
+						</span>
+					</div>
+					<img class="small_portrait" src="/assets/ui/browse.png" />
+					<div class="nft-name">&lt;none&gt;</div>
+				</div>
+				<div class="nft-panel">
+					<div class="nft-selection">
+						<div class="nft-selection-w">
+							W
+						</div>
+						<div class="nft-selection-a">
+							A
+						</div>
+					</div>
+					<div class="nft-item">
+						<div class="nft-selection-I1">
+							I1
+						</div>
+						<div class="nft-selection-I2">
+							I2
+						</div>
+					</div>
+				</div>
+				<div class="health-bar">
+					<progress class="amount-progress" value="1000" max="1000">70 %</progress>
+				</div>
 			</div>
-			<div class="column_5">
-				<h3>Troop #5</h3>
-				<img class="small_portrait" id="image_5" src="" />
-				<img class="small_portrait" id="weapon_image_5" src="" />
-				<div id="name_5"></div>
-				<button id="select_troop_5">Troop</button>
-				<button id="select_weapon_5">Weapon</button>
+			<div class="column">
+				<div class="nft-image">
+					<div class="tooltip"><img class="nft-info" src="/assets/ui/icons8-info.svg" />
+						<span class="tooltiptext">
+						  <ul>
+							<li>Level: 1</li>
+							<li>Strength: 8</li>
+							<li>...</li>
+						  </ul>
+						</span>
+					</div>
+					<img class="small_portrait" src="/assets/ui/browse.png" />
+					<div class="nft-name">&lt;none&gt;</div>
+				</div>
+				<div class="nft-panel">
+					<div class="nft-selection">
+						<div class="nft-selection-w">
+							W
+						</div>
+						<div class="nft-selection-a">
+							A
+						</div>
+					</div>
+					<div class="nft-item">
+						<div class="nft-selection-I1">
+							I1
+						</div>
+						<div class="nft-selection-I2">
+							I2
+						</div>
+					</div>
+				</div>
+				<div class="health-bar">
+					<progress class="amount-progress" value="500" max="1000">70 %</progress>
+				</div>
 			</div>
 		</div>
-		<div id="listcontainer">
+		<div class="launch-button">
+			<button id="start-game">
+				LAUNCH
+			</button>
+		</div>
+
+				<div id="myModal" class="modal">
+			<!-- Modal content -->
+			<div class="modal-content">
+			  <div class="modal-header">
+				<span class="close">&times;</span>
+				<div class="modal-title">Token List Selection</div>
+			  </div>
+			  <div class="modal-body">
+				<div class="filter">
+					<input type="text" placeholder="Filter: Origin" />
+					<input type="text" placeholder="Filter: Faction" />
+					<input type="text" placeholder="Filter: Level" />
+				</div>
+				<div class="modal-body-content">
+					<div id="token-list" class="modal-left">
+					</div>
+					<div class="modal-right">
+						<div class="nft-profile">
+							<div class="profile-img">
+								<img class="small_portrait" src="/assets/ui/browse.png" />
+								<div class="nft-profile-name">
+									&lt;none&gt;
+								</div>
+							</div>
+							<div class="nft-profile-level">
+								<p>Level</p>
+								<p>Health</p>
+							</div>
+							<div class="nft-profile-progress">
+								<progress class="lebel-progress-bar" value="950" max="1000">70 %</progress>
+								<progress class="health-progress-bar" value="950" max="1000">70 %</progress>
+							</div>
+						</div>
+						<div class="nft-profile-properties">
+							<div class="propertise">
+								<p>Skills:</p>
+								<p>DragonHide</p>
+							</div>
+							<div class="propertise-list">
+								<ul>
+									<li>Strength: 8</li>
+									<li>Agility: 4</li>
+									<li>...</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="launch-button">
+					<button class="start-game">
+						SELECT
+					</button>
+				</div>
+			  </div>
+			</div>
+		</div>
+
+		<!--div id="listcontainer">
 			<button id="paging_back">&lt;&lt;</button>
 			<button id="paging_forward">&gt;&gt;</button>
 			<span id="paging_info"></span>
@@ -70,7 +271,7 @@
 		<div class="column_2" id="nft_image">
 			
 		</div>
-		</div>
+		</div-->
 	</body>
 </html>
 
