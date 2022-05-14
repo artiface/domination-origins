@@ -48,7 +48,7 @@ class GameState:
 		self.turnCount = 0
 
 		self.wallData = None
-		self.connectedPlayers = []
+		self.players = []
 		self.clearMap()
 
 	def battleEndCondition(self):
@@ -67,7 +67,7 @@ class GameState:
 		self.turnOfPlayerIndex = 0
 
 	def turnOfPlayer(self):
-		return self.connectedPlayers[self.turnOfPlayerIndex]
+		return self.players[self.turnOfPlayerIndex]
 
 	def addSpawn(self, team, position):
 		# check if there is a list for this team
@@ -77,7 +77,7 @@ class GameState:
 
 	def nextTurn(self):
 		self.turnCount += 1
-		self.turnOfPlayerIndex = self.turnCount % len(self.connectedPlayers)
+		self.turnOfPlayerIndex = self.turnCount % len(self.players)
 		# reset steps
 		effects = []
 		for char in self.allCharacters:
@@ -88,7 +88,7 @@ class GameState:
 		return effects
 
 	def spawnTroopsOfPlayer(self, player, troops):
-		if player in self.connectedPlayers or len(self.teamSpawns) == 0:
+		if player in self.players or len(self.teamSpawns) == 0:
 			return False
 
 		troopList = []
@@ -98,7 +98,7 @@ class GameState:
 			spawnedTroop.setWeapon('2729')  # hand pistol # TODO: make this dynamic
 			troopList.append(spawnedTroop)
 
-		playerIndex = len(self.connectedPlayers)
+		playerIndex = len(self.players)
 		spawnIndex = playerIndex + 1
 		spawns = self.teamSpawns[spawnIndex]
 		for index, spawnPosition in enumerate(spawns):
@@ -109,13 +109,13 @@ class GameState:
 			self.addChar(character)
 
 		player.playerIndex = playerIndex
-		self.connectedPlayers.append(player)
+		self.players.append(player)
 		self.playerMap[player.wallet] = player.playerIndex
 
 	def updatePlayerAfterReconnect(self, player):
-		for index, playerInList in enumerate(self.connectedPlayers):
+		for index, playerInList in enumerate(self.players):
 			if playerInList.wallet == player.wallet:
-				self.connectedPlayers[index] = player
+				self.players[index] = player
 				player.playerIndex = index
 
 	def clearMap(self):
@@ -258,16 +258,16 @@ class GameState:
 	async def broadcast(self, message):
 		responseAsJson = json.dumps(message)
 		# remove all players that are not connected
-		for player in self.connectedPlayers:
+		for player in self.players:
 			if player.socket.closed:
-				self.connectedPlayers.remove(player)
+				self.players.remove(player)
 		# print('Broadcast: {}'.format(responseAsJson))
-		create_task(asyncio.wait([player.socket.send(responseAsJson) for player in self.connectedPlayers]))
+		create_task(asyncio.wait([player.socket.send(responseAsJson) for player in self.players]))
 
 	async def broadcastState(self):
-		for player in self.connectedPlayers:
+		for player in self.players:
 			if player.socket.closed:
-				self.connectedPlayers.remove(player)
+				self.players.remove(player)
 			else:
 				print('Broadcast state to player with index {}'.format(player.playerIndex))
 				create_task(self.sendPlayerState(player))
@@ -327,7 +327,7 @@ class GameState:
 		self.tileMap = [[Tile.fromObject(tile) for tile in row] for row in tileMapObj]
 
 	def reconnectPlayer(self, player):
-		for inPlayer in self.connectedPlayers:
+		for inPlayer in self.players:
 			if inPlayer.socket.closed and inPlayer == player and not player.socket.closed:
 				inPlayer.socket = player.socket
 				player.playerIndex = inPlayer.playerIndex
@@ -335,10 +335,13 @@ class GameState:
 
 	def disconnectedPlayers(self):
 		discPlayers = []
-		for player in self.connectedPlayers:
+		for player in self.players:
 			if player.socket.closed:
 				discPlayers.append(player)
 		return discPlayers
+
+	def connectedPlayers(self):
+		return [player for player in self.players if not player.socket.closed]
 
 	def dealDamage(self, attacker: doserve.common.character.Character, defender: doserve.common.character.Character, in_damage: int, damage_type: DamageType) -> (bool, int):
 		resistance = defender.getResistance(damage_type)

@@ -37,6 +37,7 @@ class PackClaws(Skill):
         response = {
             'attacker': char.charId,
             'attacker_tile': char.position.toObject(),
+            'focus_cost': self.cost,
             'aoe': [{
                 'tile': target_char.position.toObject(),
                 'damage': damage,

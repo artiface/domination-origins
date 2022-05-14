@@ -45,6 +45,7 @@ class PoisonCloud(Skill):
             })
         # return the resulting delta
         response = {
+            'focus_cost': self.cost,
             'attacker': char.charId,
             'attacker_tile': char.position.toObject(),
             'aoe': aoe_tiles,

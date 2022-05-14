@@ -161,8 +161,15 @@ var GameWorld = {
             if (i < skills.length) {
                 const skillDef = skills[i];
                 const name = skillDef.name;
+                const passive = skillDef.type === 1;
                 this.skillButtons[i].value(name);
                 this.skillButtons[i].show();
+                if (passive) {
+                    this.skillButtons[i]._mouseEventsActive = false;
+                }
+                else {
+                    this.skillButtons[i]._mouseEventsActive = true;
+                }
             }
             else {
                 this.skillButtons[i].hide();

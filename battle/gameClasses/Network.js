@@ -46,10 +46,14 @@ var Network = {
             const damage = tileEffect['damage'];
             const targetTile = tileEffect['tile'];
             const defender = this.tilemap.tileOccupiedBy(targetTile.x, targetTile.y);
+            const killed = tileEffect['killed'];
             this.spawnBulletImpacts(targetTile.x, targetTile.y, 3);
             let damageText = damage > 0 ? damage.toString() : 'miss';
             this.spawnFloatingText(targetTile.x, targetTile.y, damageText, '#ff0000');
             defender.healthbar.changeHealth(-damage);
+            if (killed) {
+                defender.kill();
+            }
         }
 
         const attacker = this.characterById(data['attacker']);
@@ -65,13 +69,24 @@ var Network = {
             const tileEffect = targetTiles[i];
             const damage = tileEffect['damage'];
             const targetTile = tileEffect['tile'];
+            const killed = tileEffect['killed'];
             const defender = this.tilemap.tileOccupiedBy(targetTile.x, targetTile.y);
             //this.spawnBulletImpacts(targetTile.x, targetTile.y, 3);
             let damageText = damage > 0 ? damage.toString() : 'miss';
             this.spawnFloatingText(targetTile.x, targetTile.y, damageText, '#ff0000');
             defender.healthbar.changeHealth(-damage);
+            if (killed) {
+                defender.kill();
+            }
         }
-        //const attacker = this.characterById(data['attacker']);
+        if (effect.hasOwnProperty('attacker')) {
+            const attacker = this.characterById(effect['attacker']);
+            if (effect.hasOwnProperty('focus_cost')) {
+                const focusChange = effect['focus_cost'];
+                attacker.focusbar.changeFocus(-focusChange);
+            }
+        }
+
         //attacker.hasAttacked(true);
         /*
         if (attacker === this.selectedCharacter)

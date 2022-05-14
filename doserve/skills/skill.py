@@ -40,8 +40,8 @@ class Skill:
     def startCooldown(self):
         self.cooldownCounter = self.cooldown
 
-    def canBePaid(self):
-        return True
+    def canBePaid(self, char):
+        return char.currentFocus >= self.cost
 
     def isReady(self):
         return self.cooldownCounter == 0

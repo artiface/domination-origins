@@ -7,15 +7,16 @@ For Retina Displays, we need double that: 240x120 pixels.
 
 So normal ground tiles will be needed in the following sizes 120x60 and 240x120.
 
+## Bugs
+ - Death animation is not working
+ - It is possible to use passive skills
+ - The mouse-over-effect is sometimes on the wrong depth layer
+
 ## Needed for Alpha Battles
  - Weapon Slots - ITEM NFTs currently CANNOT BE ITERATED OVER
  - Battle Points System
  - Test Sprinting
  - Melee and Ranged Attack Animation
- - Skill prep
-   - How many units are around me in a certain range?
-   - Status effects per turn
-
  - Skills
    - Claws of the pack
     - Additional damage for each nearby friendly unit

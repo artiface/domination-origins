@@ -14,7 +14,7 @@ class SkillHandler:
 		skill = char.getSkill(skillId)
 		if not skill:
 			return isAllowed, {'message': 'useSkill', 'error': 'no such skill.'}
-		if not skill.canBePaid():
+		if not skill.canBePaid(char):
 			return isAllowed, {'message': 'useSkill', 'error': 'you do not have enough focus.'}
 		if not skill.isReady():
 			return isAllowed, {'message': 'useSkill', 'error': 'skill is not ready.'}

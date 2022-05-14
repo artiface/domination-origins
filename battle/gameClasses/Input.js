@@ -164,8 +164,8 @@ var Input = {
             // wait for "Escape"
             else if (event.key === "Escape") {
                 // deselect the character
-                self.currentAction = Move;
                 self.selectCharacter(self.selectedCharacter);
+                self.moveMode();
             }
             else if (event.key === " ") {
                 self.selectNextActionableCharacter();
@@ -176,7 +176,7 @@ var Input = {
             const mouseTile = self.tilemap.mouseToTile();
             const char = self.tilemap.tileOccupiedBy(mouseTile.x, mouseTile.y);
             // debug tests..
-            self.spawnMessageText("123", '#f00');
+            //self.spawnMessageText("123", '#f00');
 
             if (self.isValidTarget(mouseTile) && self.selectedCharacter) {
                 self.currentAction(self.selectedCharacter, mouseTile);

@@ -70,6 +70,9 @@ class GameServer:
         if char.stepsTakenThisTurn >= char.agility:
             create_task(player.respond({'message': 'movement', 'error': 'has moved already.'}))
             return
+        if not self.state(player).inBounds(dest['x'], dest['y']):
+            create_task(player.respond({'message': 'movement', 'error': 'out of bounds.'}))
+            return
 
         path = self.findPath(player, char.position[0], char.position[1], dest['x'], dest['y'])
         stepsLeft = char.agility - char.stepsTakenThisTurn
@@ -194,7 +197,7 @@ class GameServer:
         elif not player.currentBattle:
             create_task(player.respond({'message': messageType, 'error': 'not part of a battle.'}))
             return
-        elif len(self.state(player).connectedPlayers) < 2:
+        elif len(self.state(player).connectedPlayers()) < 2:
             create_task(player.respond({'message': messageType, 'error': 'waiting for other players.'}))
             return
         elif self.state(player).turnOfPlayer() != player:
@@ -235,7 +238,7 @@ class GameServer:
                 create_task(self.state(player).sendBattleEnd(winner))
             else:
                 effectMessages = self.state(player).nextTurn()
-                response = {'message': messageType, 'effects': effectMessages, 'error': '', 'turnOfPlayer': self.state(player).turnOfPlayer().wallet}
+                response = {'message': messageType, 'effects': effectMessages, 'turnOfPlayer': self.state(player).turnOfPlayer().wallet}
                 create_task(self.state(player).broadcast(response))
             return
 
@@ -289,7 +292,7 @@ class GameServer:
         validated = self.siwe.validate(user_wallet, signature)
         is_owner_of_loadout = await self.isOwnerOfLoadout(player, loadout)
         # TODO: add further checks for the loadout
-        #  - check for duplicate css
+        #  - check for duplicate tokens
 
         if not validated:
             create_task(player.respond({'message': 'siwe', 'error': 'Login failed. (siwe)'}))
@@ -326,8 +329,7 @@ class GameServer:
 
     def findRunningBattle(self, player) -> GameState:
         for battleId, battle in self.matches.items():
-            disconnectedPlayers = battle.disconnectedPlayers()
-            if player in disconnectedPlayers:
+            if player in battle.disconnectedPlayers() and len(battle.connectedPlayers()) == 1:
                 return battle
         return None
 
