@@ -9,6 +9,7 @@ import doserve.skills.poison_cloud
 import doserve.skills.pack_claws
 import doserve.skills.pack_protection
 from doserve.skills.skill import Skill
+from doserve.status.regen import Regenerate
 from doserve.vector import Vector
 
 
@@ -261,6 +262,7 @@ class Character:
     def nextTurn(self):
         self.stepsTakenThisTurn = 0
         self.hasAttackedThisTurn = False
+        self.currentFocus += 1
         for skill in self.skills:
             skill.nextTurn()
 
@@ -269,7 +271,8 @@ class Character:
         for i in range(len(self.statusEffects)-1, -1, -1):
             statusEffect = self.statusEffects[i]
             effectMessage = statusEffect.nextTurn()
-            statusEffectMessages.append(effectMessage)
+            if effectMessage:
+                statusEffectMessages.append(effectMessage)
             if statusEffect.isExpired():
                 self.statusEffects.remove(statusEffect)
 

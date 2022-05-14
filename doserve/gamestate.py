@@ -8,6 +8,7 @@ from pytmx import pytmx
 import doserve.common.character
 from doserve.common.enums import CharacterState, DamageType
 from doserve.common.helper import dist
+from doserve.status.regen import Regenerate
 from vector import Vector
 
 
@@ -95,6 +96,8 @@ class GameState:
 		for slot, troopInfo in troops.items():
 			troopTokenId = troopInfo['troops']
 			spawnedTroop = doserve.common.character.Character(player.wallet, troopTokenId, self)
+			r = Regenerate(self, spawnedTroop)
+			spawnedTroop.addStatusEffect(r)
 			spawnedTroop.setWeapon('2729')  # hand pistol # TODO: make this dynamic
 			troopList.append(spawnedTroop)
 
@@ -379,7 +382,7 @@ class GameState:
 	async def rangedAttack(self, attacker, defender):
 		distance = dist(attacker.position, defender.position)
 
-		chanceToHit = (2 * attacker.dexterity * (attacker.level + 2)) - 5 * distance
+		chanceToHit = 20 + (2 * attacker.dexterity * (attacker.level + 2)) - 5 * distance
 		# l1, d1 => 2*1*(1+2) = 6
 		# l2, d2 => 2*2*(2+2) = 12
 		# l1, d10 => 2*10*(1+2) = 60

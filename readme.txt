@@ -7,10 +7,14 @@ For Retina Displays, we need double that: 240x120 pixels.
 
 So normal ground tiles will be needed in the following sizes 120x60 and 240x120.
 
-## Bugs
+## Bugs / Remarks
  - Death animation is not working
  - It is possible to use passive skills
  - The mouse-over-effect is sometimes on the wrong depth layer
+ - Dead character is selectable
+ - Dead character still have status effects applied
+ - Hit chances seem subjectively low
+ - Should focus re-generate during battle?
 
 ## Needed for Alpha Battles
  - Weapon Slots - ITEM NFTs currently CANNOT BE ITERATED OVER

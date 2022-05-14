@@ -13,8 +13,8 @@ class Poisoned:
         killed, damage = self.state.dealDamage(self.source_char, self.target_char, 20, damage_type)
         self.turns -= 1
         response = {
-            'attacker': self.source_char.charId,
-            'attacker_tile': self.source_char.position.toObject(),
+            'source': self.source_char.charId,
+            'source_tile': self.source_char.position.toObject(),
             'aoe': [{
                 'tile': self.target_char.position.toObject(),
                 'damage': damage,

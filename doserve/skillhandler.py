@@ -25,6 +25,6 @@ class SkillHandler:
 
 		skill_effect = skill.activate(state, char, message)
 
-		response = {'message': 'useSkill', 'characterId': charId, 'skill_id': skillId, 'error': '', 'skill_effect': skill_effect}
+		response = {'message': 'useSkill', 'characterId': charId, 'skill_id': skillId, 'skill_effect': skill_effect}
 
 		return isAllowed, response

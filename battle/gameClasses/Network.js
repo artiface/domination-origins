@@ -39,21 +39,24 @@ var Network = {
         this.socket.send(requestAsJson);
     },
 
+    handleTileEffect: function(tileEffect) {
+        const damage = tileEffect['damage'];
+        const targetTile = tileEffect['tile'];
+        const killed = tileEffect['killed'];
+        const defender = this.tilemap.tileOccupiedBy(targetTile.x, targetTile.y);
+        this.spawnBulletImpacts(targetTile.x, targetTile.y, 3);
+        let damageText = damage > 0 ? damage.toString() : 'miss';
+        this.spawnFloatingText(targetTile.x, targetTile.y, damageText, '#ff0000');
+        defender.healthbar.changeHealth(-damage);
+        if (killed) {
+            defender.kill();
+        }
+    },
     handleRangedAttack: function(data) {
         const targetTiles = data['aoe'];
         for (let i = 0; i < targetTiles.length; i++) {
             const tileEffect = targetTiles[i];
-            const damage = tileEffect['damage'];
-            const targetTile = tileEffect['tile'];
-            const defender = this.tilemap.tileOccupiedBy(targetTile.x, targetTile.y);
-            const killed = tileEffect['killed'];
-            this.spawnBulletImpacts(targetTile.x, targetTile.y, 3);
-            let damageText = damage > 0 ? damage.toString() : 'miss';
-            this.spawnFloatingText(targetTile.x, targetTile.y, damageText, '#ff0000');
-            defender.healthbar.changeHealth(-damage);
-            if (killed) {
-                defender.kill();
-            }
+            this.handleTileEffect(tileEffect);
         }
 
         const attacker = this.characterById(data['attacker']);
@@ -67,17 +70,7 @@ var Network = {
         const targetTiles = effect['aoe'];
         for (let i = 0; i < targetTiles.length; i++) {
             const tileEffect = targetTiles[i];
-            const damage = tileEffect['damage'];
-            const targetTile = tileEffect['tile'];
-            const killed = tileEffect['killed'];
-            const defender = this.tilemap.tileOccupiedBy(targetTile.x, targetTile.y);
-            //this.spawnBulletImpacts(targetTile.x, targetTile.y, 3);
-            let damageText = damage > 0 ? damage.toString() : 'miss';
-            this.spawnFloatingText(targetTile.x, targetTile.y, damageText, '#ff0000');
-            defender.healthbar.changeHealth(-damage);
-            if (killed) {
-                defender.kill();
-            }
+            this.handleTileEffect(tileEffect);
         }
         if (effect.hasOwnProperty('attacker')) {
             const attacker = this.characterById(effect['attacker']);
@@ -86,14 +79,24 @@ var Network = {
                 attacker.focusbar.changeFocus(-focusChange);
             }
         }
-
-        //attacker.hasAttacked(true);
-        /*
-        if (attacker === this.selectedCharacter)
-        {
-            this.selectNextActionableCharacter();
+    },
+    handleStatusEffect: function(effect) {
+        if (effect.hasOwnProperty('aoe')) {
+            const targetTiles = effect['aoe'];
+            for (let i = 0; i < targetTiles.length; i++) {
+                const tileEffect = targetTiles[i];
+                this.handleTileEffect(tileEffect);
+            }
         }
-        */
+        if (effect.hasOwnProperty('source')) {
+            const source = this.characterById(effect['source']);
+            if (effect.hasOwnProperty('stat_changes')) {
+                const focusChange = effect['stat_changes'].focus || 0;
+                if (focusChange !== 0) {
+                    source.focusbar.changeFocus(focusChange);
+                }
+            }
+        }
     },
     endBattle: function(winner) {
         alert(winner + ' won the battle!');
@@ -120,7 +123,6 @@ var Network = {
                 break;
             case 'auth':
                 const flatSig = await signer.signMessage(message['siwe_message']);
-
                 const siweData = matchData;
                 siweData['message'] = 'siwe';
                 siweData['signature'] = flatSig;
@@ -173,7 +175,7 @@ var Network = {
                 const listOfEffects = message['effects'];
                 for (var i = 0; i < listOfEffects.length; i++) {
                     const effect = listOfEffects[i];
-                    this.handleUseSkill(effect);
+                    this.handleStatusEffect(effect);
                 }
 
                 // reset the steps taken this turn stat for each character where the ownerWallet matches the turnOfPlayer

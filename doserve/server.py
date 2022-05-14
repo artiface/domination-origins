@@ -187,7 +187,6 @@ class GameServer:
     async def handleRequest(self, player, request):
         messageType = request['message']
         print('{}({}): {}'.format(player.wallet, player.playerIndex, messageType))
-        response = {'error': 'unknown message.'}
         if messageType == 'auth':
             create_task(self.handleAuth(player, request))
             return
