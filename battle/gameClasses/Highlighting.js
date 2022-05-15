@@ -1,7 +1,7 @@
 "use strict";
 var Highlighting = {
-	showReachableTiles: function() {
-	    this.updateReachableTiles();
+	showReachableTiles: function(sprint) {
+	    this.updateReachableTiles(sprint);
 	    const tilemap = this._parent;
         for (let tile of this._reachableTiles)
         {
@@ -19,12 +19,12 @@ var Highlighting = {
             }
         }
 	},
-	updateReachableTiles: function() {
+	updateReachableTiles: function(sprint) {
 	    this.hideReachableTiles();
         const currentPosition = this._translate;
 		const tile = this._parent.pointToTile(currentPosition);
 	    const tilemap = this._parent;
-	    const maxSteps = this.getStat('agility') - this.getStat('stepsTakenThisTurn');
+	    const maxSteps = sprint ? this.getStat('agility') : this.getStat('agility') - this.getStat('stepsTakenThisTurn');
 	    this._reachableTiles = this.path._finder.getReachableTiles(tilemap, {x: tile.x, y: tile.y}, maxSteps); // TODO: put agility of character here
 	},
 	hidePossibleTargets: function() {

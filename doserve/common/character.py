@@ -303,3 +303,7 @@ class Character:
             skill_resistance = skill.getResistance(self, damageType)
             total_resistance += skill_resistance
         return total_resistance
+
+    def kill(self):
+        self.state = CharacterState.Dead
+        self.statusEffects = []

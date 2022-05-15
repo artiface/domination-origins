@@ -17,6 +17,15 @@ var Network = {
         const requestAsJson = JSON.stringify(request);
         this.socket.send(requestAsJson);
     },
+    requestSprint: function(characterId, tileX, tileY){
+        const request = {
+            'message': 'sprint',
+            'characterId': characterId,
+            'destination': {'x': tileX, 'y': tileY}
+        };
+        const requestAsJson = JSON.stringify(request);
+        this.socket.send(requestAsJson);
+    },
 
     requestAttack: function(characterId, tileX, tileY){
         const request = {
@@ -154,6 +163,7 @@ var Network = {
                 }
                 break;
             case 'movement':
+            case 'sprint':
                 var charIndex = message['characterId'];
                 var destination = message['destination'];
                 this.characters[charIndex].setStat('stepsTakenThisTurn', message['stepsTakenThisTurn']);

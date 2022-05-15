@@ -96,7 +96,7 @@ class GameServer:
             create_task(player.respond({'message': 'sprint', 'error': 'has sprinted already.'}))
             return
 
-        path = self.findPath(player, char.x, char.y, dest['x'], dest['y'])
+        path = self.findPath(player, char.position[0], char.position[1], dest['x'], dest['y'])
         stepsNeeded = len(path) - 1
 
         if len(path) == 0:

@@ -13,7 +13,7 @@ var Character = IgeEntity.extend({
         return this.getStat('stepsTakenThisTurn') < this.getStat('agility');
     },
     canAct: function() {
-        return !this.hasAttacked() || this.canMove();
+        return !this.isDead() && (!this.hasAttacked() || this.canMove());
     },
 	init: function () {
 		IgeEntity.prototype.init.call(this);

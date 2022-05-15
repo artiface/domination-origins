@@ -352,7 +352,7 @@ class GameState:
 
 		defender.currentHealth -= damage
 		if defender.currentHealth <= 0:
-			defender.state = CharacterState.Dead
+			defender.kill()
 			return True, damage
 		return False, damage
 

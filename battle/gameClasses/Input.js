@@ -43,6 +43,16 @@ var Input = {
             this.isValidTarget = this.emptySelector;
         }
     },
+    sprintMode: function() {
+        var self = this;
+        if (this.selectedCharacter) {
+            this.selectedCharacter.showReachableTiles(true);
+            this.currentAction = function(character, tile) {
+                self.requestSprint(character.getCharId(), tile.x, tile.y);
+            };
+            this.isValidTarget = this.emptySelector;
+        }
+    },
     skillTargetMode: function(skillDefinition) {
         var self = this;
         var skillId = skillDefinition.identifier;
@@ -181,7 +191,7 @@ var Input = {
             if (self.isValidTarget(mouseTile) && self.selectedCharacter) {
                 self.currentAction(self.selectedCharacter, mouseTile);
             }
-            else if (char && char.clientIsOwner() && char != self.selectedCharacter) {
+            else if (char && char.clientIsOwner() && char != self.selectedCharacter && char.canAct()) {
                 self.deselectCharacter();
                 self.selectCharacter(char);
             }

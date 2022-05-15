@@ -328,7 +328,7 @@ var GameWorld = {
             .mouseOut(outFunc)
             .mouseMove(function () { ige.input.stopPropagation(); })
             .mouseUp(function () {
-                self.debugText.value("Sprint Activated!");
+                self.sprintMode();
                 ige.input.stopPropagation();
             })
             .mount(this.uiScene);

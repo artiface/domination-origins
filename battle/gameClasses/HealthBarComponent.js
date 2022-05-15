@@ -14,7 +14,6 @@ var HealthBarComponent = IgeEntity.extend({
 			.depth(10)
 			.bounds3d(60, 60, 0)
 			.anchor(0, 10);
-		var self = this;
 
 		this._barTexture = new IgeTexture('../assets/smart/HealthBar.js');
         this._barTexture.on('loaded', function () {
