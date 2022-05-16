@@ -107,6 +107,7 @@ class GameServer:
             create_task(player.respond({'message': 'sprint', 'error': 'too far away.'}))
             return
 
+        char.hasSprinted = True
         create_task(self.moveChar(player, 'sprint', char, dest))
 
     async def moveChar(self, player, messageType, char: Character, dest):

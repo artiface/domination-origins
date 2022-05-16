@@ -2,8 +2,42 @@
 
 import { ethers } from "./ethers-5.1.esm.min.js";
 
-export const provider = new ethers.providers.Web3Provider(window.ethereum);
-export const signer = provider.getSigner();
+if (!window.ethereum) {
+    alert("Please install MetaMask or another Wallet Software to use this dApp!\nCould not access window.ethereum");
+}
+
+export let provider = undefined;
+export let signer = undefined;
+
+export async function connect() {
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    signer = await provider.getSigner();
+    await ensureNetwork(provider);
+}
+
+async function ensureNetwork(provider) {
+    const network = await provider.getNetwork();
+    const chainId = network.chainId;
+
+    if (chainId !== 137)
+    {
+        window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+                chainId: "0x89",
+                rpcUrls: ["https://polygon-rpc.com/"],
+                chainName: "Polygon Mainnet",
+                nativeCurrency: {
+                    name: "MATIC",
+                    symbol: "MATIC",
+                    decimals: 18
+                },
+                blockExplorerUrls: ["https://polygonscan.com/"]
+            }]
+        });
+    }
+}
 
 function getContract(type) {
 	const addressMap = {
@@ -23,7 +57,7 @@ function getContract(type) {
 
 	const stakingAbi = [
 		"function getTokensStaked(address query) public view returns(uint256[] memory)",
-		"function unstakeMul(uint256[] memory tokenIds) external nonReentrant"
+		"function unstakeMul(uint256[] memory tokenIds) external"
 	];
 
 	const abis = {

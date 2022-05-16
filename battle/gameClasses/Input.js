@@ -7,7 +7,8 @@ var Input = {
         }
         const char = this.tilemap.tileOccupiedBy(tile.x, tile.y);
         const isOwner = char.clientIsOwner();
-        return !isOwner;
+        const isDead = char.isDead();
+        return !isOwner && !isDead;
     },
     allySelector: function(tile) {
         if (this.emptySelector(tile)) {
@@ -15,7 +16,8 @@ var Input = {
         }
         const char = this.tilemap.tileOccupiedBy(tile.x, tile.y);
         const isOwner = char.clientIsOwner();
-        return isOwner;
+        const isDead = char.isDead();
+        return isOwner && !isDead;
     },
     emptySelector: function(tile) {
         const isTileOccupied = this.tilemap.isTileOccupied(tile.x, tile.y);
