@@ -1,31 +1,53 @@
 "use strict";
 
 import { ethers } from "./ethers-5.1.esm.min.js";
-//import Web3Modal from "web3modal";
-const Web3Modal = window.Web3Modal.default;
 
-const providerOptions = {
-  /* See Provider Options Section */
-};
-const web3Modal = new Web3Modal({
-    network: "mainnet", // optional
-    cacheProvider: true, // optional
-    providerOptions // required
-});
+if (!window.ethereum) {
+    alert("Please install MetaMask or another Wallet Software to use this dApp!\nCould not access window.ethereum");
+}
 
-const instance = await web3Modal.connect();
+export let provider = undefined;
+export let signer = undefined;
 
-export const provider = new ethers.providers.Web3Provider(instance);
-export const signer = provider.getSigner();
+export async function connect() {
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    signer = await provider.getSigner();
+    await ensureNetwork(provider);
+}
+
+async function ensureNetwork(provider) {
+    const network = await provider.getNetwork();
+    const chainId = network.chainId;
+
+    if (chainId !== 137)
+    {
+        window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+                chainId: "0x89",
+                rpcUrls: ["https://polygon-rpc.com/"],
+                chainName: "Polygon Mainnet",
+                nativeCurrency: {
+                    name: "MATIC",
+                    symbol: "MATIC",
+                    decimals: 18
+                },
+                blockExplorerUrls: ["https://polygonscan.com/"]
+            }]
+        });
+    }
+}
 
 function getContract(type) {
 	const addressMap = {
 		'troops': "0xb195991d16c1473bdF4b122A2eD0245113fCb2F9",
-		'weapons': "0x70242aAa2a2e97Fa71936C8ED0185110cA23B866"
+		'weapons': "0x70242aAa2a2e97Fa71936C8ED0185110cA23B866",
+		'staking': '0x1F827D438EeA6F06C034bf354243AB9b7B8cbB7f'
 	};
 	const contractAddress = addressMap[type];
 
-	const contractAbi = [
+	const mintingAbi = [
 		"function name() external view returns (string memory)",
 		"function symbol() external view returns (string memory)",
 		"function tokenURI(uint256 tokenId) external view returns (string memory)",
@@ -33,7 +55,19 @@ function getContract(type) {
 		"function balanceOf(address account) external view returns (uint256)"
 	];
 
-	const contract = new ethers.Contract(contractAddress, contractAbi, provider);
+	const stakingAbi = [
+		"function getTokensStaked(address query) public view returns(uint256[] memory)",
+		"function unstakeMul(uint256[] memory tokenIds) external"
+	];
+
+	const abis = {
+	    'troops': mintingAbi,
+        'weapons': mintingAbi,
+        'staking': stakingAbi
+	}
+    const contractAbi = abis[type];
+
+	const contract = new ethers.Contract(contractAddress, contractAbi, signer);
 
 	return contract;
 };
@@ -42,6 +76,17 @@ export async function getTokenCount(wallet_address, type) {
 	const contract = getContract(type);	
 	var numberOfTokens = await contract.balanceOf(wallet_address);
 	return numberOfTokens;
+};
+
+export async function getTokensStaked(wallet_address) {
+	const contract = getContract('staking');
+	var listOfTokens = await contract.getTokensStaked(wallet_address);
+	return listOfTokens;
+};
+
+export async function unstakeMul(listOfTokens) {
+	const contract = getContract('staking');
+	await contract.unstakeMul(listOfTokens);
 };
 
 export async function loadUserNFTs(wallet_address, type, start, count) {

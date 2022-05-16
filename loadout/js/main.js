@@ -1,90 +1,81 @@
 "use strict";
 import { ethers } from "./ethers-5.1.esm.min.js";
-import {getTokenCount, loadUserNFTs, loadNFT, signer, provider} from "./chainload.js";
+import { getTokenCount, loadUserNFTs, loadNFT, connect, signer, provider} from "./chainload.js";
 
-const network = await provider.getNetwork();
-const chainId = network.chainId;
 const battleUrl = "/battle/";
 
-if (chainId === 137)
-{
-    //window.localStorage.clear();
+//window.localStorage.clear();
 
-    var itemsPerPage = 10;
-    try {
-        var userAddress = await signer.getAddress();
-        var numberOfTroops = await getTokenCount(userAddress, 'troops');
-        var numberOfWeapons = await getTokenCount(userAddress, 'weapons');
-    }
-    catch (e) {
-        alert("Please login to MetaMask: " + e);
-    }
-    var findMatchPath = '/src/index.html';
-    var tokens = {
-        'troops':{
-            'localCacheDir': '/TroopNFTs/',
-            'pages': Math.ceil(numberOfTroops / itemsPerPage),
-            'lastPageCount': numberOfTroops % itemsPerPage,
-            'cache': JSON.parse(window.localStorage.getItem('troops_cache') || "[]"),
-            'currentPage': 0,
-            'deploymentSet': new Set(),
-            'listDisplay': function(tokenData) {
-                var name = tokenData.name;
-                var level = tokenData.traits.Level;
-                return name + ' - Level: ' + level;
-            },
-            'detailDisplay': function(tokenData) {
-                var showData = {
-                    'Level': tokenData.traits.Level,
-                    'Strength': tokenData.traits.Strength,
-                    'Dexterity': tokenData.traits.Dexterity,
-                    'Intelligence': tokenData.traits.Intelligence,
-                    'Agility': tokenData.traits.Agility,
-                    'Attributes Increase': tokenData.traits['Attributes Increase'],
-                    'Stamina Increase': tokenData.traits['Stamina Increase'],
-                    'Power Increase': tokenData.traits['Power Increase'],
-                };
-                return showData;
-            }
+var itemsPerPage = 10;
+try {
+    var userAddress = await signer.getAddress();
+    var numberOfTroops = await getTokenCount(userAddress, 'troops');
+    var numberOfWeapons = await getTokenCount(userAddress, 'weapons');
+}
+catch (e) {
+    alert("Error: " + e);
+}
+var findMatchPath = '/src/index.html';
+var tokens = {
+    'troops':{
+        'localCacheDir': '/TroopNFTs/',
+        'pages': Math.ceil(numberOfTroops / itemsPerPage),
+        'lastPageCount': numberOfTroops % itemsPerPage,
+        'cache': JSON.parse(window.localStorage.getItem('troops_cache') || "[]"),
+        'currentPage': 0,
+        'deploymentSet': new Set(),
+        'listDisplay': function(tokenData) {
+            var name = tokenData.name;
+            var level = tokenData.traits.Level;
+            return name + ' - Level: ' + level;
         },
-        'weapons':{
-            'localCacheDir': '/WeaponNFTs/',
-            'pages': Math.ceil(numberOfWeapons / itemsPerPage),
-            'lastPageCount': numberOfWeapons % itemsPerPage,
-            'cache': JSON.parse(window.localStorage.getItem('weapons_cache') || "[]"),
-            'currentPage': 0,
-            'deploymentSet': new Set(),
-            'listDisplay': function(tokenData) {
-                var name = tokenData.name;
-                return name;
-            },
-            'detailDisplay': function(tokenData) {
-                var showData = {
-                    'data': JSON.stringify(tokenData),
-                };
-                return showData;
-            }
+        'detailDisplay': function(tokenData) {
+            var showData = {
+                'Level': tokenData.traits.Level,
+                'Strength': tokenData.traits.Strength,
+                'Dexterity': tokenData.traits.Dexterity,
+                'Intelligence': tokenData.traits.Intelligence,
+                'Agility': tokenData.traits.Agility,
+                'Attributes Increase': tokenData.traits['Attributes Increase'],
+                'Stamina Increase': tokenData.traits['Stamina Increase'],
+                'Power Increase': tokenData.traits['Power Increase'],
+            };
+            return showData;
+        }
+    },
+    'weapons':{
+        'localCacheDir': '/WeaponNFTs/',
+        'pages': Math.ceil(numberOfWeapons / itemsPerPage),
+        'lastPageCount': numberOfWeapons % itemsPerPage,
+        'cache': JSON.parse(window.localStorage.getItem('weapons_cache') || "[]"),
+        'currentPage': 0,
+        'deploymentSet': new Set(),
+        'listDisplay': function(tokenData) {
+            var name = tokenData.name;
+            return name;
         },
-    };
+        'detailDisplay': function(tokenData) {
+            var showData = {
+                'data': JSON.stringify(tokenData),
+            };
+            return showData;
+        }
+    },
+};
 
-    var currentTroopSelection = 0;
-    var currentTokenType = 'troops';
-    var troopSelection = {};   
-    const matchData = JSON.parse(window.localStorage.getItem('match_data'));
-    // fetch the loadout data
-    if (matchData)
-    {
-        troopSelection = matchData['troop_selection'];
-        updateTroopDisplay(troopSelection);
-    }
-    preloadLists();
-	startUp();
- 
-}
-else
+var currentTroopSelection = 0;
+var currentTokenType = 'troops';
+var troopSelection = {};
+const matchData = JSON.parse(window.localStorage.getItem('match_data'));
+// fetch the loadout data
+if (matchData)
 {
-	alert("Please connect to the Polygon MainNet");
+    troopSelection = matchData['troop_selection'];
+    updateTroopDisplay(troopSelection);
 }
+preloadLists();
+startUp();
+
 
 function createTroopListItem(index) {
     const html = `<div class="nft-list">
