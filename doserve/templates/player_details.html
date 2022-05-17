@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Troop $tokenId</title>
+    <link rel="stylesheet" href="/css/troop_detail_style.css">
+</head>
+<body class="grid-container">
+<div class="navigation">
+    $previousLink $nextLink
+</div>
+<div class="center" style="grid-column-start: 1; grid-column-end: 3; grid-row: 1">
+    <h2 class="fancy">Troop #$tokenId</h2>
+</div>
+<img style="grid-column: 1; grid-row: 2" class="portrait" src="/TroopNFTs/${tokenId}.png">
+<img style="grid-column: 1; grid-row: 3" id="faction_symbol" src="/assets/ui/${faction}.png">
+<div style="grid-column: 2; grid-row: 2;" id="core_table">
+    <div class="yellow-border padded">
+        Origin: ${origin}<br/>
+        Level: ${level}<br/>
+        Health: ${maxHealth}<br/>
+        Focus: ${maxFocus}<br/>
+        Skills: ${skillString}<br/>
+        Battle Points: ${battlePointValue}<br/>
+        Poison Resistance: ${resistance_poison}
+    </div>
+</div>
+<table style="grid-column: 2; grid-row: 3;" class="blue-border" id="attribute_table">
+    <tbody>
+    <tr>
+        <td>Strength</td>
+        <td>${strength}</td>
+    </tr>
+    <tr>
+        <td>Agility</td>
+        <td>${agility}</td>
+    </tr>
+    <tr>
+        <td>Intelligence</td>
+        <td>${intelligence}</td>
+    </tr>
+    <tr>
+        <td>Dexterity</td>
+        <td>${dexterity}</td>
+    </tr>
+    <tr>
+        <td>Damage Boost</td>
+        <td>${powerBoost}</td>
+    </tr>
+    <tr>
+        <td>Defense Boost</td>
+        <td>${staminaBoost}</td>
+    </tr>
+    <tr>
+        <td>Speed Boost</td>
+        <td>${attributeBoost}</td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>
