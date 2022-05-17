@@ -3,6 +3,7 @@
 import asyncio
 import json
 import os
+import shutil
 from asyncio import create_task
 
 import websockets
@@ -26,7 +27,8 @@ class GameServer:
 
     def __init__(self, hostname, port):
         self.ownershipChecks = False
-        self.battlecache = './battlecache/'
+        self.battlecache = './battles/running/'
+        self.battlearchive = './battles/archive/'
         self.siwe = SignInManager()
         self.port = port
         self.hostname = hostname
@@ -167,7 +169,7 @@ class GameServer:
         return True
 
     async def createNewBattle(self, playerOne, playerTwo):
-        battleId = self.storage.createBattle()
+        battleId = self.nextBattleId()
         state = GameState(battleId, 10, 10)
         state.loadMap()
         self.matches[battleId] = state
@@ -177,9 +179,9 @@ class GameServer:
         playerTwo.currentBattle = battleId
         state.spawnTroopsOfPlayer(playerOne, playerOne.loadout.troopselection)
         state.spawnTroopsOfPlayer(playerTwo, playerTwo.loadout.troopselection)
-        state.startGame()
+        state.startBattle()
         create_task(state.broadcastState())
-        create_task(state.saveToDisk())
+        create_task(state.saveToDisk(self.battlecache))
         print('battle {} created and saved to disk!\nassigned battleId and playerIndex to players..\n{}: {}\n{}: {}'.format(battleId, playerOne.playerIndex, playerOne.wallet, playerTwo.playerIndex, playerTwo.wallet))
 
     def state(self, player: Player) -> GameState:
@@ -233,9 +235,10 @@ class GameServer:
             return
     
         elif messageType == 'endTurn':
-            winner = self.state(player).battleEndCondition()
+            winner = await self.state(player).endBattle()
             if winner:
-                create_task(self.state(player).sendBattleEnd(winner))
+                create_task(self.state(player).saveToDisk(self.battlecache))
+                self.endBattle(self.state(player).battleId, winner)
             else:
                 effectMessages = self.state(player).nextTurn()
                 response = {'message': messageType, 'effects': effectMessages, 'turnOfPlayer': self.state(player).turnOfPlayer().wallet}
@@ -251,7 +254,7 @@ class GameServer:
         wallet_address = websocket.username
         remote = websocket.remote_address
         player = Player(wallet_address, websocket)
-
+        print('New connection from {}'.format(remote))
         self.connected.add(player)
 
         try:
@@ -314,10 +317,12 @@ class GameServer:
             print('reconnected player {} to battle {}'.format(player.wallet, runningBattle.battleId))
             create_task(runningBattle.sendPlayerState(player))
         else:
+            print('adding player {} to matchmaking queue.'.format(player.wallet))
             self.playersLookingForBattle.add(player)
             create_task(self.startMatchMaking())
 
     async def startMatchMaking(self):
+        print('starting matchmaking with {} players'.format(len(self.playersLookingForBattle)))
         if len(self.playersLookingForBattle) <= 1:
             return
 
@@ -328,21 +333,65 @@ class GameServer:
         create_task(self.createNewBattle(first, second))
 
     def findRunningBattle(self, player) -> GameState:
+        print('looking for running battle for player {}'.format(player.wallet))
         for battleId, battle in self.matches.items():
             if player in battle.disconnectedPlayers() and len(battle.connectedPlayers()) == 1:
+                print('found running battle {} for player {}'.format(battleId, player.wallet))
                 return battle
         return None
 
     def battlesAreOnDisk(self):
+        # check if directory exists
+        if not os.path.exists(self.battlecache):
+            return False
         if len(os.listdir(self.battlecache)) > 0:
             return True
         return False
 
     def loadBattles(self):
         for path in os.listdir(self.battlecache):
+            if not path.endswith(".json"):
+                continue
             state = GameState.fromFile(self.battlecache + path)
             self.matches[state.battleId] = state
             print('Restored battle {} from disk'.format(state.battleId))
+
+    def nextBattleId(self):
+        datapath = self.battlecache + 'battleid'
+        if not os.path.isdir(self.battlecache):
+            os.makedirs(self.battlecache, exist_ok=True)
+        # check if file exists
+        if not os.path.isfile(datapath):
+            self.saveBattleId(2)
+            return 1
+
+        nextBattleId = -1
+        with open(datapath, 'r') as f:
+            nextBattleId = int(f.read())
+
+        self.saveBattleId(nextBattleId + 1)
+        return nextBattleId
+
+    def saveBattleId(self, battleId):
+        datapath = self.battlecache + 'battleid'
+        with open(datapath, 'w') as f:
+            f.write(str(battleId))
+
+    def endBattle(self, battleId, winner_wallet):
+        looser_wallet = self.matches[battleId].looser
+        self.storage.addWinForPlayer(winner_wallet)
+        self.storage.addLossForPlayer(looser_wallet)
+        self.moveBattleToArchive(battleId)
+
+    def moveBattleToArchive(self, battleId):
+        basename = 'bs_' + str(battleId) + '.json'
+        filename = self.battlecache + basename
+        # ensure the directory exists
+        if not os.path.isdir(self.battlearchive):
+            os.makedirs(self.battlearchive, exist_ok=True)
+        if os.path.isfile(filename):
+            # move the file to the archive
+            shutil.move(filename, self.battlearchive + basename)
 
 
 server = GameServer("localhost", 2000)

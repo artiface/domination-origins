@@ -185,9 +185,6 @@ class Character:
             'skills': [skill.toObject() for skill in self.skills],
             'battlePointValue': self.getBattlePointValue(),
             'base_resistances:': self.resistance,
-            'resistance_poison': self.getResistance(DamageType.Poison),
-            'resistance_melee': self.getResistance(DamageType.Melee),
-            'resistance_ranged': self.getResistance(DamageType.Ranged),
         }
 
     @classmethod
@@ -278,6 +275,9 @@ class Character:
 
         return statusEffectMessages
 
+    def __str__(self):
+        return self.tokenId
+
     def __hash__(self):
         """Overrides the default implementation"""
         return hash(self.tokenId)
@@ -302,6 +302,8 @@ class Character:
         for skill in self.skills:
             skill_resistance = skill.getResistance(self, damageType)
             total_resistance += skill_resistance
+            if skill_resistance > 0:
+                print("{} resistance of type {} from {} for troop {}".format(skill_resistance, damageType, skill, self))
         return total_resistance
 
     def kill(self):

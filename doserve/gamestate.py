@@ -38,6 +38,8 @@ class Tile:
 
 class GameState:
 	def __init__(self, battleId, width, height):
+		self.winner = None
+		self.looser = None
 		self.battleId = battleId
 		self.width = width
 		self.height = height
@@ -52,6 +54,8 @@ class GameState:
 		self.players = []
 		self.clearMap()
 
+		self.battleHasEnded = False
+
 	def battleEndCondition(self):
 		# check if there is only one team left
 		playersWithLivingCharacters = set()
@@ -61,10 +65,29 @@ class GameState:
 			playersWithLivingCharacters.add(char.ownerWallet)
 
 		if len(playersWithLivingCharacters) == 1:
-			return playersWithLivingCharacters.pop()
+			self.winner = playersWithLivingCharacters.pop()
+			self.looser = self.players[0].wallet if self.players[0].wallet != self.winner else self.players[1].wallet
+			return self.winner
 		return False
 
-	def startGame(self):
+	async def endBattle(self):
+		winner = self.battleEndCondition()
+		if not winner:
+			return False
+		self.battleHasEnded = True
+		create_task(self.sendBattleEnd(winner))
+		return winner
+
+	async def sendBattleEnd(self, winner):
+		response = {
+			'message': 'battleEnd',
+			'error': '',
+			'winner': winner
+		}
+		create_task(self.broadcast(response))
+		# TODO: remove battle from list of battles
+
+	def startBattle(self):
 		self.turnOfPlayerIndex = 0
 
 	def turnOfPlayer(self):
@@ -296,8 +319,8 @@ class GameState:
 		}
 		return state
 
-	async def saveToDisk(self):
-		with open('./battlecache/bs_{}.json'.format(self.battleId), 'w', encoding='utf-8') as f:
+	async def saveToDisk(self, path):
+		with open(path + 'bs_{}.json'.format(self.battleId), 'w', encoding='utf-8') as f:
 			json.dump(self.toObject(), f, ensure_ascii=False, indent=4)
 
 	@staticmethod
@@ -409,11 +432,3 @@ class GameState:
 		print("ranged attack:", response)
 		create_task(self.broadcast(response))
 
-	async def sendBattleEnd(self, winner):
-		response = {
-			'message': 'battleEnd',
-			'error': '',
-			'winner': winner
-		}
-		create_task(self.broadcast(response))
-		# TODO: remove battle from list of battles

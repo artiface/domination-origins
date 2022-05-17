@@ -40,5 +40,6 @@ class DragonStrike(Skill):
                 'effects': ['melee_attack', 'claws']
             }],
         }
+        print('dragon_strike response:', response)
         return response
 

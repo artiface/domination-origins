@@ -25,7 +25,7 @@ class PackClaws(Skill):
         for c in charsNearby:
             if c.ownerWallet == char.ownerWallet:
                 alliesNearby += 1
-
+        print("Allies nearby: " + str(alliesNearby))
         damage = 20 + alliesNearby * 10
         damage_type = DamageType.Melee
 
@@ -46,5 +46,6 @@ class PackClaws(Skill):
                 'effects': ['melee_attack', 'claws']
             }],
         }
+        print('pack_claws response:', response)
         return response
 

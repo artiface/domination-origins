@@ -43,5 +43,6 @@ class SnakeBite(Skill):
                 'effects': ['melee_attack', 'poison_defender']
             }],
         }
+        print('Snake Bite response:', response)
         return response
 

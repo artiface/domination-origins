@@ -51,5 +51,6 @@ class PoisonCloud(Skill):
             'attacker_tile': char.position.toObject(),
             'aoe': aoe_tiles,
         }
+        print('poison_cloud response:', response)
         return response
 

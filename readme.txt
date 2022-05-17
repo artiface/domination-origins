@@ -8,13 +8,21 @@ For Retina Displays, we need double that: 240x120 pixels.
 So normal ground tiles will be needed in the following sizes 120x60 and 240x120.
 
 ## Bugs / Remarks
+
+## Known minor issues
  - The mouse-over-effect is sometimes on the wrong depth layer
  - During my turn the reachable tiles of enemies are visible
+
 ## Needed for Alpha Battles
  - Weapon Slots - ITEM NFTs currently CANNOT BE ITERATED OVER
  - Battle Points System
- - Test Sprinting
- - Melee and Ranged Attack Animation
+ - Animations
+    - Death
+    - Melee & Ranged Attack
+    - Mighty Melee Attack
+    - Poison
+    - Guard?
+ - Battle-End-Screen
  - Skills
    - Claws of the pack
     - Additional damage for each nearby friendly unit

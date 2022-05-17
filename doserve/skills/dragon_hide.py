@@ -8,5 +8,5 @@ class DragonHide(Skill):
 
     def getResistance(self, char, damage_type: DamageType):
         if damage_type == DamageType.Poison:
-            return 2
+            return 10
         return 0

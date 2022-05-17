@@ -14,6 +14,6 @@ class PackProtection(Skill):
             for c in charsNearby:
                 if c.ownerWallet == char.ownerWallet:
                     alliesNearby += 1
-
+            print("Allies nearby: " + str(alliesNearby))
             return 5 * alliesNearby
         return 0
