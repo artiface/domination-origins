@@ -23,6 +23,7 @@ def prepareTroopData(generation, char):
     templateData['faction'] = str(templateData['faction']).replace('Faction.', '')
     # cast all skill to str
     to_str = lambda x: str(x['name'])
+    templateData['generation'] = generation
     templateData['skills'] = templateData['skills']
     templateData['skillString'] = ', '.join(map(to_str, templateData['skills']))
     templateData = create_nav_links(char, generation, templateData)
