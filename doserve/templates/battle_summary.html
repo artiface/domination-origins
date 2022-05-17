@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle $battleId</title>
+    <link rel="stylesheet" href="/css/troop_detail_style.css">
+</head>
+<body class="grid-container">
+<div class="center" style="grid-column-start: 1; grid-column-end: 3; grid-row: 1">
+    <h2 class="fancy">Battle $battleId</h2>
+</div>
+
+<div style="grid-column: 2; grid-row: 2;" id="core_table">
+    <div class="yellow-border padded">
+        Player 1: ${player0}<br/>
+        Player 2: ${player1}<br/>
+        Winner after ${turnCount} turns: ${winner}<br/>
+        Troops of Player 1: ${player0Troops}<br/>
+        Troops of Player 2: ${player1Troops}
+    </div>
+</div>
+</body>
+</html>

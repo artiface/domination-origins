@@ -17,10 +17,29 @@ class Storage:
         self.createPlayerTable()
         self.createSiweCacheTable()
 
-    def createPlayerTable(self):
+    # create a table for the battles, that holds the battleId, the two player wallets, the winner and the timestamp
+    def createBattleTable(self):
         cur = self.con.cursor()
         cur.execute(
-            '''CREATE TABLE IF NOT EXISTS users (wallet text primary key, name text, wins integer, losses integer, draws integer)''')
+            '''CREATE TABLE IF NOT EXISTS battles (battleId integer primary key, player1 text, player2 text, winner text, loser text, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
+        self.con.commit()
+
+    def insertBattle(self, player1, player2):
+        cur = self.con.cursor()
+        cur.execute("insert into battles(player1, player2) values (?, ?)", (player1, player2))
+        self.con.commit()
+        return cur.lastrowid
+
+    def setWinnerAndLoser(self, battleId, winner, loser):
+        cur = self.con.cursor()
+        cur.execute("UPDATE battles SET winner = ?, loser = ? WHERE battleId = ?", (winner, loser, battleId))
+        self.con.commit()
+        self.addWinForPlayer(winner)
+        self.addLossForPlayer(loser)
+
+    def createPlayerTable(self):
+        cur = self.con.cursor()
+        cur.execute('''CREATE TABLE IF NOT EXISTS users (wallet text primary key, name text, wins integer, losses integer, draws integer)''')
         self.con.commit()
 
     def insertPlayer(self, wallet_address, name):

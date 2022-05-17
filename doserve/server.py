@@ -169,7 +169,7 @@ class GameServer:
         return True
 
     async def createNewBattle(self, playerOne, playerTwo):
-        battleId = self.nextBattleId()
+        battleId = self.storage.insertBattle(playerOne.wallet, playerTwo.wallet)
         state = GameState(battleId, 10, 10)
         state.loadMap()
         self.matches[battleId] = state
@@ -237,8 +237,7 @@ class GameServer:
         elif messageType == 'endTurn':
             winner = await self.state(player).endBattle()
             if winner:
-                create_task(self.state(player).saveToDisk(self.battlecache))
-                self.endBattle(self.state(player).battleId, winner)
+                create_task(self.endBattle(self.state(player).battleId, winner))
             else:
                 effectMessages = self.state(player).nextTurn()
                 response = {'message': messageType, 'effects': effectMessages, 'turnOfPlayer': self.state(player).turnOfPlayer().wallet}
@@ -377,22 +376,23 @@ class GameServer:
         with open(datapath, 'w') as f:
             f.write(str(battleId))
 
-    def endBattle(self, battleId, winner_wallet):
-        looser_wallet = self.matches[battleId].looser
-        self.storage.addWinForPlayer(winner_wallet)
-        self.storage.addLossForPlayer(looser_wallet)
-        self.moveBattleToArchive(battleId)
+    async def endBattle(self, battleId, winner_wallet):
+        looser_wallet = self.matches[battleId].loser
+        self.storage.setWinnerAndLoser(battleId, winner_wallet, looser_wallet)
+        await self.moveBattleToArchive(battleId)
+        create_task(self.matches[battleId].sendBattleEnd())
 
-    def moveBattleToArchive(self, battleId):
+    async def moveBattleToArchive(self, battleId):
         basename = 'bs_' + str(battleId) + '.json'
         filename = self.battlecache + basename
-        # ensure the directory exists
+
         if not os.path.isdir(self.battlearchive):
             os.makedirs(self.battlearchive, exist_ok=True)
-        if os.path.isfile(filename):
-            # move the file to the archive
-            shutil.move(filename, self.battlearchive + basename)
 
+        create_task(self.matches[battleId].saveToDisk(self.battlearchive))
+
+        if os.path.isfile(filename):
+            os.remove(filename)
 
 server = GameServer("localhost", 2000)
 server.run()

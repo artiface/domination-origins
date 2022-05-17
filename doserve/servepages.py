@@ -1,3 +1,5 @@
+import json
+
 import flask
 from string import Template
 
@@ -10,8 +12,7 @@ def render(template, data):
     with open('./templates/{}.html'.format(template), 'r') as file:
         templateString = file.read()
         t = Template(templateString)
-        return t.substitute(data)
-
+        return t.safe_substitute(data)
 
 def prepareTroopData(generation, char):
     templateData = char.toObject()
@@ -23,6 +24,23 @@ def prepareTroopData(generation, char):
     templateData = create_nav_links(char, generation, templateData)
     return templateData
 
+def prepareSummaryData(battle_data):
+    templateData = {}
+    templateData['battleId'] = battle_data['battleId']
+    for wallet, index in battle_data['playerMap'].items():
+        templateData['player{}'.format(index)] = wallet
+    templateData['winner'] = battle_data['winner']
+    templateData['turnCount'] = battle_data['turnCount']
+    troopsByPlayer = {
+        templateData['player0']: [],
+        templateData['player1']: []
+    }
+    for char_data in battle_data['allCharacters']:
+        troopsByPlayer[char_data['ownerWallet']].append(char_data['tokenId'])
+
+    templateData['player0Troops'] = ', '.join(troopsByPlayer[templateData['player0']])
+    templateData['player1Troops'] = ', '.join(troopsByPlayer[templateData['player1']])
+    return templateData
 
 def create_nav_links(char, generation, templateData):
     templateData['previousLink'] = ''
@@ -37,9 +55,19 @@ def create_nav_links(char, generation, templateData):
 
 
 @app.route('/troops/<int:generation>/<int:tokenId>', methods=['GET'])
-def home(generation, tokenId):
+def troop_detail(generation, tokenId):
     char = Character('NoOwner', tokenId)
     templateData = prepareTroopData(generation, char)
     return render('troops_detail', templateData)
+
+
+@app.route('/battle-summary/<int:battleId>', methods=['GET'])
+def battle_summary(battleId):
+    filepath = './battles/archive/bs_{}.json'.format(battleId)
+    templateData = None
+    with open(filepath, 'r') as file:
+        battle_data = json.load(file)
+        templateData = prepareSummaryData(battle_data)
+    return render('battle_summary', templateData)
 
 app.run()

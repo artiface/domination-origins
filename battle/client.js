@@ -92,7 +92,7 @@ var Client = IgeClass.extend({
 			ige.start(function (success) {
 				// Check if the engine started successfully
 				if (userAddress !== matchData['user_wallet']) {
-				    alert('Loadout has been created for a different wallet.');
+				    alert('Loadout has been created for a different wallet or wallet has not been loaded.');
 				}
 				else if (success) {
                     self.connectToServer();

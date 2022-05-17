@@ -107,8 +107,8 @@ var Network = {
             }
         }
     },
-    endBattle: function(winner) {
-        alert(winner + ' won the battle!');
+    endBattle: function(summary_page) {
+        window.location.href = summary_page;
     },
     handleServerResponse: async function(message) {
         if (message['error'])
@@ -119,7 +119,7 @@ var Network = {
         switch (message['message'])
         {
             case 'battleEnd':
-                this.endBattle(message['winner']);
+                this.endBattle(message['summary_page']);
                 break;
             case 'rangedAttack':
                 this.handleRangedAttack(message);

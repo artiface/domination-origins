@@ -1,5 +1,6 @@
 battles/running/
 battles/cache/
+doserve/battles/
 bin/
 .DS_Store
 .idea/

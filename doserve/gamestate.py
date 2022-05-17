@@ -39,7 +39,7 @@ class Tile:
 class GameState:
 	def __init__(self, battleId, width, height):
 		self.winner = None
-		self.looser = None
+		self.loser = None
 		self.battleId = battleId
 		self.width = width
 		self.height = height
@@ -66,7 +66,7 @@ class GameState:
 
 		if len(playersWithLivingCharacters) == 1:
 			self.winner = playersWithLivingCharacters.pop()
-			self.looser = self.players[0].wallet if self.players[0].wallet != self.winner else self.players[1].wallet
+			self.loser = self.players[0].wallet if self.players[0].wallet != self.winner else self.players[1].wallet
 			return self.winner
 		return False
 
@@ -75,17 +75,15 @@ class GameState:
 		if not winner:
 			return False
 		self.battleHasEnded = True
-		create_task(self.sendBattleEnd(winner))
 		return winner
 
-	async def sendBattleEnd(self, winner):
+	async def sendBattleEnd(self):
 		response = {
 			'message': 'battleEnd',
 			'error': '',
-			'winner': winner
+			'summary_page': '/battle-summary/' + self.battleId
 		}
 		create_task(self.broadcast(response))
-		# TODO: remove battle from list of battles
 
 	def startBattle(self):
 		self.turnOfPlayerIndex = 0
@@ -344,6 +342,9 @@ class GameState:
 			'turnOfPlayerIndex': self.turnOfPlayerIndex,
 			'allCharacters': [char.toObject() for char in self.allCharacters],
 			'tileMap': self.tileMapToObject(),
+			'winner': self.winner,
+			'loser': self.loser,
+			'turnCount': self.turnCount
 		}
 
 	def tileMapToObject(self):
