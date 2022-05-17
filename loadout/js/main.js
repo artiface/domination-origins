@@ -1,6 +1,6 @@
 "use strict";
 import { ethers } from "./ethers-5.1.esm.min.js";
-import { getTokenCount, loadUserNFTs, loadNFT, connect, signer, provider} from "./chainload.js";
+import { getTokenCount, loadUserNFTs, loadNFT, connect, signer, provider } from "./chainload.js";
 
 const battleUrl = "/battle/";
 
@@ -8,6 +8,7 @@ const battleUrl = "/battle/";
 
 var itemsPerPage = 10;
 try {
+    await connect();
     var userAddress = await signer.getAddress();
     var numberOfTroops = await getTokenCount(userAddress, 'troops');
     var numberOfWeapons = await getTokenCount(userAddress, 'weapons');

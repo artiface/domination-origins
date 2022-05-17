@@ -16,6 +16,7 @@ class Storage:
         # create all the tables
         self.createPlayerTable()
         self.createSiweCacheTable()
+        self.createBattleTable()
 
     # create a table for the battles, that holds the battleId, the two player wallets, the winner and the timestamp
     def createBattleTable(self):

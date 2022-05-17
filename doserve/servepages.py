@@ -2,7 +2,8 @@ import json
 
 import flask
 from string import Template
-
+import sys,os
+sys.path.append(os.getcwd())
 from doserve.common.character import Character
 
 app = flask.Flask(__name__)

@@ -355,27 +355,6 @@ class GameServer:
             self.matches[state.battleId] = state
             print('Restored battle {} from disk'.format(state.battleId))
 
-    def nextBattleId(self):
-        datapath = self.battlecache + 'battleid'
-        if not os.path.isdir(self.battlecache):
-            os.makedirs(self.battlecache, exist_ok=True)
-        # check if file exists
-        if not os.path.isfile(datapath):
-            self.saveBattleId(2)
-            return 1
-
-        nextBattleId = -1
-        with open(datapath, 'r') as f:
-            nextBattleId = int(f.read())
-
-        self.saveBattleId(nextBattleId + 1)
-        return nextBattleId
-
-    def saveBattleId(self, battleId):
-        datapath = self.battlecache + 'battleid'
-        with open(datapath, 'w') as f:
-            f.write(str(battleId))
-
     async def endBattle(self, battleId, winner_wallet):
         looser_wallet = self.matches[battleId].loser
         self.storage.setWinnerAndLoser(battleId, winner_wallet, looser_wallet)

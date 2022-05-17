@@ -191,6 +191,8 @@ var Network = {
                 // reset the steps taken this turn stat for each character where the ownerWallet matches the turnOfPlayer
                 for (var i = 0; i < this.characters.length; i++)
                 {
+                    this.characters[i].hideReachableTiles();
+                    this.characters[i].hidePossibleTargets();
                     if (this.characters[i].getStat('ownerWallet') === turnOfPlayer)
                     {
                         this.characters[i].nextTurn();

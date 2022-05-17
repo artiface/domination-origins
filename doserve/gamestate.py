@@ -81,7 +81,7 @@ class GameState:
 		response = {
 			'message': 'battleEnd',
 			'error': '',
-			'summary_page': '/battle-summary/' + self.battleId
+			'summary_page': '/battle-summary/' + str(self.battleId)
 		}
 		create_task(self.broadcast(response))
 

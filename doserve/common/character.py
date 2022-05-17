@@ -257,6 +257,8 @@ class Character:
         return True
 
     def nextTurn(self):
+        if self.state == CharacterState.Dead:
+            return []
         self.stepsTakenThisTurn = 0
         self.hasAttackedThisTurn = False
         self.currentFocus += 1
@@ -267,12 +269,12 @@ class Character:
 
         for i in range(len(self.statusEffects)-1, -1, -1):
             statusEffect = self.statusEffects[i]
-            effectMessage = statusEffect.nextTurn()
-            if effectMessage:
-                statusEffectMessages.append(effectMessage)
             if statusEffect.isExpired():
                 self.statusEffects.remove(statusEffect)
-
+            else:
+                effectMessage = statusEffect.nextTurn()
+                if effectMessage:
+                    statusEffectMessages.append(effectMessage)
         return statusEffectMessages
 
     def __str__(self):
@@ -308,4 +310,5 @@ class Character:
 
     def kill(self):
         self.state = CharacterState.Dead
-        self.statusEffects = []
+        for effect in self.statusEffects:
+            effect.onDeath()

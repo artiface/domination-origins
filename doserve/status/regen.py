@@ -5,6 +5,7 @@ class Regenerate:
     def __init__(self, state, source_char):
         self.source_char = source_char
         self.state = state
+        self.expired = False
 
     def nextTurn(self):
         response = None
@@ -18,4 +19,7 @@ class Regenerate:
         return response
 
     def isExpired(self):
-        return False
+        return self.expired
+
+    def onDeath(self):
+        self.expired = True

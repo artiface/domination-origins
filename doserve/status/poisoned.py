@@ -27,3 +27,6 @@ class Poisoned:
 
     def isExpired(self):
         return self.turns <= 0
+
+    def onDeath(self):
+        self.turns = 0

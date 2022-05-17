@@ -22,7 +22,6 @@ So normal ground tiles will be needed in the following sizes 120x60 and 240x120.
     - Mighty Melee Attack
     - Poison
     - Guard?
- - Battle-End-Screen
  - Skills
    - Claws of the pack
     - Additional damage for each nearby friendly unit
