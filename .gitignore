@@ -1,4 +1,5 @@
-battlecache/
+battles/running/
+battles/cache/
 bin/
 .DS_Store
 .idea/
