@@ -48,6 +48,7 @@ function getContract(type) {
 	const contractAddress = addressMap[type];
 
 	const mintingAbi = [
+        "function walletOfOwner(address _owner) public view returns (uint256[] memory)",
 		"function name() external view returns (string memory)",
 		"function symbol() external view returns (string memory)",
 		"function tokenURI(uint256 tokenId) external view returns (string memory)",
@@ -98,6 +99,11 @@ export async function loadUserNFTs(wallet_address, type, start, count) {
 	}
 
 	return tokenList;
+};
+
+export async function getWallet(wallet, type) {
+    const contract = getContract(type);
+    return await contract.walletOfOwner(wallet);
 };
 
 export async function loadNFT(type, tokenId) {

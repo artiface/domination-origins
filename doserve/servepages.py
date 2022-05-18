@@ -6,10 +6,12 @@ import sys,os
 sys.path.append('..')
 from doserve.common.character import Character
 from storage import Storage
+from flask_cors import CORS
 
 db = Storage('battles.sqlite')
 
 app = flask.Flask(__name__)
+cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 app.config["DEBUG"] = True
 
 def render(template, data):
