@@ -183,8 +183,8 @@ class Modal {
             listParent.insertAdjacentHTML('beforeend', data);
 
             document.getElementById(`player-${i}`).addEventListener("click" , () => {
-                //this.cards.changePlayer(player);
-                //this.modalParent.style.display = "none";
+                this.cards.changePlayer(player);
+                this.modalParent.style.display = "none";
             });
         });
     }
@@ -241,7 +241,17 @@ class Crypto {
     async load() {
         await connect();
         this.userAdress = await signer.getAddress();
-        const troops = await getWallet(this.userAdress, "troops");
+
+        const isTraining = true;
+        const troops = [];
+        if (isTraining) {
+            for (let i = 0; i < 10000; i++) {
+                troops.push((i+1).toString());
+            }
+        }
+        else {
+            troops = await getWallet(this.userAdress, "troops");
+        }
 
         for (let i = 0; i < troops.length; i++) 
             this.troops.push(await this.loadLocalNFT("troops", troops[i].toString()));
