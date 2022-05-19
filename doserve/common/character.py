@@ -261,7 +261,6 @@ class Character:
             return []
         self.stepsTakenThisTurn = 0
         self.hasAttackedThisTurn = False
-        self.currentFocus += 1
         for skill in self.skills:
             skill.nextTurn()
 
