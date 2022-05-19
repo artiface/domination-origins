@@ -1,4 +1,5 @@
 import json
+import math
 
 import flask
 from string import Template
@@ -26,9 +27,15 @@ def prepareTroopData(generation, char):
     # cast all skill to str
     to_str = lambda x: str(x['name'])
     templateData['generation'] = generation
-    templateData['skills'] = templateData['skills']
     templateData['skillString'] = ', '.join(map(to_str, templateData['skills']))
     templateData = create_nav_links(char, generation, templateData)
+    return templateData
+
+def prepareTroopDataForAPI(generation, char):
+    templateData = char.toObject()
+    templateData['faction'] = str(templateData['faction']).replace('Faction.', '')
+    # cast all skill to str
+    templateData['generation'] = generation
     return templateData
 
 def prepareSummaryData(battle_data):
@@ -73,11 +80,25 @@ def create_nav_links(char, generation, templateData):
     return templateData
 
 
-@app.route('/api/troops/<int:generation>/<int:tokenId>', methods=['GET'])
+@app.route('/api/troop/<int:generation>/<int:tokenId>', methods=['GET'])
 def troop_detail_json(generation, tokenId):
     char = Character('NoOwner', tokenId)
-    templateData = prepareTroopData(generation, char)
+    templateData = prepareTroopDataForAPI(generation, char)
     return templateData
+
+
+@app.route('/api/troops/<int:generation>/<int:page>', methods=['GET'])
+def all_troop_detail_json(generation, page):
+    alltroops = []
+    itemsPerPage = 20
+    pageCount = int(math.ceil(10000 / itemsPerPage))
+    start = ((page - 1) * itemsPerPage) + 1
+    end = start + itemsPerPage
+    for tokenId in range(start, end):
+        char = Character('NoOwner', tokenId)
+        templateData = prepareTroopDataForAPI(generation, char)
+        alltroops.append(templateData)
+    return {'troops': alltroops, 'page:': page, 'pageCount': pageCount}
 
 
 @app.route('/troops/<int:generation>/<int:tokenId>', methods=['GET'])
