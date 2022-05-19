@@ -93,9 +93,9 @@ class Cards {
                 </div>
             </div>`
             this.cardParent.insertAdjacentHTML('beforeend', data);
-            document.getElementById(`card-${i}`).addEventListener('click', () => {
+            document.getElementById(`card-${i}`).addEventListener('click', async () => {
                 this.clickedCard = i;
-                j.renderPlayerModal();
+                await modal.renderPlayerModal();
             });
         }
     }
@@ -106,8 +106,7 @@ class Modal {
         this.crypto = crypto;
         this.cards = cards;
         this.modalParent = document.getElementById('modal-parent');
-
-        this.players = crypto.troops;
+        this.firstTime = true;
     }
 
     renderModal() {
@@ -122,7 +121,7 @@ class Modal {
         document.getElementById("close-modal").addEventListener("click", () => this.modalParent.style.display = "none")
     }
 
-    renderPlayerModal() {
+    async renderPlayerModal() {
         this.renderModal();
 
         let data = `
@@ -140,12 +139,18 @@ class Modal {
         `
         document.getElementById("modal").insertAdjacentHTML('beforeend', data);
 
-        this.renderPlayerList();
+        await this.renderPlayerList();
     }
 
-    renderPlayerList() {
+    async renderPlayerList() {
+        if (this.firstTime) {
+            await this.crypto.load();
+            this.firstTime = false;
+        }
+
         const listParent = document.getElementById('modal-list');
-        this.players.forEach((player, i) => {
+        listParent.innerHTML = "";
+        this.crypto.troops.forEach((player, i) => {
             let data = `
             <div id="player-${i}" class="modal-list-node">
                 <img class="img-horizontal-responsive" src="${player.IMAGE_SRC}">
@@ -179,26 +184,35 @@ class Modal {
                 <img class="img-horizontal-responsive" src="${this.crypto.factions[player.FACTION]}">
             </div>
             `
-        //Image, TokenID, Faction Icon, Origin, Level, Health, Focus, Battle Points 
             listParent.insertAdjacentHTML('beforeend', data);
-
-            document.getElementById(`player-${i}`).addEventListener("click" , () => {
-                this.cards.changePlayer(player);
-                this.modalParent.style.display = "none";
+            const node = document.getElementById(`player-${i}`);
+            node.addEventListener("click" , () => {
+                document.querySelectorAll(".modal-list-node").forEach(node => node.classList.remove("node-selected"));
+                node.classList.add("node-selected");
+                this.renderRightInfo(player);
+                //this.cards.changePlayer(player);
+                //this.modalParent.style.display = "none";
             });
         });
+
+        let added = false;
+        const cb = async () => {
+            if (!added && listParent.scrollTop > (listParent.scrollHeight - listParent.clientHeight) - 200) {
+                listParent.removeEventListener("scroll", cb);
+                await this.crypto.addTroops();
+                this.renderPlayerList();
+            }
+        }
+        listParent.addEventListener("scroll", cb);
     }
 
-    renderRightInfo() {
+    renderRightInfo(player) {
         const data = `
-        <img class="img-horizontal-responsive" src="../assets/ui/browse.png">
-        <div class="horizontal-wrapper">
-            <div id="modal-info-1">Hey</div>
-            <div id="modal-info-2">Hey</div>
-        </div>
+        <img class="img-horizontal-responsive modal-left-side-image" src="${player.IMAGE_SRC}">
+        <div id="modal-info-2">Hey</div>
         `
-
-        document.getElementById("modal-description")
+        document.getElementById("modal-description").innerHTML = "";
+        document.getElementById("modal-description").insertAdjacentHTML('beforeend', data);
     }
 }
 
@@ -222,46 +236,60 @@ class Crypto {
         this.userAdress = "";
         this.troops = [];
         this.weapons = [];
+        this.testMode = true;
+        this.pageAmount = 0;
+        this.pageCount = 1;
     }
 
-    async loadLocalNFT(type, tokenId) {
-        const response = await fetch(`http://127.0.0.1:5000/api/${type}/1/${tokenId}`)
-        const data = await response.json()
-        console.log(data)
-        return {
-            LABEL: data.tokenId,
-            IMAGE_SRC: `${this.types[type].dir}t_${data.tokenId}.png`,
-            MAX_HEALTH: data.maxHealth,
-            ORIGIN: data.origin,
-            BATTLE_POINTS: data.battlePointValue,
-            FACTION: data.faction,
-        }
+    async loadPageNFT(type, count) {
+        const response = await fetch(`http://127.0.0.1:5000/api/${type}/1/${count}`)
+        return await response.json()
     };
 
     async load() {
         await connect();
         this.userAdress = await signer.getAddress();
 
-        const isTraining = true;
-        const troops = [];
-        if (isTraining) {
-            for (let i = 0; i < 10000; i++) {
-                troops.push((i+1).toString());
-            }
-        }
-        else {
-            troops = await getWallet(this.userAdress, "troops");
-        }
+        let tokenAmount = 0;
+        if (this.testMode)  {
+            tokenAmount = 100;
+        } //else troops = await getWallet(this.userAdress, "troops");
 
-        for (let i = 0; i < troops.length; i++) 
-            this.troops.push(await this.loadLocalNFT("troops", troops[i].toString()));
+        const type = "troops";
+        const page = await this.loadPageNFT(type, 1);
+        this.pageAmount = Math.ceil((tokenAmount * 20) / 20) + 1;
+        
+        for (let j = 0; j < page.troops.length; j++) this.troops.push({
+            LABEL: page.troops[j].tokenId,
+            IMAGE_SRC: `${this.types[type].dir}t_${page.troops[j].tokenId}.png`,
+            MAX_HEALTH: page.troops[j].maxHealth,
+            ORIGIN: page.troops[j].origin,
+            BATTLE_POINTS: page.troops[j].battlePointValue,
+            FACTION: page.troops[j].faction,
+        });
+    }
+
+    async addTroops() {
+        if (this.pageAmount <= this.pageCount) return;
+        this.pageCount++;
+        console.log(this.pageCount)
+        const page = await this.loadPageNFT("troops", this.pageCount);
+        console.log(page.troops.length)
+
+        for (let j = 0; j < page.troops.length; j++) this.troops.push({
+            LABEL: page.troops[j].tokenId,
+            IMAGE_SRC: `${this.types["troops"].dir}t_${page.troops[j].tokenId}.png`,
+            MAX_HEALTH: page.troops[j].maxHealth,
+            ORIGIN: page.troops[j].origin,
+            BATTLE_POINTS: page.troops[j].battlePointValue,
+            FACTION: page.troops[j].faction,
+        });
     }
 }
 
-const k = new Crypto();
-await k.load();
+const crypto = new Crypto();
 
-const i = new Cards(k);
-i.renderCards();
+const cards = new Cards(crypto);
+cards.renderCards();
 
-const j = new Modal(i, k);
+const modal = new Modal(cards, crypto);

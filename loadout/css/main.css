@@ -87,14 +87,19 @@ input[type = "text"]:focus {
 
 #close-modal {
     position: absolute;
-    left: 95.5%;
-    top: 3%;
+    left: calc(100% - 1.5%);
+    top: -1.5%;
     width: 3%;
     aspect-ratio: 1 / 1;
+    z-index: 3;
     border-radius: 50%;
-    background-color: var(--cyan);
+    filter: invert(91%) sepia(1%) saturate(0%) hue-rotate(37deg) brightness(93%) contrast(88%);
     border: var(--border-thickness) solid var(--black);
     transition: background-color 0.3s, border .3s;
+}
+
+.node-selected {
+    background-color: var(--dark-blue)!important;
 }
 
 #close-modal:hover {
@@ -169,13 +174,16 @@ input[type = "text"]:focus {
 }
 
 #modal-description {
+    position: relative;
     width: 40%;
     height: 100%;
     display: flex;
+    padding: 1%;
     align-items: center;
     justify-content: center;
     flex-direction: column;
     gap: 1%;
+    box-sizing: border-box;
     background-color: var(--grey);
 }
 
@@ -216,7 +224,7 @@ input[type = "text"]:focus {
 }
 
 .modal-list-node:hover {
-    filter: brightness(80%);
+    filter: brightness(96%);
 }
 
 .card {
@@ -294,7 +302,7 @@ input[type = "text"]:focus {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 15%;
+    gap: 2%;
 }
 
 .node-name {
@@ -313,7 +321,7 @@ input[type = "text"]:focus {
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    background-color: var(--black);
+    background-color: var(--dark);
     gap: 1%;
 }
 
@@ -324,6 +332,7 @@ input[type = "text"]:focus {
     align-items: center;
     justify-content: center;
     flex-direction: column;
+    background-color: var(--dark);
     gap: 1%;
 }
 
