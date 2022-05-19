@@ -42,7 +42,7 @@ class PoisonCloud(Skill):
                 'damage': damage,
                 'damage_type': damage_type,
                 'killed': killed,
-                'effects': ['melee_attack', 'poison_defender']
+                'effects': ['slash', 'poison_defender']
             })
         # return the resulting delta
         response = {

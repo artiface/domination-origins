@@ -53,7 +53,16 @@ var Network = {
         const targetTile = tileEffect['tile'];
         const killed = tileEffect['killed'];
         const defender = this.tilemap.tileOccupiedBy(targetTile.x, targetTile.y);
-        this.spawnBulletImpacts(targetTile.x, targetTile.y, 3);
+        const effectsForThisTile = tileEffect['effects'];
+        for (let i = 0; i < effectsForThisTile.length; i++) {
+            const effect = effectsForThisTile[i];
+            if (effect === 'slash') {
+                this.spawnMeleeSlash(targetTile.x, targetTile.y);
+            } else if (effect === 'bullets') {
+                this.spawnBulletHit(targetTile.x, targetTile.y, 3);
+            }
+
+        }
         let damageText = damage > 0 ? damage.toString() : 'miss';
         this.spawnFloatingText(targetTile.x, targetTile.y, damageText, '#ff0000');
         defender.healthbar.changeHealth(-damage);

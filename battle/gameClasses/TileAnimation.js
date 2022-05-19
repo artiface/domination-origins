@@ -1,9 +1,12 @@
 "use strict";
-// Define our player character container classes
-var BulletImpact = IgeEntity.extend({
-	classId: 'BulletImpact',
 
-	init: function (bulletSheet) {
+const range = (start, stop, step) => Array.from({ length: (stop - start) / step + 1}, (_, i) => start + (i * step));
+
+// Define our player character container classes
+var TileAnimation = IgeEntity.extend({
+	classId: 'TileAnimation',
+
+	init: function (bulletSheet, frameCount) {
 		IgeEntity.prototype.init.call(this);
 
 		var self = this;
@@ -15,11 +18,11 @@ var BulletImpact = IgeEntity.extend({
 			.anchor(0, 10);
 
 		self._bulletSheet = bulletSheet;
-        self.texture(self._bulletSheet).width(40);
-        self.texture(self._bulletSheet).height(48);
+        self.texture(self._bulletSheet).width(120);
+        self.texture(self._bulletSheet).height(120);
         self.texture(self._bulletSheet).localAabb(true);
-
-		self.animation.define('impact', [1, 2, 3, 4], 8, -1)
+        const frameList = range(0, frameCount, 1);
+		self.animation.define('impact', frameList, 8, -1)
             .cell(1);
         self.animation.select('impact');
 
@@ -32,4 +35,4 @@ var BulletImpact = IgeEntity.extend({
 	},
 });
 
-if (typeof(module) !== 'undefined' && typeof(module.exports) !== 'undefined') { module.exports = BulletImpact; }
+if (typeof(module) !== 'undefined' && typeof(module.exports) !== 'undefined') { module.exports = TileAnimation; }

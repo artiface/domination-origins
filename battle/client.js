@@ -24,7 +24,14 @@ var Client = IgeClass.extend({
 		this.gameTexture.tiles = [];
 		this.gameTexture.effects = [];
 
-        this.gameTexture.effects.push(new IgeCellSheet('../assets/sprites/bullet_sheet.png', 4, 1));
+        this.gameTexture.effects.push({
+            frames: 4*1,
+            sheet: new IgeCellSheet('../assets/sprites/bullet_sheet.png', 4, 1)
+        });
+        this.gameTexture.effects.push({
+            frames: 4*2,
+            sheet: new IgeCellSheet('../assets/sprites/Slash.png', 4, 2)
+        });
 
 		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Ceramic Tile.png'));
 		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Clay Brick - A.png'));

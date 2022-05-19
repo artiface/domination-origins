@@ -1,4 +1,11 @@
 "use strict";
+
+const TileAnimationType = {
+    Bullets: 0,
+    Slash: 1,
+    Poison: 2,
+};
+
 var GameWorld = {
     spawnMessageText: function (text, color) {
         const float = new MessageText(text)
@@ -9,8 +16,8 @@ var GameWorld = {
             .mount(this.tilemap)
             .translateToTile(tileX, tileY);
     },
-    spawnBulletImpacts: function(tileX, tileY, count)
-    {
+    spawnBulletHit: function (tileX, tileY) {
+        var self = this;
         for (var i = 0; i < count; i++)
         {
             const randRange = 40;
@@ -18,14 +25,22 @@ var GameWorld = {
             const randY = Math.floor(Math.random() * randRange) - (randRange / 2);
             const randomTimer = Math.floor(Math.random() * 500);
             setTimeout(() => {
-                const effect = new BulletImpact(this.gameTexture.effects[0])
+                self.spawnTileAnimation(tileX, tileY, TileAnimationType.Bullets, randX, randY);
+            }, randomTimer);
+        }
+    },
+    spawnMeleeSlash: function (tileX, tileY) {
+        this.spawnTileAnimation(tileX, tileY, TileAnimationType.Slash, 0, 0);
+    },
+    spawnTileAnimation: function(tileX, tileY, effectIndex, xOffset, yOffset)
+    {
+        const anim = this.gameTexture.effects[effectIndex];
+        const effect = new TileAnimation(anim.sheet, anim.frames)
                 .layer(6)
                 .isometric(true)
                 .mount(this.tilemap)
                 .translateToTile(tileX, tileY, 0)
-                .translateBy(randX, randY, 0);
-            }, randomTimer);
-        }
+                .translateBy(xOffset, yOffset, 0);
     },
     getOwnCharIndex: function(ownChar) {
         for (let i = 0; i < this.ownCharacters.length; i++)

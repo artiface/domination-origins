@@ -7,7 +7,7 @@ var igeClientConfig = {
 		'./gameClasses/Input.js',
 		'./gameClasses/Network.js',
 		'./gameClasses/Label.js',
-		'./gameClasses/BulletImpact.js',
+		'./gameClasses/TileAnimation.js',
 		'./gameClasses/Highlighting.js',
 		'./gameClasses/HealthBarComponent.js',
 		'./gameClasses/FocusBarComponent.js',

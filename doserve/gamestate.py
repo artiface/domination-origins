@@ -398,7 +398,7 @@ class GameState:
 				'damage': damage if hit else 0,
 				'damage_type': damage_type,
 				'killed': killed,
-				'effects': ['melee_attack', 'claws']
+				'effects': ['slash', 'claws']
 			}],
 		}
 		create_task(self.broadcast(response))
@@ -427,7 +427,7 @@ class GameState:
 				'damage': damage if hit else 0,
 				'damage_type': damage_type,
 				'killed': killed,
-				'effects': ['melee_attack', 'claws']
+				'effects': ['bullets', 'claws']
 			}],
 		}
 		print("ranged attack:", response)
