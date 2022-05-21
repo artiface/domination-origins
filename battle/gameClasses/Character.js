@@ -93,14 +93,23 @@ var Character = IgeEntity.extend({
         this._charId = id;
         return this;
     },
-
     getCharId: function () {
         return this._charId;
     },
 	kill: function () {
+	    if (this.isDead()) {
+            return;
+        }
 		this.rotate().z(Math.radians(85));
         this.isDead(true);
+        if (this._onDeathCallback) {
+            this._onDeathCallback(this);
+        }
 	},
+	setOnDeathCallback: function (callback) {
+        this._onDeathCallback = callback;
+        return this;
+    },
 	isDead: function (isDead) {
         if (isDead === undefined) {
             return this._isDead;

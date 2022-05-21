@@ -32,6 +32,10 @@ var Client = IgeClass.extend({
             frames: 4*2,
             sheet: new IgeCellSheet('../assets/sprites/Slash.png', 4, 2)
         });
+        this.gameTexture.effects.push({
+            frames: 5*3,
+            sheet: new IgeCellSheet('../assets/sprites/Death.png', 5, 3)
+        });
 
 		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Ceramic Tile.png'));
 		this.gameTexture.tiles.push(new IgeTexture('../assets/tiles/Clay Brick - A.png'));

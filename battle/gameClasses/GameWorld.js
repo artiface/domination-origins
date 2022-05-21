@@ -3,7 +3,9 @@
 const TileAnimationType = {
     Bullets: 0,
     Slash: 1,
-    Poison: 2,
+    DeathAlly: 2,
+    DeathEnemy: 3,
+    Poison: 4,
 };
 
 var GameWorld = {
@@ -16,7 +18,7 @@ var GameWorld = {
             .mount(this.tilemap)
             .translateToTile(tileX, tileY);
     },
-    spawnBulletHit: function (tileX, tileY) {
+    spawnBulletHit: function (tileX, tileY, count) {
         var self = this;
         for (var i = 0; i < count; i++)
         {
@@ -31,6 +33,9 @@ var GameWorld = {
     },
     spawnMeleeSlash: function (tileX, tileY) {
         this.spawnTileAnimation(tileX, tileY, TileAnimationType.Slash, 0, 0);
+    },
+    spawnDeath: function (tileX, tileY) {
+        this.spawnTileAnimation(tileX, tileY, TileAnimationType.DeathAlly, 0, 0);
     },
     spawnTileAnimation: function(tileX, tileY, effectIndex, xOffset, yOffset)
     {
@@ -91,7 +96,12 @@ var GameWorld = {
             .setCharData(charData)
             .addComponent(HealthBarComponent)
             .drawBounds(false)
-            .drawBoundsData(false);
+            .drawBoundsData(false)
+            .setOnDeathCallback(function(char) {
+                const pos = char.tilePosition();
+                char.hide();
+                this.spawnDeath(pos.x, pos.y);
+            }.bind(this))
 
         this.tilemap.occupyTile(pos.x, pos.y, 1, 1, char);
         if (isOwner) {
