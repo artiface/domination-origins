@@ -279,11 +279,6 @@ interface IERC1155 is IERC165 {
 
 
 // OpenZeppelin Contracts (last updated v4.5.0) (token/ERC1155/IERC1155Receiver.sol)
-
-
-
-
-
 /**
  * @dev _Available since v3.1._
  */
@@ -624,8 +619,13 @@ contract ERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI {
      * Clients calling this function must replace the `\{id\}` substring with the
      * actual token type ID.
      */
-    function uri(uint256) public view virtual override returns (string memory) {
-        return _uri;
+    function uri(uint256 _tokenId) public view virtual override returns (string memory) {
+        return string(
+            abi.encodePacked(
+                _uri,
+                Strings.toString(_tokenId),".json"
+            )
+        );
     }
 
     /**
@@ -1600,8 +1600,42 @@ abstract contract ERC1155Supply is ERC1155 {
     }
 }
 
+abstract contract ERC1155Receiver is ERC165, IERC1155Receiver {
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
+        return interfaceId == type(IERC1155Receiver).interfaceId || super.supportsInterface(interfaceId);
+    }
+}
+
+contract ERC1155Holder is ERC1155Receiver {
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes memory
+    ) public virtual override returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address,
+        address,
+        uint256[] memory,
+        uint256[] memory,
+        bytes memory
+    ) public virtual override returns (bytes4) {
+        return this.onERC1155BatchReceived.selector;
+    }
+}
+
 /* Smart Contract written by memmaker 2022-05-21 */
-contract G4N9 is ERC1155, AccessControl, Pausable, ERC1155Burnable, ERC1155Supply {
+contract G4N9 is ERC1155, AccessControl, Pausable, ERC1155Burnable, ERC1155Supply, ERC1155Holder {
+    event Received(address indexed _sender, uint256 indexed _tokenId, uint256 _value);
+    event ReceivedBatch(address indexed _sender, uint256[] indexed _tokenId, uint256[] _value);
+
     bytes32 public constant URI_SETTER_ROLE = keccak256("URI_SETTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -1622,6 +1656,19 @@ contract G4N9 is ERC1155, AccessControl, Pausable, ERC1155Burnable, ERC1155Suppl
     uint256 public STARTER_PRICE = 5 ether;
     uint256 public BOOSTER_PRICE = 10 ether;
 
+    // The wallet that will receive a share for the gas fees
+    address private _gas_receiver = 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2;
+
+    // The wallet that will receive ERC1155 tokens sent to the contract
+    address private _token_receiver = 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2;
+
+    // The part of 1000 that will be passed to the gas_receiver
+    uint8 private _gas_share = 200;
+
+    mapping(uint256 => uint256) private _token_dna;
+
+    string private _contract_uri;
+
     constructor() ERC1155()
     {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -1637,25 +1684,39 @@ contract G4N9 is ERC1155, AccessControl, Pausable, ERC1155Burnable, ERC1155Suppl
         _setURI(newuri);
     }
 
+    function setContractURI(string memory newuri) public onlyRole(URI_SETTER_ROLE) {
+        _contract_uri = newuri;
+    }
+
+    function contractURI() public view returns (string memory) {
+        return _contract_uri;
+    }
+
+    function setGasReceiver(address new_gas_receiver, uint8 part_of_thousand) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(new_gas_receiver != address(0));
+        require(part_of_thousand <= 200);
+        _gas_receiver = new_gas_receiver;
+        _gas_share = part_of_thousand;
+    }
+
+    function setTokenReceiver(address new_token_receiver) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(new_token_receiver != address(0));
+        _token_receiver = new_token_receiver;
+    }
+
     function setPrices(uint256 newstarter, uint256 newbooster) public onlyRole(DEFAULT_ADMIN_ROLE) {
         STARTER_PRICE = newstarter;
         BOOSTER_PRICE = newbooster;
     }
 
-    function pause() public onlyRole(PAUSER_ROLE) {
-        _pause();
+    function withdrawAmount(address account, uint256 amount) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(account != address(0));
+        payable(account).transfer(amount);
     }
 
-    function unpause() public onlyRole(PAUSER_ROLE) {
-        _unpause();
-    }
-
-    function withdrawAmount(uint256 amount) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        payable(_msgSender()).transfer(amount);
-    }
-
-    function withdrawAll() public onlyRole(DEFAULT_ADMIN_ROLE) {
-        payable(_msgSender()).transfer(address(this).balance);
+    function withdrawAll(address account) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(account != address(0));
+        payable(account).transfer(address(this).balance);
     }
 
     function buyStarter(uint256 id, uint8 amount) public payable
@@ -1664,6 +1725,9 @@ contract G4N9 is ERC1155, AccessControl, Pausable, ERC1155Burnable, ERC1155Suppl
         require(msg.value == STARTER_PRICE * amount, "G4N9-buy: You must send an exact amount");
         require(id >= STARTER_KITS && id < BOOSTER_PACKS, "G4N9-buy: Invalid token id");
         _mint(operator, id, amount, "");
+
+        uint256 gas_reserve_part = (msg.value * _gas_share) / 1000;
+        payable(_gas_receiver).transfer(gas_reserve_part);
     }
 
     function buyBooster(uint256 id, uint8 amount) public payable
@@ -1672,20 +1736,53 @@ contract G4N9 is ERC1155, AccessControl, Pausable, ERC1155Burnable, ERC1155Suppl
         require(msg.value == BOOSTER_PRICE * amount, "G4N9-buy: You must send an exact amount");
         require(id >= BOOSTER_PACKS && id < ITEMS_START, "G4N9-buy: Invalid token id");
         _mint(operator, id, amount, "");
+
+        uint256 gas_reserve_part = (msg.value * _gas_share) / 1000;
+        payable(_gas_receiver).transfer(gas_reserve_part);
     }
 
-    function mint(address account, uint256 id, uint256 amount, bytes memory data)
+    function mint(address account, uint256 id, uint256 amount, uint256 dna)
         public
         onlyRole(MINTER_ROLE)
     {
-        _mint(account, id, amount, data);
+        _mint(account, id, amount, "");
+        _token_dna[id] = dna;
     }
 
-    function mintBatch(address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
+    function mintBatch(address to, uint256[] memory ids, uint256[] memory amounts, uint256[] memory dna)
         public
         onlyRole(MINTER_ROLE)
     {
-        _mintBatch(to, ids, amounts, data);
+        _mintBatch(to, ids, amounts, "");
+        for (uint256 i = 0; i < ids.length; i++) {
+            _token_dna[ids[i]] = dna[i];
+        }
+    }
+
+    function dnaOf(uint256 id) public view returns (uint256) {
+        return _token_dna[id];
+    }
+
+    function dnaOfBatch(uint256[] memory ids)
+        public
+        view
+        returns (uint256[] memory)
+    {
+        uint256[] memory dnaList = new uint256[](ids.length);
+
+        for (uint256 i = 0; i < ids.length; ++i) {
+            dnaList[i] = dnaOf(ids[i]);
+        }
+
+        return dnaList;
+    }
+
+    function pause() public onlyRole(PAUSER_ROLE) {
+        _pause();
+    }
+
+    function unpause() public onlyRole(PAUSER_ROLE) {
+        _unpause();
     }
 
     function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
@@ -1697,13 +1794,36 @@ contract G4N9 is ERC1155, AccessControl, Pausable, ERC1155Burnable, ERC1155Suppl
     }
 
     // The following functions are overrides required by Solidity.
-
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC1155, AccessControl)
+        override(ERC1155, AccessControl, ERC1155Receiver)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+    function onERC1155Received(
+        address _operator,
+        address _from,
+        uint256 _id,
+        uint256 _value,
+        bytes memory _data
+    ) public virtual override returns (bytes4) {
+        emit Received(_from, _id, _value);
+        _safeTransferFrom(address(this), _token_receiver, _id, _value, _data);
+        return super.onERC1155Received(_operator, _from, _id, _value, _data);
+    }
+
+    function onERC1155BatchReceived(
+        address _operator,
+        address _from,
+        uint256[] memory _ids,
+        uint256[] memory _values,
+        bytes memory _data
+    ) public virtual override returns (bytes4) {
+        emit ReceivedBatch(_from, _ids, _values);
+        _safeBatchTransferFrom(address(this), _token_receiver, _ids, _values, _data);
+        return super.onERC1155BatchReceived(_operator, _from, _ids, _values, _data);
     }
 }

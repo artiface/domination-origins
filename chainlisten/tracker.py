@@ -20,19 +20,23 @@ class Tracker:
         self.db = Storage('balances.db')
         #currentBlock = self.web3.eth.blockNumber
 
-    def on_scan_event(self, block_number, txhash, log_index, transfer):
-        token_id = transfer['tokenId']
-        from_address = transfer['from']
-        to_address = transfer['to']
-        value = transfer['value']
-        self.on_transfer(token_id, from_address, to_address, value)
+    def on_raw_event(self, event):
+        args = event["args"]
+        is_batch = 'id' not in args and 'ids' in args
+        tokenIds = args["ids"] if is_batch else [args["id"]]
+        from_address = args["from"]
+        to_address = args.to
+        values = args["values"] if is_batch else [args["value"]]
 
-    def on_listen_event(self, event):
-        token_id = event['args']['id']
-        from_address = event['args']['from']
-        to_address = event['args']['to']
-        value = event['args']['value']
-        self.on_transfer(token_id, from_address, to_address, value)
+        for tokenId, value in zip(tokenIds, values):
+            self.on_transfer(tokenId, from_address, to_address, value)
+
+        return {
+            'tokenIds': tokenIds,
+            'from': from_address,
+            'to': to_address,
+            'values': values
+        }
 
     def on_transfer(self, token_id, from_address, to_address, value):
         print('on_transfer: {} of tokens with id {} from {} to {}'.format(value, token_id, from_address, to_address))
@@ -45,7 +49,7 @@ class Tracker:
         while True:
             for filter in filters:
                 for event in filter.get_new_entries():
-                    self.on_listen_event(event)
+                    self.on_raw_event(event)
             await asyncio.sleep(poll_interval)
 
     def listen(self, event_list):
@@ -60,11 +64,12 @@ class Tracker:
         finally:
             loop.close()
 
-    def scan(self, contract, event_list, startBlock, end_block):
+    def scan(self, contract, event_list, start_block, end_block=None):
         #start_block = 26395546
-        #end_block = self.web3.eth.blockNumber
+        if not end_block:
+            end_block = self.web3.eth.blockNumber
 
-        state = JSONifiedState(self.on_scan_event)
+        state = JSONifiedState(self.on_raw_event)
         state.restore()
 
         scanner = EventScanner(
@@ -85,7 +90,7 @@ class Tracker:
         addressMap = {
             'troop': "0xb195991d16c1473bdF4b122A2eD0245113fCb2F9",
             'weapon': "0x70242aAa2a2e97Fa71936C8ED0185110cA23B866",
-            'erc1155-test': '0xB3f5900562b8944025e7303CD6B0520a42599513'
+            'erc1155-test': '0xd400303B7366266e120c956652513D6d09cA92f4'
         }
 
         address = addressMap[name]
@@ -115,21 +120,21 @@ if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == 'listen':
         t = Tracker()
         contract = t.getContract('erc1155-test')
-        event_list = [contract.events.TransferSingle]
+        event_list = [contract.events.TransferSingle, contract.events.TransferBatch]
         block = t.getCurrentBlock()
         print('Listening from block:', block)
         t.listen(event_list)
     # check if argument is "scan"
     elif len(sys.argv) > 1 and sys.argv[1] == 'scan':
         # get start and end block from the command line arguments
-        end_block = int(sys.argv[2])
+        end_block = 'latest' #int(sys.argv[2])
         t = Tracker()
         contract = t.getContract('erc1155-test')
-        start_block = 26395546
-        event_list = [contract.events.TransferSingle]
+        start_block = 26409555
+        event_list = [contract.events.TransferSingle, contract.events.TransferBatch]
         block = t.getCurrentBlock()
         print('Scanning from block {} to {}'.format(start_block, end_block))
-        t.scan(contract, event_list, start_block, end_block)
+        t.scan(contract, event_list, start_block)
     # check if argument is "balance"
     elif len(sys.argv) > 1 and sys.argv[1] == 'balance':
         #get wallet address from the command line arguments

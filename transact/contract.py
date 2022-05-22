@@ -1,5 +1,6 @@
 import binascii
 import json
+import random
 from getpass import getpass
 
 from eth_account import Account
@@ -16,7 +17,7 @@ class Contract:
         self.web3.middleware_onion.inject(geth_poa_middleware, layer=0)
         self.web3.eth.defaultAccount = self.account.address
         self.chain_id = self.web3.toHex(self.web3.eth.chain_id)
-        self.contract = self.getContract('erc1155-test')
+        self.contract = self.getContract('g4n9-erc1155-test')
 
     def abiFromFile(self, filename):
         abi = None
@@ -28,13 +29,13 @@ class Contract:
         addressMap = {
             'troop': "0xb195991d16c1473bdF4b122A2eD0245113fCb2F9",
             'weapon': "0x70242aAa2a2e97Fa71936C8ED0185110cA23B866",
-            'erc1155-test': '0xB3f5900562b8944025e7303CD6B0520a42599513'
+            'g4n9-erc1155-test': '0xd400303B7366266e120c956652513D6d09cA92f4'
         }
 
         address = addressMap[name]
 
         abiMap = {
-            'erc1155-test': self.abiFromFile('erc1155.json')
+            'g4n9-erc1155-test': self.abiFromFile('erc1155.json')
         }
         abi = abiMap[name]
 
@@ -65,11 +66,14 @@ class Contract:
         tx_hash = self.web3.eth.sendRawTransaction(signed_tx.rawTransaction)
         return self.web3.toHex(tx_hash)
 
-    def createNFTCollection(self, target_address, start_id, count):
+    def openStarterKit(self, target_address):
         token_ids = []
         token_counts = []
-        for i in range(count):
-            token_ids.append(start_id + i)
+        for i in range(10):
+            if i < 5:
+                token_ids.append(10000 + i)  # 5x 10000 - 10005 sequential
+            else:
+                token_ids.append(random.randint(1000, 9999))  # 5x 1000 - 9999 random
             token_counts.append(1)
         return self.mintBatch(target_address, token_ids, token_counts)
 
@@ -101,5 +105,5 @@ else:
     ct = Contract(private_key)
     #tx = ct.transferFrom(from_address, to_address, token_id, amount)
     #tx = ct.mint(to_address, token_id, amount)
-    tx = ct.createNFTCollection(to_address, 10000, 5000)
+    tx = ct.openStarterKit(to_address)
     print(ct.txLink(tx))

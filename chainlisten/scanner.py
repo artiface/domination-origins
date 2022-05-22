@@ -488,14 +488,9 @@ class JSONifiedState(EventScannerState):
         block_number = event.blockNumber
 
         # Convert ERC-20 Transfer event to our internal format
-        args = event["args"]
-        transfer = {
-            "tokenId": args["id"],
-            "from": args["from"],
-            "to": args.to,
-            "value": args.value,
-            "timestamp": block_when.isoformat(),
-        }
+        transfer = event["args"]
+        if self.event_callback:
+            transfer = self.event_callback(event)
 
         # Create empty dict as the block that contains all transactions by txhash
         if block_number not in self.state["blocks"]:
@@ -510,9 +505,6 @@ class JSONifiedState(EventScannerState):
 
         # Record ERC-20 transfer in our database
         self.state["blocks"][block_number][txhash][log_index] = transfer
-
-        if self.event_callback:
-            self.event_callback(block_number, txhash, log_index, transfer)
 
         # Return a pointer that allows us to look up this event later if needed
         return f"{block_number}-{txhash}-{log_index}"
