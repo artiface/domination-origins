@@ -1,0 +1,50 @@
+{
+  "description": "This can be opened and thus exchanged for 5 troops and weapons, so you can immediately begin playing.",
+  "external_url": "https://staging.32kb.org/token_details/1",
+  "image": "https://picsum.photos/seed/starter-kit/350",
+  "name": "G4N9 Starter Kit",
+  "background_color": "#000000",
+  "attributes": [
+    {
+      "trait_type": "Generation",
+      "value": "Early Access"
+    },
+    {
+      "trait_type": "Level",
+      "value": 5
+    },
+    {
+      "trait_type": "Stamina",
+      "value": 1.4
+    },
+    {
+      "trait_type": "Personality",
+      "value": "Sad"
+    },
+    {
+      "display_type": "boost_number",
+      "trait_type": "Aqua Power",
+      "value": 40
+    },
+    {
+      "display_type": "boost_percentage",
+      "trait_type": "Stamina Increase",
+      "value": 10
+    },
+    {
+      "display_type": "date",
+      "trait_type": "Date of release",
+      "value": 1546360800
+    },
+    {
+      "display_type": "number",
+      "trait_type": "Troop Capacity",
+      "value": 5
+    },
+    {
+      "display_type": "number",
+      "trait_type": "Weapon Capacity",
+      "value": 5
+    }
+  ]
+}

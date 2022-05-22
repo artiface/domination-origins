@@ -12,3 +12,7 @@ WeaponNFTs/
 Puzzles/
 *.db
 
+images/
+metadata/
+layers/
+weapons/
