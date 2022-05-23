@@ -165,7 +165,7 @@ class Modal {
                 document.querySelectorAll(".node-selected").forEach(el => el.classList.remove("node-selected"));
                 e.target.classList.add("node-selected");
                 this.selectedNode = e.target.id;
-                this.renderPlayerDescription(this.crypto.troops[e.target.id.split("-")[1]]);
+                this.renderPlayerDescription(this.crypto.troops[e.target.id.split("-")[1] - 1]);
             }
         });
 
@@ -215,7 +215,7 @@ class Modal {
 
         let data = '';
 
-        for (let i = first; i < last; i++) {
+        for (let i = first; i <= last; i++) {
             const player = this.crypto.troops[i];
             data += `
             <div id="player-${player.LABEL}" class="modal-list-node">
@@ -258,7 +258,11 @@ class Modal {
     renderPlayerDescription(player) {
         const data = `
         <img class="img-vertical-responsive modal-left-side-image" src="${player.IMAGE_SRC}">
-        <div id="modal-info-2">Hey</div>
+        <div>${player.LABEL}</div>
+        <div id="modal-info-2">
+        Faction Icon, Origin, Level, Health, Focus, Battle Points, Skills, Attributes (Strength, Agility, Dexterity, Intelligence) 
+
+        </div>
         `
         document.getElementById("modal-description").innerHTML = "";
         document.getElementById("modal-description").insertAdjacentHTML('beforeend', data);
