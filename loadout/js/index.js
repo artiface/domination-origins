@@ -109,6 +109,8 @@ class Modal {
         this.firstTime = true;
         this.clusterize = null;
         this.rendered = false;
+        this.selectedNode = null;
+        this.refreshing = false;
     }
 
     renderModal() {
@@ -126,7 +128,11 @@ class Modal {
     }
 
     async renderPlayerModal() {
-        if (this.rendered) return;
+        if (this.rendered) {
+            this.modalParent.style.display = "flex"
+            return;
+        }
+        this.rendered = true;
         this.renderModal();
 
         let data = `
@@ -147,37 +153,73 @@ class Modal {
 
         const list = document.getElementById("modal-list");
         
-        for  (let i = 0; i < 10; i++) {
-            const troops = await this.crypto.addTroops();
-            console.log(troops)
-            this.renderPlayerList(troops);
-        }
+        await this.crypto.addTroops();
+
+        list.insertAdjacentHTML('beforeend', await this.renderPlayerList(0, 10));
+
+        let first = 0;
+        let last = 10;
+
+        list.addEventListener("click", async (e) => {
+            if (e.target.classList.contains("modal-list-node")) {
+                document.querySelectorAll(".node-selected").forEach(el => el.classList.remove("node-selected"));
+                e.target.classList.add("node-selected");
+                this.selectedNode = e.target.id;
+                this.renderPlayerDescription(this.crypto.troops[e.target.id.split("-")[1]]);
+            }
+        });
 
         list.addEventListener("scroll", async () => {
+            const fakeDocument = document.createElement("div");
+            fakeDocument.classList.add("modal-list-node");
+            list.appendChild(fakeDocument);
+            const nodeHeight = fakeDocument.clientHeight;
+            fakeDocument.remove();
+
+            const newLast = Math.ceil((list.scrollTop + nodeHeight * 7) / nodeHeight);
+
+            if (newLast === last) return; 
+
+            if (!this.refreshing && last + 10 > this.crypto.troops.length) {
+                this.refreshing = true;
+                await this.crypto.addTroops();
+                this.refreshing = false;
+            }
+
+            last = Math.min(newLast, this.crypto.troops.length - 1);
+            first = Math.max(last - 10, 0);
+
+            list.innerHTML = "";
             const top = document.createElement("div");
-            top.class = "modal-list-node";
-
-            document.getElementById("modal-list").insertAdjacentHTML('beforeend', await this.renderPlayerList());
-
+            top.classList.add("modal-list-node");
+            top.style.height = `${first * nodeHeight}px`;
+            list.appendChild(top);
+            list.insertAdjacentHTML('beforeend', await this.renderPlayerList(first, last));
             const bottom = document.createElement("div");
-            bottom.class = "modal-list-node";
+            bottom.classList.add("modal-list-node");
+            bottom.style.height = `${(this.crypto.troops.length - 1 - last) * nodeHeight }px`;
+            list.appendChild(bottom);
+
+            if (this.selectedNode) {
+                const doc = document.getElementById(this.selectedNode);
+                if (doc) doc.classList.add("node-selected");
+            } 
         });
     }
 
-    async renderPlayerList(troops) {
+    async renderPlayerList(first, last) {
         if (this.firstTime) {
             await this.crypto.load();
             this.firstTime = false;
         }
 
-
-
         let data = '';
 
-        troops.forEach(player => {
+        for (let i = first; i < last; i++) {
+            const player = this.crypto.troops[i];
             data += `
             <div id="player-${player.LABEL}" class="modal-list-node">
-                <!--<img class="img-horizontal-responsive" src="${player.IMAGE_SRC}">-->
+                <img class="img-horizontal-responsive" src="${player.IMAGE_SRC}">
                 <div class="node-name">
                     ${player.LABEL}
                 </div>
@@ -208,13 +250,14 @@ class Modal {
                 <img class="img-horizontal-responsive" src="${this.crypto.factions[player.FACTION]}">
             </div>
             `;
-        });
+        }
+
         return data;
     }
 
-    renderRightInfo(player) {
+    renderPlayerDescription(player) {
         const data = `
-        <img class="img-horizontal-responsive modal-left-side-image" src="${player.IMAGE_SRC}">
+        <img class="img-vertical-responsive modal-left-side-image" src="${player.IMAGE_SRC}">
         <div id="modal-info-2">Hey</div>
         `
         document.getElementById("modal-description").innerHTML = "";
@@ -255,34 +298,11 @@ class Crypto {
     async load() {
         await connect();
         this.userAdress = await signer.getAddress();
-
-        let tokenAmount = 0;
-        if (this.testMode)  {
-            tokenAmount = 100;
-        } //else troops = await getWallet(this.userAdress, "troops");
-
-        const type = "troops";
-        const page = await this.loadPageNFT(type, 1);
-        this.pageAmount = Math.ceil((tokenAmount * 20) / 20) + 1;
-        
-        for (let j = 0; j < page.troops.length; j++) this.troops.push({
-            LABEL: page.troops[j].tokenId,
-            IMAGE_SRC: `${this.types[type].dir}t_${page.troops[j].tokenId}.png`,
-            MAX_HEALTH: page.troops[j].maxHealth,
-            ORIGIN: page.troops[j].origin,
-            BATTLE_POINTS: page.troops[j].battlePointValue,
-            FACTION: page.troops[j].faction,
-        });
     }
 
     async addTroops() {
-        //if (this.pageAmount <= this.pageCount) return;
         this.pageCount++;
         const page = await this.loadPageNFT("troops", this.pageCount);
-
-        const newTroops = [];
-
-    
         for (let j = 0; j < page.troops.length; j++) {
             const troop = {
                 LABEL: page.troops[j].tokenId,
@@ -293,10 +313,8 @@ class Crypto {
                 FACTION: page.troops[j].faction,
             }
 
-            newTroops.push(troop);
+            this.troops.push(troop);
         }
-
-        return newTroops;
     }
 }
 
