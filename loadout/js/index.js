@@ -107,6 +107,8 @@ class Modal {
         this.cards = cards;
         this.modalParent = document.getElementById('modal-parent');
         this.firstTime = true;
+        this.clusterize = null;
+        this.rendered = false;
     }
 
     renderModal() {
@@ -116,12 +118,15 @@ class Modal {
             <img src="./svgs/circle-xmark.svg" id="close-modal">
         </div>
         `
-        this.modalParent.innerHTML = "";
         this.modalParent.insertAdjacentHTML('beforeend', data);
-        document.getElementById("close-modal").addEventListener("click", () => this.modalParent.style.display = "none")
+        document.getElementById("close-modal").addEventListener("click", () => {
+            this.modalParent.style.display = "none"
+            this.firstTime = true;
+        })
     }
 
     async renderPlayerModal() {
+        if (this.rendered) return;
         this.renderModal();
 
         let data = `
@@ -131,7 +136,8 @@ class Modal {
                 <input type="text" placeholder="filter: Faction" class="filter-input">
                 <input type="text" placeholder="filter: Level" class="filter-input">
             </div>
-            <div id="modal-list"></div>
+            <div id="modal-list">
+            </div>
         </div>
 
         <div id="modal-description">
@@ -139,21 +145,39 @@ class Modal {
         `
         document.getElementById("modal").insertAdjacentHTML('beforeend', data);
 
-        await this.renderPlayerList();
+        const list = document.getElementById("modal-list");
+        
+        for  (let i = 0; i < 10; i++) {
+            const troops = await this.crypto.addTroops();
+            console.log(troops)
+            this.renderPlayerList(troops);
+        }
+
+        list.addEventListener("scroll", async () => {
+            const top = document.createElement("div");
+            top.class = "modal-list-node";
+
+            document.getElementById("modal-list").insertAdjacentHTML('beforeend', await this.renderPlayerList());
+
+            const bottom = document.createElement("div");
+            bottom.class = "modal-list-node";
+        });
     }
 
-    async renderPlayerList() {
+    async renderPlayerList(troops) {
         if (this.firstTime) {
             await this.crypto.load();
             this.firstTime = false;
         }
 
-        const listParent = document.getElementById('modal-list');
-        listParent.innerHTML = "";
-        this.crypto.troops.forEach((player, i) => {
-            let data = `
-            <div id="player-${i}" class="modal-list-node">
-                <img class="img-horizontal-responsive" src="${player.IMAGE_SRC}">
+
+
+        let data = '';
+
+        troops.forEach(player => {
+            data += `
+            <div id="player-${player.LABEL}" class="modal-list-node">
+                <!--<img class="img-horizontal-responsive" src="${player.IMAGE_SRC}">-->
                 <div class="node-name">
                     ${player.LABEL}
                 </div>
@@ -183,27 +207,9 @@ class Modal {
                 </div>
                 <img class="img-horizontal-responsive" src="${this.crypto.factions[player.FACTION]}">
             </div>
-            `
-            listParent.insertAdjacentHTML('beforeend', data);
-            const node = document.getElementById(`player-${i}`);
-            node.addEventListener("click" , () => {
-                document.querySelectorAll(".modal-list-node").forEach(node => node.classList.remove("node-selected"));
-                node.classList.add("node-selected");
-                this.renderRightInfo(player);
-                //this.cards.changePlayer(player);
-                //this.modalParent.style.display = "none";
-            });
+            `;
         });
-
-        let added = false;
-        const cb = async () => {
-            if (!added && listParent.scrollTop > (listParent.scrollHeight - listParent.clientHeight) - 200) {
-                listParent.removeEventListener("scroll", cb);
-                await this.crypto.addTroops();
-                this.renderPlayerList();
-            }
-        }
-        listParent.addEventListener("scroll", cb);
+        return data;
     }
 
     renderRightInfo(player) {
@@ -237,8 +243,8 @@ class Crypto {
         this.troops = [];
         this.weapons = [];
         this.testMode = true;
-        this.pageAmount = 0;
-        this.pageCount = 1;
+        this.pageAmount = -1;
+        this.pageCount = 0;
     }
 
     async loadPageNFT(type, count) {
@@ -270,20 +276,27 @@ class Crypto {
     }
 
     async addTroops() {
-        if (this.pageAmount <= this.pageCount) return;
+        //if (this.pageAmount <= this.pageCount) return;
         this.pageCount++;
-        console.log(this.pageCount)
         const page = await this.loadPageNFT("troops", this.pageCount);
-        console.log(page.troops.length)
 
-        for (let j = 0; j < page.troops.length; j++) this.troops.push({
-            LABEL: page.troops[j].tokenId,
-            IMAGE_SRC: `${this.types["troops"].dir}t_${page.troops[j].tokenId}.png`,
-            MAX_HEALTH: page.troops[j].maxHealth,
-            ORIGIN: page.troops[j].origin,
-            BATTLE_POINTS: page.troops[j].battlePointValue,
-            FACTION: page.troops[j].faction,
-        });
+        const newTroops = [];
+
+    
+        for (let j = 0; j < page.troops.length; j++) {
+            const troop = {
+                LABEL: page.troops[j].tokenId,
+                IMAGE_SRC: `${this.types["troops"].dir}t_${page.troops[j].tokenId}.png`,
+                MAX_HEALTH: page.troops[j].maxHealth,
+                ORIGIN: page.troops[j].origin,
+                BATTLE_POINTS: page.troops[j].battlePointValue,
+                FACTION: page.troops[j].faction,
+            }
+
+            newTroops.push(troop);
+        }
+
+        return newTroops;
     }
 }
 
