@@ -328,7 +328,7 @@ class Crypto {
     constructor() {
         this.types = {
             troops: {
-                dir: `${window.location}TroopNFTs/`,
+                dir: `/TroopNFTs/`,
             },
             weapons:{
                 dir: `${window.location}/WeaponsNFTs/`,

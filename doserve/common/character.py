@@ -223,6 +223,8 @@ class Character:
         # we just load the token data from the local directory and json file
         # load a file from disk
         tokenData = loadLocalNFT('troop', self.tokenId)
+        if not tokenData:
+            raise Exception('Could not load token data for tokenId: {}'.format(self.tokenId))
         self.backgroundHint = tokenData['attributes']['Background Pattern'] if 'Background Pattern' in tokenData['attributes'] else False
         self.level = tokenData['attributes']['Level']
         self.origin = tokenData['attributes']['Origin']
