@@ -233,9 +233,15 @@ class Character:
         self.intelligence = tokenData['attributes']['Intelligence']
         self.strength = tokenData['attributes']['Strength']
         self.dexterity = tokenData['attributes']['Dexterity']
-        self.attributeBoost = tokenData['attributes']['Attributes Increase']
-        self.powerBoost = tokenData['attributes']['Power Increase']
-        self.staminaBoost = tokenData['attributes']['Stamina Increase']
+        self.attributeBoost = 0
+        self.powerBoost = 0
+        self.staminaBoost = 0
+        try:
+            self.attributeBoost = tokenData['attributes']['Attributes Increase']
+            self.powerBoost = tokenData['attributes']['Power Increase']
+            self.staminaBoost = tokenData['attributes']['Stamina Increase']
+        except KeyError:
+            print('No attribute boost found for tokenId: {}'.format(self.tokenId))
 
         factionMap = {
             'Ryu': Faction.Dragon,
