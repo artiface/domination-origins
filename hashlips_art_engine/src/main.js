@@ -14,6 +14,7 @@ const layersDir = path.join(basePath, "/layers");
 const {
   format,
   baseUri,
+  externalUri,
   description,
   background,
   uniqueDnaTorrance,
@@ -137,6 +138,7 @@ const addMetadata = (_dna, _edition) => {
     image: `${baseUri}/${_edition}.png`,
     edition: _edition,
     date: dateTime,
+    external_url: `${externalUri}/${_edition}.png`,
     ...extraMetadata,
     attributes: attributesList,
   };
@@ -159,16 +161,36 @@ const replaceBulk = (str, findArray, replaceWith) => {
 
 const cleanTrait = (traitName) => {
   const removals = ['ASDFGHJ ', 'BAASDFGHJ ', 'EDCRFB ', 'LKJHGFD ', 'POIUYTR ', 'QAZWSX ', 'QWERTYU ', 'WRAITHFEMALE ', 'WRAITHMALE ', 'ZXCVBN '];
-  const cleanTrait = replaceBulk(traitName, removals, '');
-  return cleanTrait;
+  const cleaned = replaceBulk(traitName, removals, '');
+  return cleaned;
+};
+
+const getDisplayType = (traitName) => {
+  if (traitName === 'Level') {
+    return 'number';
+  }
+  else if (traitName == 'Attributes Increase') {
+    return 'boost_number';
+  }
+  else if (traitName.includes('Increase')) {
+    return 'boost_percentage';
+  }
+  return false;
 };
 
 const addAttributes = (_element) => {
   let selectedElement = _element.layer.selectedElement;
-  attributesList.push({
-    trait_type: cleanTrait(_element.layer.name),
-    value: selectedElement.name,
-  });
+  const trait = cleanTrait(_element.layer.name);
+  const displayType = getDisplayType(trait);
+  const value = Number.isInteger(parseInt(selectedElement.name)) ? parseInt(selectedElement.name) : selectedElement.name;
+  let attributeData = {
+    trait_type: trait,
+    value: value,
+  };
+  if (displayType) {
+    attributeData.display_type = displayType;
+  }
+  attributesList.push(attributeData);
 };
 
 const loadLayerImg = async (_layer) => {
@@ -332,7 +354,7 @@ const startCreating = async (tokenId, onlyStarter) => {
     });
 
     await Promise.all(loadedElements).then((renderObjectArray) => {
-      debugLogs ? console.log("Clearing canvas") : null;
+      //debugLogs ? console.log("Clearing canvas") : null;
       ctx.clearRect(0, 0, format.width, format.height);
       if (background.generate) {
         drawBackground();
@@ -348,13 +370,13 @@ const startCreating = async (tokenId, onlyStarter) => {
       addMetadata(newDna, tokenId);
       saveMetaDataSingleFile(tokenId);
       console.log(
-        `Created token with id: ${tokenId}, with DNA: ${dnaHash}`
+        `${dnaHash}`
       );
     });
     dnaList.add(dnaHash);
     const asList = Array.from(dnaList);
     const dnaAsString = JSON.stringify(asList);
-    console.log("DNA in list: ", asList.length);
+    //console.log("DNA in list: ", asList.length);
     try {
       fs.writeFileSync(path.join(basePath, "/dnalist.json"), dnaAsString);
       // file written successfully
@@ -362,7 +384,7 @@ const startCreating = async (tokenId, onlyStarter) => {
       console.error(err);
     }
   } else {
-    console.log("DNA exists!");
+    //console.log("DNA exists!");
     failedCount++;
     if (failedCount >= uniqueDnaTorrance) {
       console.log(

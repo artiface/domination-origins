@@ -118,7 +118,7 @@ def loadLocalNFT(type, tokenId):
     }
     dir = dirmap[type]
     try:
-        with open('../{}/{}.json'.format(dir, tokenId), 'r') as f:
+        with open('./{}/{}.json'.format(dir, tokenId), 'r') as f:
             data = json.load(f)
             # flatten attributes
             data['attributes'] = flattenAttributes(data['attributes'])

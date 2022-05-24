@@ -1758,7 +1758,11 @@ contract G4N9 is ERC1155, AccessControl, Pausable, ERC1155Burnable, ERC1155Suppl
             _token_dna[ids[i]] = dna[i];
         }
     }
-
+    /*
+    function setDNA(uint256 id, uint256 dna) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _token_dna[id] = dna;
+    }
+    */
     function dnaOf(uint256 id) public view returns (uint256) {
         return _token_dna[id];
     }

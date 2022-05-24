@@ -4,6 +4,7 @@
 # 3. Check if metadata and image for this tokenId is available
 # 4. If no, create metadata and image
 # 5. Mint the tokens by sending a transaction
+import json
 import os
 import pathlib
 import subprocess
@@ -30,37 +31,65 @@ class OnDemandMinter:
 
     def onOpenStarterKit(self, opener_wallet):
         print("Open starter kit event received from " + opener_wallet)
-        troopTokenIds = self.assignTroopTokenIds()
-        self.ensureDataForTroops(troopTokenIds)
-        self.mintTokens(opener_wallet, troopTokenIds)
+        troopTokenIds = self.selectTroopTokens()
+        dnaList = self.getTroopDNA(troopTokenIds)
+        self.mintTokens(opener_wallet, troopTokenIds, dnaList)
 
-    def assignTroopTokenIds(self):
-        return [10002, 10003, 10004]
+        weaponTokenIds = self.selectWeaponTokens()
+        dnaList = self.getWeaponDNA(weaponTokenIds)
+        self.mintTokens(opener_wallet, weaponTokenIds, dnaList)
 
-    def ensureDataForTroops(self, troopTokenIds):
+    def selectTroopTokens(self):
+        return [1002, 1003, 1004]
+
+    def selectWeaponTokens(self):
+        return [10001, 10002, 10003]
+
+    def getWeaponDNA(self, weaponTokenIds):
+        dnaList = []
+        for weaponTokenId in weaponTokenIds:
+            dna = self.readDNAFromMetadata(weaponTokenId)
+            dnaList.append(dna)
+        return dnaList
+
+    def getTroopDNA(self, troopTokenIds):
+        dnaList = []
         for troopTokenId in troopTokenIds:
-            if not self.isMetadataAvailable(troopTokenId):
-                self.createTroopMetadata(troopTokenId)
+            dna = self.readDNAFromMetadata(troopTokenId)
+            if not dna:
+                dna = self.createTroopMetadata(troopTokenId)
+            dnaList.append(dna)
+        return dnaList
 
-    def mintTokens(self, receiving_wallet, tokenIds):
+    def mintTokens(self, receiving_wallet, tokenIds, dna_list):
         amounts = [1 for _ in tokenIds]
-        dna = [0 for _ in tokenIds] # TODO: pass DNA
-        tx = self.contract.mintBatch(receiving_wallet, tokenIds, dna, amounts)
+        # convert the hex strings in dna_list to integers
+        dna_list = [int(dna, 16) for dna in dna_list]
+        tx = self.contract.mintBatch(receiving_wallet, tokenIds, dna_list, amounts)
         print("Minting tokens {}".format(tx))
 
-    def isMetadataAvailable(self, tokenId):
+    def readDNAFromMetadata(self, tokenId):
         # check if file in metadata dir exists
         json_path = self.metadata_dir + '/' + str(tokenId) + '.json'
         image_path = self.image_dir + '/' + str(tokenId) + '.png'
         token_exists = pathlib.Path(json_path).is_file()
         image_exists = pathlib.Path(image_path).is_file()
-        return token_exists and image_exists
+        if not token_exists or not image_exists:
+            return False
+        # read metadata from json file
+        metadata = None
+        with open(json_path, 'r') as f:
+            metadata = json.load(f)
+        return metadata['dna']
 
     def createTroopMetadata(self, troopTokenId):
         # the called script must create the metadata and the image
         # and also move them to the appropriate directories
         #subprocess.run(["mintTroopToken.sh", str(troopTokenId)])
-        os.system('mintTroopToken.sh ' + str(troopTokenId) + ' starter')
+        stream = os.popen('mintTroopToken.sh ' + str(troopTokenId) + ' starter')
+        dna = stream.read().strip()
+        return dna
+
 
 
 if __name__ == '__main__':

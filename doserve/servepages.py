@@ -5,7 +5,7 @@ import flask
 from string import Template
 import sys,os
 sys.path.append('..')
-from doserve.common.character import Character
+from common.character import Character
 from storage import Storage
 from flask_cors import CORS
 

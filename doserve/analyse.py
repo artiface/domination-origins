@@ -6,14 +6,22 @@ class Analyzer:
         self.attributeValues = {}
 
     def startAnalyse(self):
-        listOfTokens = []
+        listOfTokenNames = set()
+        tokensByName = {}
+        tokenMap = []
         tokenValues = {'attributeSum': {'min': 9999, 'max': -9999, 'sum': 0, 'count': 0}}
         tokenCount = 0
-        for i in range(10000):
-            token = self.loadLocalNFT(i)
+        for i in range(1, 10001):
+            token = self.loadLocalNFT('weapon', i)
             if token:
                 tokenCount += 1
                 attributeSum = 0
+                name = token['name']
+                if name not in tokensByName:
+                    tokensByName[name] = []
+                tokensByName[name].append(i)
+                tokenMap.append(name)
+                listOfTokenNames.add(name)
                 for name, strvalue in token['attributes'].items():
                     try:
                         value = int(strvalue)
@@ -42,6 +50,18 @@ class Analyzer:
             values['avg'] = values['sum'] / tokenCount
             print('{}: min: {}, max: {}, avg: {}, count: {}'.format(name, values['min'], values['max'], values['avg'], values['count']))
 
+        listOfUniqueTokenNames = list(listOfTokenNames)
+        listOfUniqueTokenNames.sort()
+        print('Unique token names: {}'.format(len(listOfUniqueTokenNames)))
+        indexMap = {}
+        for name in listOfUniqueTokenNames:
+            # index and name
+            print('{}, {}'.format(listOfUniqueTokenNames.index(name), name))
+            indexMap[name] = listOfUniqueTokenNames.index(name)
+        # save index map
+        with open(Path('indexMap.json'), 'w') as f:
+            json.dump(indexMap, f)
+
 
     def flattenAttributes(self, attributes):
         flat = {}
@@ -54,7 +74,7 @@ class Analyzer:
     def loadLocalNFT(self, type, tokenId):
         dirmap = {
             'char': 'TroopNFTs',
-            'weapon': 'WeaponNFTs',
+            'weapon': 'weapons.org',
         }
         dir = dirmap[type]
         try:

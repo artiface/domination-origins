@@ -4,10 +4,9 @@ const path = require("path");
 const isLocal = typeof process.pkg === "undefined";
 const basePath = isLocal ? process.cwd() : path.dirname(process.execPath);
 const { MODE } = require(path.join(basePath, "constants/blend_mode.js"));
-const description =
-  "G4N9 Troop";
+const description = "G4N9 Troop";
 const baseUri = "https://staging.32kb.org/images";
-
+const externalUri = "https://staging.32kb.org/troops/2";
 
 const layerConfigurations = [
   {
@@ -422,6 +421,7 @@ const preview = {
 module.exports = {
   format,
   baseUri,
+  externalUri,
   description,
   background,
   uniqueDnaTorrance,
