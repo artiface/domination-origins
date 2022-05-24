@@ -227,7 +227,7 @@ class Modal {
                     <div class="horizontal-wrapper">
                         <img class="svg-horizontal-responsive" src="./svgs/briefcase-medical.svg">
                         <div class="bar-container">
-                        <div class="bar" style="width: ${(player.MAX_HEALTH / 200) * 100}%"></div>
+                            <div class="bar" style="width: ${(player.MAX_HEALTH / 200) * 100}%"></div>
                         </div>
                     </div>
                     <div class="horizontal-wrapper">
@@ -256,16 +256,71 @@ class Modal {
     }
 
     renderPlayerDescription(player) {
-        const data = `
-        <img class="img-vertical-responsive modal-left-side-image" src="${player.IMAGE_SRC}">
+        let data = `
+        <img class="img-horizontal-responsive" src="${player.IMAGE_SRC}">
         <div>${player.LABEL}</div>
-        <div id="modal-info-2">
-        Faction Icon, Origin, Level, Health, Focus, Battle Points, Skills, Attributes (Strength, Agility, Dexterity, Intelligence) 
+        <div id="modal-info">
+            <div class="modal-info-node">
+                <img class="svg-horizontal-responsive" src="./svgs/person.svg">
+                <div>${player.ORIGIN}</div>
+            </div>
+            <div class="modal-info-node">
+                <img class="svg-horizontal-responsive" src="./svgs/helmet-battle.svg">
+                <div>${player.BATTLE_POINTS}</div>
+            </div>
+            <div class="modal-info-node">
+                <img class="svg-horizontal-responsive" src="./svgs/briefcase-medical.svg">
+                <div class="bar-container">
+                    <div class="bar" style="width: ${(player.MAX_HEALTH / 200) * 100}%"></div>
+                </div>
+            </div>
+            <div class="modal-info-node">
+                <img class="svg-horizontal-responsive" src="./svgs/chart-simple-solid.svg">
+                <div class="bar-container">
+                    <div class="bar" style="width: ${(player.LEVEL / 10) * 100}%"></div>
+                </div>
+            </div>
+            <div class="modal-info-node-title">Skills</div>
+            `
 
-        </div>
-        `
+            for (let i = 0; i < player.SKILLS.length; i++) {
+                const skill = player.SKILLS[i];
+                data += `
+                <div class="modal-info-node">
+                    <div>${skill.LABEL}</div>
+                </div>`
+            }
+
+            if (player.SKILLS.length === 0) {
+                data += `
+                <div class="modal-info-node">
+                    <div>No skills</div>
+                </div>`
+            }
+
+            data += `
+                <!--<div class="modal-info-node">INDENTIFIER - ${player.SKILLS.INDENTIFIER}</div>
+                <div class="modal-info-node">TARGET MODE - ${player.SKILLS.TARGET_MODE}</div>
+                <div class="modal-info-node">TYPE - ${player.SKILLS.TYPE}</div>
+                <div class="modal-info-node">NAME - ${player.SKILLS.NAME}</div>
+                <div class="modal-info-node">DESCRIPTION - ${player.SKILLS.DESCRIPTION}</div>
+                <div class="modal-info-node">COOLDOWN - ${player.SKILLS.COOLDOWN}</div>
+                <div class="modal-info-node">COST - ${player.SKILLS.COST}</div>-->
+                <div class="modal-info-node-title">Attributes</div>
+                <div class="modal-info-node">NAME - ${player.ATTRIBUTES.STRENGTH}</div>
+                <div class="modal-info-node">AGILITY - ${player.ATTRIBUTES.AGILITY}</div>
+                <div class="modal-info-node">DEXTERITY - ${player.ATTRIBUTES.DEXTERITY}</div>
+                <div class="modal-info-node">INTELLIGENCE - ${player.ATTRIBUTES.INTELLIGENCE}</div>
+            </div>
+            <div id="modal-info-select-button">Select</div>
+            `;
         document.getElementById("modal-description").innerHTML = "";
         document.getElementById("modal-description").insertAdjacentHTML('beforeend', data);
+
+        document.getElementById("modal-info-select-button").addEventListener("click", () => {
+            this.cards.changePlayer(player);
+            this.modalParent.style.display = "none";
+        })
     }
 }
 
@@ -307,14 +362,33 @@ class Crypto {
     async addTroops() {
         this.pageCount++;
         const page = await this.loadPageNFT("troops", this.pageCount);
+        console.log(page)
         for (let j = 0; j < page.troops.length; j++) {
-            const troop = {
+            let troop = {
                 LABEL: page.troops[j].tokenId,
                 IMAGE_SRC: `${this.types["troops"].dir}t_${page.troops[j].tokenId}.png`,
                 MAX_HEALTH: page.troops[j].maxHealth,
                 ORIGIN: page.troops[j].origin,
                 BATTLE_POINTS: page.troops[j].battlePointValue,
                 FACTION: page.troops[j].faction,
+                SKILLS: [],
+                ATTRIBUTES: {
+                    STRENGTH: page.troops[j].strength,
+                    AGILITY: page.troops[j].agility,
+                    DEXTERITY: page.troops[j].dexterity,
+                    INTELLIGENCE: page.troops[j].intelligence
+                }
+            }
+
+            for (let i = 0; i < page.troops[j].skills.length; i++) {
+                troop.SKILLS.push({
+                    LABEL: page.troops[j].skills[i].name,
+                    TYPE: page.troops[j].skills[i].type,
+                    IDENTIFIER: page.troops[j].skills[i].identifier,
+                    DESCRIPTION: page.troops[j].skills[i].description,
+                    COOLDOWN: page.troops[j].skills[i].cooldown,
+                    COST: page.troops[j].skills[i].cost
+                });
             }
 
             this.troops.push(troop);
