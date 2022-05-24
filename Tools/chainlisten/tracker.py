@@ -23,7 +23,7 @@ class Tracker:
         self.listener = Listener(self.on_raw_event)
         #currentBlock = self.web3.eth.blockNumber
 
-    def on_raw_event(self, event):
+    def on_raw_event(self, event_index, event):
         args = event["args"]
         is_batch = 'id' not in args and 'ids' in args
         tokenIds = args["ids"] if is_batch else [args["id"]]

@@ -350,7 +350,12 @@ class Crypto {
     }
 
     async loadPageNFT(type, count) {
-        const response = await fetch(`http://localhost:9000/api/${type}/1/${count}`);
+        // construct the url from the current protocol, host, and path
+        let url = new URL(window.location);
+        let protocol = url.protocol;
+        let host = url.host;
+        let nftUrl = `${protocol}//${host}/api/${type}/1/${count}`;
+        const response = await fetch(nftUrl);
         return await response.json();
     };
 

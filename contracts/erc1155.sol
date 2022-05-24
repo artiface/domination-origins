@@ -1641,17 +1641,19 @@ contract G4N9 is ERC1155, AccessControl, Pausable, ERC1155Burnable, ERC1155Suppl
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     uint256 public constant THETOKEN = 0;
-    uint256 public constant STARTER_KITS = 1;
+    uint256 public constant STARTER_KITS = 1;               // 1      -   499
 
-    uint256 public constant BOOSTER_PACKS = 500;
+    uint256 public constant BOOSTER_PACKS = 500;            // 500    -   999
 
-    uint256 public constant LOW_TROOPS_START = 1000;
+    uint256 public constant LOW_TROOPS_START = 1000;        // 1000   - 10000
 
-    uint256 public constant ITEMS_START = 10000;
-    uint256 public constant SWORDS = 10001;
-    uint256 public constant RIFLES = 10002;
+    uint256 public constant GEN1_TROOPS_START = 10001;      // 10001  - 20000
 
-    uint256 public constant HIGH_TROOPS_START = 100000;
+    uint256 public constant GEN1_WEAPONS_START = 20001;     // 20001  - 30000
+
+    uint256 public constant ITEMS_START = 30001;            // 30001  - 99999
+
+    uint256 public constant TROOPS_START = 100000;          // 100000 - ...
 
     uint256 public STARTER_PRICE = 5 ether;
     uint256 public BOOSTER_PRICE = 10 ether;
@@ -1734,7 +1736,7 @@ contract G4N9 is ERC1155, AccessControl, Pausable, ERC1155Burnable, ERC1155Suppl
     {
         address operator = _msgSender();
         require(msg.value == BOOSTER_PRICE * amount, "G4N9-buy: You must send an exact amount");
-        require(id >= BOOSTER_PACKS && id < ITEMS_START, "G4N9-buy: Invalid token id");
+        require(id >= BOOSTER_PACKS && id < LOW_TROOPS_START, "G4N9-buy: Invalid token id");
         _mint(operator, id, amount, "");
 
         uint256 gas_reserve_part = (msg.value * _gas_share) / 1000;

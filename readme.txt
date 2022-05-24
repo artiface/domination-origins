@@ -178,3 +178,13 @@ We'll have to pay the fees for these transactions.
 
 ## Tools for managing all this:
  - Item creation tool
+
+
+## Token receive pages (Open page, Swap page)
+
+Should listen for events on the client-side and immediately provide feedback when a transaction has
+been received. We want visually feedback on the page and a "receipt area".
+
+The "receipt area" is simple multiline textfield where copy & paste is easy.
+We'll add the transaction ids there and the user can copy this to prove he sent us the tokens.
+That will be useful for troubleshooting, should the sending transaction on our side fail.

@@ -25,19 +25,47 @@ class OnDemandMinter:
         print("Listening for open starter kit events")
         self.listener.listen([self.contract.events.Received, self.contract.events.ReceivedBatch])
 
-    def on_event(self, event):
-        opener_wallet = event['sender']
-        self.onOpenStarterKit(opener_wallet)
+    def on_event(self, event_index, event):
+        sender_wallet = event['_sender']
+        tokenIds = event['_tokenId']
+        amounts = event['_value']
+        if event_index == 0:
+            tokenIds = [event['_tokenId']]
+            amounts = [event['_value']]
 
-    def onOpenStarterKit(self, opener_wallet):
-        print("Open starter kit event received from " + opener_wallet)
-        troopTokenIds = self.selectTroopTokens()
-        dnaList = self.getTroopDNA(troopTokenIds)
-        self.mintTokens(opener_wallet, troopTokenIds, dnaList)
+        self.handle_tokens_received(sender_wallet, tokenIds, amounts)
 
-        weaponTokenIds = self.selectWeaponTokens()
-        dnaList = self.getWeaponDNA(weaponTokenIds)
-        self.mintTokens(opener_wallet, weaponTokenIds, dnaList)
+    def handle_tokens_received(self, sender_wallet, tokenIds, amounts):
+        dnaList = []
+        mintIds = []
+        for tokenId, amount in zip(tokenIds, amounts):
+            print("Received {} tokens with tokenId {} from {}".format(amount, tokenId, sender_wallet))
+            if tokenId == 1:
+                starterToken, starterDna = self.onOpenStarterKit(sender_wallet, amount)
+                dnaList.append(starterDna)
+                mintIds.append(starterToken)
+
+            if 10001 <= tokenId <= 20000:
+                for _ in range(amount):
+                    self.onOpenStarterKit(sender_wallet)
+
+        self.mintTokens(sender_wallet, mintIds, dnaList)
+
+    def onOpenStarterKit(self, opener_wallet, amount):
+        print("Received open pack {} for {} starter kits".format(opener_wallet, amount))
+        dnaList = []
+        tokenIds = []
+        for _ in range(amount):
+            troopTokenIds = self.selectTroopTokens()
+            troopDnaList = self.getTroopDNA(troopTokenIds)
+
+            weaponTokenIds = self.selectWeaponTokens()
+            weaponDnaList = self.getWeaponDNA(weaponTokenIds)
+
+            dnaList.append(troopDnaList + weaponDnaList)
+            tokenIds.append(troopTokenIds + weaponTokenIds)
+
+        return tokenIds, dnaList
 
     def selectTroopTokens(self):
         return [1002, 1003, 1004]

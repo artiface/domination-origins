@@ -7,15 +7,16 @@ class Listener:
 
     async def log_loop(self, filters, poll_interval):
         while True:
-            for filterItem in filters:
+            for index, filterItem in filters:
                 for event in filterItem.get_new_entries():
-                    self.on_raw_event(event)
+                    self.on_raw_event(index, event)
             await asyncio.sleep(poll_interval)
 
     def listen(self, event_list):
         filters = []
-        for event in event_list:
-            filters.append(event.createFilter(fromBlock='latest'))
+        # iterate with index
+        for index, event in enumerate(event_list):
+            filters.append((index, event.createFilter(fromBlock='latest')))
         loop = asyncio.get_event_loop()
         try:
             loop.run_until_complete(asyncio.gather(self.log_loop(filters, 2)))
