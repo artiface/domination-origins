@@ -103,6 +103,7 @@ class BuyButton extends HTMLElement {
             self.buyFunc(amount, price).catch((e) => {
                 alert(e.data.message);
             });
+        });
     }
 }
 
