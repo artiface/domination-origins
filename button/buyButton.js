@@ -100,13 +100,9 @@ class BuyButton extends HTMLElement {
         submit.addEventListener('click', async function() {
             const amount = parseInt(numberField.value);
             const price = self.tokenPrice;
-            try {
-                self.buyFunc(amount, price);
-            }
-            catch (e) {
+            self.buyFunc(amount, price).catch((e) => {
                 alert(e.data.message);
-            }
-        });
+            });
     }
 }
 
