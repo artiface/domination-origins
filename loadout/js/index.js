@@ -130,6 +130,7 @@ class Modal {
     async renderPlayerModal() {
         if (this.rendered) {
             this.modalParent.style.display = "flex"
+            if (this.selectedNode) this.renderPlayerDescription(this.crypto.troops[this.selectedNode.split("-")[1] - 1]);
             return;
         }
         this.rendered = true;
@@ -255,9 +256,16 @@ class Modal {
         return data;
     }
 
+    isPlayerAlreadySelected(player) {
+        let alreadyChose = false;
+        for (let i = 0; i < this.cards.cards.length; i++) 
+            if (this.cards.cards[i].LABEL === player.LABEL) alreadyChose = true;
+        return alreadyChose;
+    }
+
     renderPlayerDescription(player) {
         let data = `
-        <img class="img-horizontal-responsive" src="${player.IMAGE_SRC}">
+        <div class="img-horizontal-responsive" style="background-image: url(${player.IMAGE_SRC})"></div>
         <div>${player.LABEL}</div>
         <div id="modal-info">
             <div class="modal-info-node">
@@ -298,6 +306,8 @@ class Modal {
                 </div>`
             }
 
+            const isAlreadySelected = this.isPlayerAlreadySelected(player);
+
             data += `
                 <!--<div class="modal-info-node">INDENTIFIER - ${player.SKILLS.INDENTIFIER}</div>
                 <div class="modal-info-node">TARGET MODE - ${player.SKILLS.TARGET_MODE}</div>
@@ -307,20 +317,22 @@ class Modal {
                 <div class="modal-info-node">COOLDOWN - ${player.SKILLS.COOLDOWN}</div>
                 <div class="modal-info-node">COST - ${player.SKILLS.COST}</div>-->
                 <div class="modal-info-node-title">Attributes</div>
-                <div class="modal-info-node">NAME - ${player.ATTRIBUTES.STRENGTH}</div>
+                <div class="modal-info-node">STRENGTH - ${player.ATTRIBUTES.STRENGTH}</div>
                 <div class="modal-info-node">AGILITY - ${player.ATTRIBUTES.AGILITY}</div>
                 <div class="modal-info-node">DEXTERITY - ${player.ATTRIBUTES.DEXTERITY}</div>
                 <div class="modal-info-node">INTELLIGENCE - ${player.ATTRIBUTES.INTELLIGENCE}</div>
             </div>
-            <div id="modal-info-select-button">Select</div>
+            <div id="modal-info-select-button">${isAlreadySelected ? 'Already Selected' : 'Select'}</div>
             `;
         document.getElementById("modal-description").innerHTML = "";
         document.getElementById("modal-description").insertAdjacentHTML('beforeend', data);
 
-        document.getElementById("modal-info-select-button").addEventListener("click", () => {
-            this.cards.changePlayer(player);
-            this.modalParent.style.display = "none";
-        })
+        if (!isAlreadySelected) {
+            document.getElementById("modal-info-select-button").addEventListener("click", () => {
+                this.cards.changePlayer(player);
+                this.modalParent.style.display = "none";
+            })
+        }
     }
 }
 
@@ -354,7 +366,7 @@ class Crypto {
         let url = new URL(window.location);
         let protocol = url.protocol;
         let host = url.host;
-        let nftUrl = `${protocol}//${host}/api/${type}/1/${count}`;
+        let nftUrl = `https://g4n9.site/api/${type}/1/${count}`;
         const response = await fetch(nftUrl);
         return await response.json();
     };

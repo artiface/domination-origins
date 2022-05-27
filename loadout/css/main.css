@@ -10,11 +10,15 @@ body {
 .img-vertical-responsive {
     width: 100%;
     aspect-ratio: 1 / 1;
+    background-size: contain;
+    background-repeat: no-repeat;
 }
 
 .img-horizontal-responsive {
     height: 100%;
     aspect-ratio: 1 / 1;
+    background-size: contain;
+    background-repeat: no-repeat;
 }
 
 .svg-horizontal-responsive {
