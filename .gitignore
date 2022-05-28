@@ -13,6 +13,6 @@ Puzzles/
 *.db
 
 images/
+opensea/
 metadata/
 layers/
-weapons/

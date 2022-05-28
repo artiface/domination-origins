@@ -3,11 +3,16 @@ import math
 
 import flask
 from string import Template
-import sys,os
-sys.path.append('..')
+import sys
+from pathlib import Path
+
 from common.character import Character
 from storage import Storage
 from flask_cors import CORS
+
+# PYTHONPATH hack
+sys.path.append(str(Path(__file__).parent.parent.absolute()))
+
 
 db = Storage('battles.sqlite')
 

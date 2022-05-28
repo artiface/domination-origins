@@ -113,7 +113,7 @@ class ChainLoader:
 
 def loadLocalNFT(type, tokenId):
     dirmap = {
-        'troop': 'TroopNFTs',
+        'troop': 'original.metadata/troops',
         'weapon': 'WeaponNFTs',
     }
     dir = dirmap[type]

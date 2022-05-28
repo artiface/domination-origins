@@ -163,10 +163,17 @@ Troops & Items Minting:
 
 
 ## Metadata mismatch
+
 OpenSEA needs metadata in a completely different format than we do.
 We need to be able to create metadata in two different formats.
  - OpenSea specific
  - Reduced in size for our own purposes
+
+Original Metadata (Troops, Weapons)
+-> change_metadata.py
+-> New Metadata & OS Metadata
+
+
 
 ## The Migration Problem
 Troops and Items on ERC721
@@ -188,3 +195,7 @@ been received. We want visually feedback on the page and a "receipt area".
 The "receipt area" is simple multiline textfield where copy & paste is easy.
 We'll add the transaction ids there and the user can copy this to prove he sent us the tokens.
 That will be useful for troubleshooting, should the sending transaction on our side fail.
+
+## The enumeration problem
+
+ERC1155 does not really allow for enumeration of tokens on the chain.

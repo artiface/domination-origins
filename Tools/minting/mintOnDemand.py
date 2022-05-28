@@ -11,35 +11,55 @@ import subprocess
 from getpass import getpass
 
 from Tools.chainlisten.listener import Listener
-from Tools.transact.contract import WritableContract
-
+from Tools.transact.contract import Contract, WritableContract
 
 class OnDemandMinter:
-    def __init__(self, writable_contract):
+    def __init__(self, private_key_for_transactions):
         self.metadata_dir = './metadata'
         self.image_dir = './images'
-        self.contract = writable_contract
+        self.main_contract = WritableContract('g4n9-erc1155-test', private_key_for_transactions, testnet=True)
+
+        # We listen to transfer events to this address
+        self.erc721_token_receiver_wallet = '0xddf047721E8d9996E74325145c31da14bCFB093E'
+
+        self.troops_contract = Contract('troops')
+        self.items_contract = Contract('items')
+
         self.listener = Listener(self.on_event)
 
     def startListening(self):
         print("Listening for open starter kit events")
-        self.listener.listen([self.contract.events.Received, self.contract.events.ReceivedBatch])
+        self.listener.listen([
+            self.main_contract.contract.events.Received,         # 0
+            self.main_contract.contract.events.ReceivedBatch,    # 1
+            self.items_contract.contract.events.Transfer,        # 2
+            self.troops_contract.contract.events.Transfer,       # 3
+        ])
 
     def on_event(self, event_index, event):
-        sender_wallet = event['_sender']
-        tokenIds = event['_tokenId']
-        amounts = event['_value']
-        if event_index == 0:
-            tokenIds = [event['_tokenId']]
-            amounts = [event['_value']]
+        if event_index < 2:
+            sender_wallet = event['_sender']
+            tokenIds = event['_tokenId']
+            amounts = event['_value']
+            if event_index == 0:
+                tokenIds = [event['_tokenId']]
+                amounts = [event['_value']]
+            self.handle_erc1155_tokens_received(sender_wallet, tokenIds, amounts)
+        else:
+            from_wallet = event['args']['from']
+            to_wallet = event['args']['to']
+            tokenId = event['args']['tokenId']
+            if to_wallet == self.erc721_token_receiver_wallet:
+                if event_index == 2:
+                    self.handle_erc721_item_received(from_wallet, tokenId)
+                elif event_index == 3:
+                    self.handle_erc721_troop_received(from_wallet, tokenId)
 
-        self.handle_tokens_received(sender_wallet, tokenIds, amounts)
-
-    def handle_tokens_received(self, sender_wallet, tokenIds, amounts):
+    def handle_erc1155_tokens_received(self, sender_wallet, tokenIds, amounts):
         dnaList = []
         mintIds = []
         for tokenId, amount in zip(tokenIds, amounts):
-            print("Received {} tokens with tokenId {} from {}".format(amount, tokenId, sender_wallet))
+            print("Received {} erc1155 tokens with tokenId {} from {}".format(amount, tokenId, sender_wallet))
             if tokenId == 1:
                 starterToken, starterDna = self.onOpenStarterKit(sender_wallet, amount)
                 dnaList.append(starterDna)
@@ -93,8 +113,14 @@ class OnDemandMinter:
         amounts = [1 for _ in tokenIds]
         # convert the hex strings in dna_list to integers
         dna_list = [int(dna, 16) for dna in dna_list]
-        tx = self.contract.mintBatch(receiving_wallet, tokenIds, dna_list, amounts)
+        tx = self.main_contract.mintBatch(receiving_wallet, tokenIds, dna_list, amounts)
         print("Minting tokens {}".format(tx))
+
+    def mintToken(self, receiving_wallet, tokenId, dna):
+        # convert the hex strings in dna_list to integers
+        dna = int(dna, 16)
+        tx = self.main_contract.mint(receiving_wallet, tokenId, dna, 1)
+        print("Minting token {}".format(tx))
 
     def readDNAFromMetadata(self, tokenId):
         # check if file in metadata dir exists
@@ -118,7 +144,18 @@ class OnDemandMinter:
         dna = stream.read().strip()
         return dna
 
+    # requires existing metadata with dna and image
+    def handle_erc721_item_received(self, from_wallet, tokenId):
+        print("Received item token {} from {}".format(tokenId, from_wallet))
+        new_token_id = tokenId + 20000
+        print("Minting new item token {}".format(new_token_id))
+        self.mintToken(from_wallet, new_token_id, self.readDNAFromMetadata(new_token_id))
 
+    def handle_erc721_troop_received(self, from_wallet, tokenId):
+        print("Received troop token {} from {}".format(tokenId, from_wallet))
+        new_token_id = tokenId + 10000
+        print("Minting new troop token {}".format(new_token_id))
+        self.mintToken(from_wallet, new_token_id, self.readDNAFromMetadata(new_token_id))
 
 if __name__ == '__main__':
     private_key = None
@@ -127,7 +164,6 @@ if __name__ == '__main__':
     except Exception as error:
         print('ERROR', error)
     else:
-        ct = WritableContract(private_key)
-        om = OnDemandMinter(ct)
-        #om.startListening()
-        om.onOpenStarterKit('0xddf047721E8d9996E74325145c31da14bCFB093E')
+        om = OnDemandMinter(private_key)
+        om.startListening()
+        #om.onOpenStarterKit('0xddf047721E8d9996E74325145c31da14bCFB093E')

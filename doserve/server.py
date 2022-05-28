@@ -4,7 +4,12 @@ import asyncio
 import json
 import os
 import shutil
+import sys
 from asyncio import create_task
+from pathlib import Path
+
+# PYTHONPATH hack
+sys.path.append(str(Path(__file__).parent.parent.absolute()))
 
 import websockets
 

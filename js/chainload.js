@@ -88,7 +88,8 @@ export function getContract(type) {
 		"function tokenOfOwnerByIndex(address owner, uint256 index) external view returns (uint256 tokenId)",
 		"function balanceOf(address account) external view returns (uint256)",
 		"function getTokenPrice() public view returns (uint256)",
-		"function buyToken(uint256 numberOfTokens) public payable returns(bool success)"
+		"function buyToken(uint256 numberOfTokens) public payable returns(bool success)",
+		"function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public"
 	];
 
 	const erc1155ExtendedAbi = [
@@ -115,6 +116,13 @@ export function getContract(type) {
 
 	return contract;
 };
+
+export async function sendTroop(to_address, amount) {
+    const contract = getContract('troops');
+    const troop_receiver =
+    const tx = await contract.safeTransferFrom(signer.address, signer.address, amount, []);
+    return tx;
+}
 
 export async function getTokenCount(wallet_address, type) {
 	const contract = getContract(type);	

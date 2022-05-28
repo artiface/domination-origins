@@ -88,9 +88,9 @@ class Character:
         self.strength = 1
         self.dexterity = 1
 
-        self.attributeBoost = 1
+        self.defenseBoost = 1
         self.powerBoost = 1
-        self.staminaBoost = 1
+        self.speedBoost = 1
 
         self.weapon = None
         self.armor = {}
@@ -141,14 +141,14 @@ class Character:
         agilityValue = self.agility
         dexterityValue = self.dexterity
         intelligenceValue = self.intelligence
-        attributeBoostValue = self.attributeBoost
+        defenseBoostValue = self.defenseBoost
         powerBoostValue = (self.powerBoost / 100) * 10
-        staminaBoostValue = (self.staminaBoost / 100) * 10
+        speedBoostValue = (self.speedBoost / 100) * 10
         levelValue = self.level
         skillsValue = len(self.skills) * 10
 
         # sum all values
-        bp = healthValue + focusValue + strengthValue + agilityValue + dexterityValue + intelligenceValue + attributeBoostValue + powerBoostValue + staminaBoostValue + levelValue + skillsValue
+        bp = healthValue + focusValue + strengthValue + agilityValue + dexterityValue + intelligenceValue + defenseBoostValue + powerBoostValue + speedBoostValue + levelValue + skillsValue
         return int(bp)
 
     def setWeapon(self, weaponTokenId):
@@ -176,15 +176,36 @@ class Character:
             'intelligence': self.intelligence,
             'strength': self.strength,
             'dexterity': self.dexterity,
-            'attributeBoost': self.attributeBoost,
+            'defenseBoost': self.defenseBoost,
             'powerBoost': self.powerBoost,
-            'staminaBoost': self.staminaBoost,
+            'speedBoost': self.speedBoost,
             'weapon': self.weapon.tokenId if self.weapon else None,
             'armor': self.armor,
             'items': self.items,
             'skills': [skill.toObject() for skill in self.skills],
             'battlePointValue': self.getBattlePointValue(),
-            'base_resistances:': self.resistance,
+            'baseResistances:': self.resistance,
+        }
+
+    def toTokenMetadata(self):
+        return {
+            'tokenId': self.tokenId,
+            'faction': self.faction.name,
+            'origin': self.origin,
+            'level': self.level,
+            'dna': self.dna,
+            'maxHealth': self.maxHealth,
+            'maxFocus': self.maxFocus,
+            'agility': self.agility,
+            'intelligence': self.intelligence,
+            'strength': self.strength,
+            'dexterity': self.dexterity,
+            'defenseBoost': self.defenseBoost,
+            'powerBoost': self.powerBoost,
+            'speedBoost': self.speedBoost,
+            'skills': [skill.name for skill in self.skills],
+            'battlePointValue': self.getBattlePointValue(),
+            'baseResistances:': self.resistance,
         }
 
     @classmethod
@@ -206,9 +227,9 @@ class Character:
         char.intelligence = objData['intelligence']
         char.strength = objData['strength']
         char.dexterity = objData['dexterity']
-        char.attributeBoost = objData['attributeBoost']
+        char.defenseBoost = objData['defenseBoost']
         char.powerBoost = objData['powerBoost']
-        char.staminaBoost = objData['staminaBoost']
+        char.speedBoost = objData['speedBoost']
         char.weapon = objData['weapon']
         char.armor = objData['armor']
         char.items = objData['items']
@@ -233,13 +254,13 @@ class Character:
         self.intelligence = int(tokenData['attributes']['Intelligence'])
         self.strength = int(tokenData['attributes']['Strength'])
         self.dexterity = int(tokenData['attributes']['Dexterity'])
-        self.attributeBoost = 0
+        self.defenseBoost = 0
         self.powerBoost = 0
-        self.staminaBoost = 0
+        self.speedBoost = 0
         try:
-            self.attributeBoost = int(tokenData['attributes']['Attributes Increase'])
+            self.defenseBoost = int(tokenData['attributes']['Attributes Increase'])
             self.powerBoost = int(tokenData['attributes']['Power Increase'])
-            self.staminaBoost = int(tokenData['attributes']['Stamina Increase'])
+            self.speedBoost = int(tokenData['attributes']['Stamina Increase'])
         except KeyError:
             print('No attribute boost found for tokenId: {}'.format(self.tokenId))
 
