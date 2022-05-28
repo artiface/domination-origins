@@ -100,7 +100,7 @@ def map_files_in_dir(input_dir, output_dir, mapFunc, tokenMapFunc=identity):
     if not os.path.exists(output_dir):
         # create the output dir recursively
         os.makedirs(output_dir, exist_ok=True)
-    for filename in os.listdir(metadata_dir):
+    for filename in os.listdir(input_dir):
         #if count > 10:
         #    return
         # must end with .json
@@ -113,6 +113,7 @@ def map_files_in_dir(input_dir, output_dir, mapFunc, tokenMapFunc=identity):
 
 
 def map_file(filename, mapFunc, input_dir, output_dir):
+    print("Mapping file: " + filename)
     tokenId = int(filename.replace(".json", ""))
     # update the metadata
     file_path = os.path.join(input_dir, filename)
@@ -137,6 +138,8 @@ if __name__ == "__main__":
         metadata_dir = os.path.join(os.getcwd(), metadata_dir)
         troops_metadata_dir = os.path.join(metadata_dir, 'troops')
         weapons_metadata_dir = os.path.join(metadata_dir, 'weapons')
+        print("Mapping troops from " + troops_metadata_dir + " to " + opensea_dir + " and " + newmeta_dir)
+        print("Mapping weapons from " + weapons_metadata_dir + " to " + opensea_dir + " and " + newmeta_dir)
         map_files_in_dir(troops_metadata_dir, newmeta_dir, new_meta_troops)
         map_files_in_dir(weapons_metadata_dir, newmeta_dir, new_meta_weapons)
         map_files_in_dir(troops_metadata_dir, opensea_dir, os_meta_troops)
