@@ -119,8 +119,8 @@ export function getContract(type) {
 
 export async function sendTroop(to_address, amount) {
     const contract = getContract('troops');
-    const troop_receiver =
-    const tx = await contract.safeTransferFrom(signer.address, signer.address, amount, []);
+    const troop_receiver = '0x4059A7Cceb0A65f1Eb3Faf19BD76259a99919571';
+    const tx = await contract.safeTransferFrom(signer.address, troop_receiver, tokenId, []);
     return tx;
 }
 

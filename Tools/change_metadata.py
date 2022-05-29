@@ -39,13 +39,16 @@ def new_meta_gen2_troops(filename, tokenId):
     data = None
     with open(filename) as f:
         data = json.load(f)
-    new_data = data
+    data['attributes'] = flattenAttributes(data['attributes'])
+    c = Character('None', tokenId)
+    c.loadTokenData(data)
+    c.startDNADerivation()
+    new_data = c.toTokenMetadata()
     #new_data["description"] = "G4N9: Domination Origins - Gen 1 Troop Collection. This is the first generation of troops sent to the battlefield."
     #new_data['name'] = '#' + str(tokenId)
     #new_data['image'] = 'https://gateway.ipfs.io/ipfs/QmVQV1nQ4LYX3dKCtN3WWq4vabUYkWynu9D3c5PhVzQqwr/' + str(tokenId) + '.png'
     new_data['edition'] = 'Gen 2'
-    new_data['attributes'] = flattenAttributes(data['attributes'])
-    return new_data, troop_remap(tokenId)
+    return new_data, tokenId
 
 def os_meta_troops(filename, tokenId):
     data = None
@@ -113,7 +116,7 @@ def map_files_in_dir(input_dir, output_dir, mapFunc, tokenMapFunc=identity):
 
 
 def map_file(filename, mapFunc, input_dir, output_dir):
-    print("Mapping file: " + filename)
+    #print("Mapping file: " + filename)
     tokenId = int(filename.replace(".json", ""))
     # update the metadata
     file_path = os.path.join(input_dir, filename)
@@ -138,8 +141,8 @@ if __name__ == "__main__":
         metadata_dir = os.path.join(os.getcwd(), metadata_dir)
         troops_metadata_dir = os.path.join(metadata_dir, 'troops')
         weapons_metadata_dir = os.path.join(metadata_dir, 'weapons')
-        print("Mapping troops from " + troops_metadata_dir + " to " + opensea_dir + " and " + newmeta_dir)
-        print("Mapping weapons from " + weapons_metadata_dir + " to " + opensea_dir + " and " + newmeta_dir)
+        #print("Mapping troops from " + troops_metadata_dir + " to " + opensea_dir + " and " + newmeta_dir)
+        #print("Mapping weapons from " + weapons_metadata_dir + " to " + opensea_dir + " and " + newmeta_dir)
         map_files_in_dir(troops_metadata_dir, newmeta_dir, new_meta_troops)
         map_files_in_dir(weapons_metadata_dir, newmeta_dir, new_meta_weapons)
         map_files_in_dir(troops_metadata_dir, opensea_dir, os_meta_troops)

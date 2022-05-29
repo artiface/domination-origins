@@ -112,16 +112,11 @@ class ChainLoader:
         return True
 
 def loadLocalNFT(type, tokenId):
-    dirmap = {
-        'troop': 'original.metadata/troops',
-        'weapon': 'WeaponNFTs',
-    }
-    dir = dirmap[type]
     try:
-        with open('./{}/{}.json'.format(dir, tokenId), 'r') as f:
+        file = './metadata/{}.json'.format(tokenId)
+        #print('loading local data from %s' % file)
+        with open(file, 'r') as f:
             data = json.load(f)
-            # flatten attributes
-            data['attributes'] = flattenAttributes(data['attributes'])
             return data
     except FileNotFoundError:
         return False

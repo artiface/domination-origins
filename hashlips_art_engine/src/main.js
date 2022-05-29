@@ -162,6 +162,15 @@ const replaceBulk = (str, findArray, replaceWith) => {
 const cleanTrait = (traitName) => {
   const removals = ['ASDFGHJ ', 'BAASDFGHJ ', 'EDCRFB ', 'LKJHGFD ', 'POIUYTR ', 'QAZWSX ', 'QWERTYU ', 'WRAITHFEMALE ', 'WRAITHMALE ', 'ZXCVBN '];
   const cleaned = replaceBulk(traitName, removals, '');
+  if (cleaned === 'Constitution') {
+    return 'Defense Boost';
+  }
+  else if (cleaned === 'Wisdom') {
+    return 'Speed Boost';
+  }
+  else if (cleaned === 'Charisma') {
+    return 'Power Boost';
+  }
   return cleaned;
 };
 

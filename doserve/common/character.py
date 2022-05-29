@@ -104,9 +104,10 @@ class Character:
             DamageType.Ranged: 0,
             DamageType.Poison: 0
         }
-
-        self.loadTokenData()
-        self.startDNADerivation()
+        tokenData = loadLocalNFT('troop', self.tokenId)
+        if tokenData:
+            self.loadTokenData(tokenData)
+            self.startDNADerivation()
 
     def startDNADerivation(self):
         integer_dna = int(self.dna, base=16)
@@ -240,12 +241,11 @@ class Character:
             char.setWeapon(objData['weapon'])
         return char
 
-    def loadTokenData(self):
+    def loadTokenData(self, tokenData):
         # we just load the token data from the local directory and json file
         # load a file from disk
-        tokenData = loadLocalNFT('troop', self.tokenId)
-        if not tokenData:
-            raise Exception('Could not load token data for tokenId: {}'.format(self.tokenId))
+        #print('loading token data for ' + str(self.tokenId))
+        #print('token data path: ' + str(tokenData))
         self.backgroundHint = tokenData['attributes']['Background Pattern'] if 'Background Pattern' in tokenData['attributes'] else False
         self.level = int(tokenData['attributes']['Level'])
         self.origin = tokenData['attributes']['Origin']
@@ -258,11 +258,11 @@ class Character:
         self.powerBoost = 0
         self.speedBoost = 0
         try:
-            self.defenseBoost = int(tokenData['attributes']['Attributes Increase'])
-            self.powerBoost = int(tokenData['attributes']['Power Increase'])
-            self.speedBoost = int(tokenData['attributes']['Stamina Increase'])
+            self.defenseBoost = int(tokenData['attributes']['Attributes Increase'] if 'Attributes Increase' in tokenData['attributes'] else tokenData['attributes']['Defense Boost'])
+            self.powerBoost = int(tokenData['attributes']['Power Increase'] if 'Power Increase' in tokenData['attributes'] else tokenData['attributes']['Power Boost'])
+            self.speedBoost = int(tokenData['attributes']['Stamina Increase'] if 'Stamina Increase' in tokenData['attributes'] else tokenData['attributes']['Speed Boost'])
         except KeyError:
-            print('No attribute boost found for tokenId: {}'.format(self.tokenId))
+            raise ('No boosts attributes found for tokenId: {}'.format(self.tokenId))
 
         factionMap = {
             'Ryu': Faction.Dragon,
