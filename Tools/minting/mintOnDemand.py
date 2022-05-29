@@ -17,10 +17,10 @@ class OnDemandMinter:
     def __init__(self, private_key_for_transactions):
         self.metadata_dir = './metadata'
         self.image_dir = './images'
-        self.main_contract = WritableContract('g4n9-erc1155-test', private_key_for_transactions, testnet=True)
+        self.main_contract = WritableContract('erc1155', private_key_for_transactions, testnet=True)
 
         # We listen to transfer events to this address
-        self.erc721_token_receiver_wallet = '0xddf047721E8d9996E74325145c31da14bCFB093E'
+        self.erc721_token_receiver_wallet = '0x4059A7Cceb0A65f1Eb3Faf19BD76259a99919571'
 
         self.troops_contract = Contract('troops')
         self.items_contract = Contract('items')

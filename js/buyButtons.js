@@ -88,14 +88,19 @@ class BuyButton extends HTMLElement {
             modal.style.display = 'none';
         });
         const numberField = this.shadowRoot.getElementById('buy-coins-amount');
-        numberField.addEventListener('keyup', () => {
+        const onchangeFunction = () => {
             if (numberField.value) {
-                const amount = ethers.utils.parseUnits(numberField.value);
+                let amount = 0;
+                if (numberField.value) {
+                    amount = parseInt(numberField.value);
+                }
                 const price = self.tokenPrice;
-                const totalPrice = (numberField.value * price) / 1e18;
-                self.shadowRoot.getElementById('buy-coins-price').innerText = totalPrice;
+                const totalPrice = price.mul(amount);//.div(1e18);
+                self.shadowRoot.getElementById('buy-coins-price').innerText = ethers.utils.formatUnits(totalPrice, 18);
             }
-        });
+        };
+        numberField.addEventListener('keyup', onchangeFunction);
+
         const submit = this.shadowRoot.getElementById('buy-coins-submit');
         submit.addEventListener('click', async function() {
             const amount = parseInt(numberField.value);
@@ -120,13 +125,13 @@ class BuyCoinsButton extends BuyButton {
         });
     }
     async buyFunc(amount, price) {
-        const totalPrice = (amount * price);
+        const totalPrice = price.mul(amount);
 
         const gasEstimated = await this.contract.estimateGas.buyToken(amount, { value: totalPrice.toString() });
 
         const options = {
-            value: totalPrice.toString(),
-            gasLimit: gasEstimated * 1.2
+            value: totalPrice,
+            gasLimit: gasEstimated.mul(120).div(100)
         };
         await this.contract.buyToken(amount, options);
     }
@@ -146,14 +151,15 @@ class BuyStarterButton extends BuyButton {
     }
     async buyFunc(amount, price) {
         const starterTokenId = 1;
-        const totalPrice = (amount * price);
+        const totalPrice = price.mul(amount);
 
         const gasEstimated = await this.contract.estimateGas.buyStarter(starterTokenId, amount, { value: totalPrice.toString() });
 
         const options = {
-            value: totalPrice.toString(),
-            gasLimit: gasEstimated * 1.2
+            value: totalPrice,
+            gasLimit: gasEstimated.mul(120).div(100)
         };
+
         await this.contract.buyStarter(starterTokenId, amount, options);
     }
 }
@@ -171,15 +177,16 @@ class BuyBoosterButton extends BuyButton {
         });
     }
     async buyFunc(amount, price) {
-        const starterTokenId = 1;
-        const totalPrice = (amount * price);
+        const boosterTokenId = 500;
+        const totalPrice = price.mul(amount);
 
-        const gasEstimated = await this.contract.estimateGas.buyBooster(starterTokenId, amount, { value: totalPrice.toString() });
+        const gasEstimated = await this.contract.estimateGas.buyBooster(boosterTokenId, amount, { value: totalPrice.toString() });
 
         const options = {
-            value: totalPrice.toString(),
-            gasLimit: gasEstimated * 1.2
+            value: totalPrice,
+            gasLimit: gasEstimated.mul(120).div(100)
         };
+
         await this.contract.buyBooster(starterTokenId, amount, options);
     }
 }

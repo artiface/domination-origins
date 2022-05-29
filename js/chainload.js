@@ -8,12 +8,14 @@ if (!window.ethereum) {
 
 export let provider = undefined;
 export let signer = undefined;
+export let user_address = undefined;
 
 let isTestnet = false;
 
 // try to find the connect button
 let connectButton = document.getElementById("connect");
 let connectTestButton = document.getElementById("connect_test");
+
 if (connectButton) {
     connectButton.addEventListener("click", async () => {
         await connect();
@@ -34,6 +36,7 @@ export async function connect() {
     provider = new ethers.providers.Web3Provider(window.ethereum);
     await provider.send("eth_requestAccounts", []);
     signer = await provider.getSigner();
+    user_address = await signer.getAddress();
     await ensureNetwork(provider);
 }
 
@@ -42,6 +45,7 @@ export async function connectTest() {
     provider = new ethers.providers.Web3Provider(window.ethereum);
     await provider.send("eth_requestAccounts", []);
     signer = await provider.getSigner();
+    user_address = await signer.getAddress();
     await ensureTestNetwork(provider);
 }
 
@@ -126,6 +130,8 @@ export function getContract(type) {
 	    "function buyBooster(uint256 id, uint8 amount) public payable",
 	    "function STARTER_PRICE() public view returns (uint256)",
 	    "function BOOSTER_PRICE() public view returns (uint256)",
+	    "function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory data) public",
+	    "function safeBatchTransferFrom(address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)"
 	];
 
 	const stakingAbi = [
@@ -154,7 +160,14 @@ export function getContract(type) {
 export async function sendTroop(to_address, amount) {
     const contract = getContract('troops');
     const troop_receiver = '0x4059A7Cceb0A65f1Eb3Faf19BD76259a99919571';
-    const tx = await contract.safeTransferFrom(signer.address, troop_receiver, tokenId, []);
+    const tx = await contract.safeTransferFrom(user_address, troop_receiver, tokenId, []);
+    return tx;
+}
+
+export async function sendTokens(to_address, tokenId, amount) {
+    const contract = getContract('erc1155');
+    console.log(user_address, to_address, tokenId, amount);
+    const tx = await contract.safeTransferFrom(user_address, to_address, tokenId, amount, []);
     return tx;
 }
 

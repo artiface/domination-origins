@@ -1680,6 +1680,9 @@ contract G4N9 is ERC1155, AccessControl, Pausable, ERC1155Burnable, ERC1155Suppl
 
         _mint(msg.sender, STARTER_KITS, 1000, "");
         _mint(msg.sender, BOOSTER_PACKS, 1000, "");
+
+        _setURI("https://g4n9.site/opensea/");
+        _contract_uri = "https://g4n9.site/opensea/contract.json";
     }
 
     function setURI(string memory newuri) public onlyRole(URI_SETTER_ROLE) {
