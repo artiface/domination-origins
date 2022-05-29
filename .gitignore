@@ -12,8 +12,8 @@ WeaponNFTs/
 Puzzles/
 *.db
 
-images/
 layers/
+#images/
 #opensea/
 metadata/
 accounts/
