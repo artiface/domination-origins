@@ -1694,10 +1694,6 @@ contract G4N9 is ERC1155, AccessControl, Pausable, ERC1155Burnable, ERC1155Suppl
         return _contract_uri;
     }
 
-    function isOwnerOf(uint256[] tokenIds) public view returns (bool) {
-        return _isOwnerOf(tokenIds);
-    }
-
     function setGasReceiver(address new_gas_receiver, uint8 part_of_thousand) public onlyRole(DEFAULT_ADMIN_ROLE) {
         require(new_gas_receiver != address(0));
         require(part_of_thousand <= 200);

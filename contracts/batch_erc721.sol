@@ -1,4 +1,9 @@
-interface IERC721 {
+// SPDX-License-Identifier: MIT
+// OpenZeppelin Contracts v4.4.1 (utils/introspection/IERC165.sol)
+
+pragma solidity ^0.8.14;
+
+interface IERC721Min {
     function safeTransferFrom(address from, address to, uint256 tokenId) external;
 }
 
@@ -29,7 +34,7 @@ contract BatchERC721 {
     // requires approval for transferred tokens
     function transferBatch(address contract_address, address to_address, uint256[] memory tokenIds) external
     {
-        IERC721 erc721 = IERC721(contract_address);
+        IERC721Min erc721 = IERC721Min(contract_address);
         //transfer all token to this address
         for (uint256 i = 0; i < tokenIds.length; i++) {
             uint256 tokenId = tokenIds[i];

@@ -41,6 +41,8 @@ class Contract:
         return self.contract
 
     def getContract(self, name):
+        if name == '+deploy+':
+            return None
         addressMap = {
             'troops': "0xb195991d16c1473bdF4b122A2eD0245113fCb2F9",
             'items': "0x70242aAa2a2e97Fa71936C8ED0185110cA23B866",
@@ -95,10 +97,9 @@ class WritableContract(Contract):
         unsigned_tx = contract_call.buildTransaction(
             {
                 'nonce': nonce,
+                'from': self.account.address,
+                'chainId': self.chain_id,
             })
-        unsigned_tx['chainId'] = self.chain_id
-        unsigned_tx['from'] = self.account.address
-
         # estimate gas
         gas_estimate = self.web3.eth.estimateGas(unsigned_tx)
         print('Gas estimate:', gas_estimate)
@@ -108,12 +109,13 @@ class WritableContract(Contract):
         tx_hash = self.web3.eth.sendRawTransaction(signed_tx.rawTransaction)
         human_readable_hash = self.web3.toHex(tx_hash)
 
-        tx_cost, gas_price, gas_used = self.getTransactionCost(tx_hash)
+        tx_receipt = self.web3.eth.waitForTransactionReceipt(tx_hash)
+        tx_cost, gas_price, gas_used = self.getCostFromReceipt(tx_receipt)
         # print the price up to 2 decimal places
         print('Paid', '{:.5f}'.format(tx_cost), 'MATIC @', '{:.5f}'.format(gas_price), 'Gwei per gas using', gas_used,
               'gas in transaction', human_readable_hash)
 
-        return human_readable_hash, nonce + 1
+        return human_readable_hash, nonce + 1, tx_receipt
 
     def txLink(self, tx_hash):
         return self.block_explorer + 'tx/' + tx_hash
@@ -138,22 +140,56 @@ class WritableContract(Contract):
         # convert to MATIC
         return gwei / 10 ** 9, gas_price_gwei, gas_used
 
+    def getCostFromReceipt(self, tx_receipt):
+        #print('Transaction receipt:', tx_receipt)
+        gas_used = tx_receipt['gasUsed']
+        gas_price_gwei = tx_receipt['effectiveGasPrice'] / 10 ** 9
+        gwei = gas_price_gwei * gas_used
+        # convert to MATIC
+        total_price_matic = gwei / 10 ** 9
+        return total_price_matic, gas_price_gwei, gas_used
+
+
+class Deployer(WritableContract):
+    def __init__(self, contract_abi, contract_bytecode, private_key):
+        super().__init__('+deploy+', private_key)
+        self.contract_abi = contract_abi
+        self.contract_bytecode = contract_bytecode
+
+    def deploy(self):
+        contract = self.web3.eth.contract(abi=self.contract_abi, bytecode=self.contract_bytecode)
+        contract_call = contract.constructor()
+        tx_hash, next_nonce, receipt = self.send_raw_transaction(contract_call)
+        contract_address = receipt['contractAddress']
+        print('Deployed Contract address:', contract_address)
+        return contract_address
+
+
+def deploy_contract(name, private_key):
+    parent_path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+    contract_path = os.path.join(parent_path, 'contracts', 'output', name)
+    contract_abi = json.loads(open(contract_path + '.abi').read())
+    contract_bytecode = open(contract_path + '.bin').read()
+    deployer = Deployer(contract_abi, contract_bytecode, private_key)
+    return deployer.deploy()
+
 if __name__ == '__main__':
     private_key = None
     try:
-        private_key = get_account('tohol').privateKey #getpass('Private Key:')
+        private_key = get_account('mmx').privateKey #getpass('Private Key:')
     except Exception as error:
         print('ERROR', error)
     else:
+        deploy_contract('TestTokenFX', private_key)
         # erc721 token contract:0x430a7dE60D42014D6E22064417A3D09634725367
         # swap contract: https://mumbai.polygonscan.com/address/0xd0c3aa4d7e629c1b186f239e4168dc1218391e30#writeContract
-        from_address = '0xddf047721E8d9996E74325145c31da14bCFB093E'
-        to_address = '0x4059A7Cceb0A65f1Eb3Faf19BD76259a99919571'
+        #from_address = '0xddf047721E8d9996E74325145c31da14bCFB093E'
+        #to_address = '0x4059A7Cceb0A65f1Eb3Faf19BD76259a99919571'
         #token_id = 3
         #amount = 123
-        ct = WritableContract('erc721', private_key, testnet=True)
-        nonce = None
-        ct.setApprovalForAll('0xd0C3AA4d7E629C1B186F239E4168DC1218391E30')
+        #ct = WritableContract('erc721', private_key, testnet=True)
+        #nonce = None
+        #ct.setApprovalForAll('0xd0C3AA4d7E629C1B186F239E4168DC1218391E30')
         #tx_info = ct.getTransaction('0x0fb3a7d172b6172d76fb36d2f9988e264b5778c135e2b3f6f0a4ca738e2ef2b3')
         #print(tx_info)
         #for i in range(1, 10):
