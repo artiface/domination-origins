@@ -1,0 +1,108 @@
+{
+  "dna": "f2005af93bfb90f02083bac9366ec7090d2996d8",
+  "name": "#1001",
+  "description": "G4N9 Troop",
+  "image": "https://staging.32kb.org/images/1001.png",
+  "edition": 1001,
+  "date": 1653844087847,
+  "external_url": "https://staging.32kb.org/troops/2/1001.png",
+  "attributes": [
+    {
+      "trait_type": "Sex",
+      "value": "Female"
+    },
+    {
+      "trait_type": "Origin",
+      "value": "Humanity"
+    },
+    {
+      "trait_type": "Background",
+      "value": "Bluu"
+    },
+    {
+      "trait_type": "Background Pattern",
+      "value": "Normal"
+    },
+    {
+      "trait_type": "Back Gear",
+      "value": "None"
+    },
+    {
+      "trait_type": "Body",
+      "value": "Vanilla"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "Long Lash Gaze Red"
+    },
+    {
+      "trait_type": "Tatoo",
+      "value": "None"
+    },
+    {
+      "trait_type": "Makeup",
+      "value": "None"
+    },
+    {
+      "trait_type": "Facial Features",
+      "value": "Cheek Scar"
+    },
+    {
+      "trait_type": "Facial Wear",
+      "value": "Facemask Pink"
+    },
+    {
+      "trait_type": "Hair",
+      "value": "Pageboy Pink"
+    },
+    {
+      "trait_type": "Eye Wear",
+      "value": "Naked Eye"
+    },
+    {
+      "trait_type": "Clothes",
+      "value": "Robe White"
+    },
+    {
+      "trait_type": "Ear Wear",
+      "value": "Triple Earrings Gold"
+    },
+    {
+      "trait_type": "Effect",
+      "value": "Normal"
+    },
+    {
+      "trait_type": "Level",
+      "value": 2,
+      "display_type": "number"
+    },
+    {
+      "trait_type": "Strength",
+      "value": 4
+    },
+    {
+      "trait_type": "Dexterity",
+      "value": 1
+    },
+    {
+      "trait_type": "Defense Boost",
+      "value": 8
+    },
+    {
+      "trait_type": "Intelligence",
+      "value": 2
+    },
+    {
+      "trait_type": "Agility",
+      "value": 1
+    },
+    {
+      "trait_type": "Speed Boost",
+      "value": 1
+    },
+    {
+      "trait_type": "Power Boost",
+      "value": 5
+    }
+  ]
+}

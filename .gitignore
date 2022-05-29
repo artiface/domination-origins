@@ -12,6 +12,7 @@ WeaponNFTs/
 Puzzles/
 *.db
 
+hashlips_art_engine/build/images/
 layers/
 #images/
 #opensea/

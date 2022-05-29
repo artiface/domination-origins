@@ -1,0 +1,108 @@
+{
+  "dna": "4086528419616d13b927fbea545ee5a64aa470d2",
+  "name": "#1002",
+  "description": "G4N9 Troop",
+  "image": "https://staging.32kb.org/images/1002.png",
+  "edition": 1002,
+  "date": 1653844095766,
+  "external_url": "https://staging.32kb.org/troops/2/1002.png",
+  "attributes": [
+    {
+      "trait_type": "Sex",
+      "value": "Female"
+    },
+    {
+      "trait_type": "Origin",
+      "value": "Humanity"
+    },
+    {
+      "trait_type": "Background",
+      "value": "Peank"
+    },
+    {
+      "trait_type": "Background Pattern",
+      "value": "Normal"
+    },
+    {
+      "trait_type": "Back Gear",
+      "value": "None"
+    },
+    {
+      "trait_type": "Body",
+      "value": "Vanilla"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "Long Lash Distant Red"
+    },
+    {
+      "trait_type": "Tatoo",
+      "value": "None"
+    },
+    {
+      "trait_type": "Makeup",
+      "value": "None"
+    },
+    {
+      "trait_type": "Facial Features",
+      "value": "Heart"
+    },
+    {
+      "trait_type": "Facial Wear",
+      "value": "Facemask Black"
+    },
+    {
+      "trait_type": "Hair",
+      "value": "Pageboy Blue"
+    },
+    {
+      "trait_type": "Eye Wear",
+      "value": "Naked Eye"
+    },
+    {
+      "trait_type": "Clothes",
+      "value": "Ranger Garb Black Yellow"
+    },
+    {
+      "trait_type": "Ear Wear",
+      "value": "Earphones Black"
+    },
+    {
+      "trait_type": "Effect",
+      "value": "Rain"
+    },
+    {
+      "trait_type": "Level",
+      "value": 1,
+      "display_type": "number"
+    },
+    {
+      "trait_type": "Strength",
+      "value": 6
+    },
+    {
+      "trait_type": "Dexterity",
+      "value": 2
+    },
+    {
+      "trait_type": "Defense Boost",
+      "value": 3
+    },
+    {
+      "trait_type": "Intelligence",
+      "value": 3
+    },
+    {
+      "trait_type": "Agility",
+      "value": 2
+    },
+    {
+      "trait_type": "Speed Boost",
+      "value": 7
+    },
+    {
+      "trait_type": "Power Boost",
+      "value": 2
+    }
+  ]
+}

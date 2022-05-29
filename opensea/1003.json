@@ -1,0 +1,108 @@
+{
+  "dna": "731152db56b780e050851cb7760ca272fa08efb6",
+  "name": "#1003",
+  "description": "G4N9 Troop",
+  "image": "https://staging.32kb.org/images/1003.png",
+  "edition": 1003,
+  "date": 1653844103616,
+  "external_url": "https://staging.32kb.org/troops/2/1003.png",
+  "attributes": [
+    {
+      "trait_type": "Sex",
+      "value": "Male"
+    },
+    {
+      "trait_type": "Origin",
+      "value": "Humanity"
+    },
+    {
+      "trait_type": "Background",
+      "value": "Bluu"
+    },
+    {
+      "trait_type": "Background Pattern",
+      "value": "Normal"
+    },
+    {
+      "trait_type": "Back Gear",
+      "value": "None"
+    },
+    {
+      "trait_type": "Body",
+      "value": "Toffe"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "Normal Distant Red"
+    },
+    {
+      "trait_type": "Tatoo",
+      "value": "None"
+    },
+    {
+      "trait_type": "Facial Features",
+      "value": "Cheek Scar"
+    },
+    {
+      "trait_type": "Facial Wear",
+      "value": "Facemask Red"
+    },
+    {
+      "trait_type": "Hair",
+      "value": "Cap Shaggy Black Red"
+    },
+    {
+      "trait_type": "Eye Wear",
+      "value": "Naked Eye"
+    },
+    {
+      "trait_type": "Shirt",
+      "value": "Shirt White"
+    },
+    {
+      "trait_type": "Clothes",
+      "value": "Scout White Black"
+    },
+    {
+      "trait_type": "Ear Wear",
+      "value": "Earphones White"
+    },
+    {
+      "trait_type": "Effect",
+      "value": "Normal"
+    },
+    {
+      "trait_type": "Level",
+      "value": 2,
+      "display_type": "number"
+    },
+    {
+      "trait_type": "Strength",
+      "value": 4
+    },
+    {
+      "trait_type": "Dexterity",
+      "value": 1
+    },
+    {
+      "trait_type": "Defense Boost",
+      "value": 3
+    },
+    {
+      "trait_type": "Intelligence",
+      "value": 2
+    },
+    {
+      "trait_type": "Agility",
+      "value": 3
+    },
+    {
+      "trait_type": "Speed Boost",
+      "value": 4
+    },
+    {
+      "trait_type": "Power Boost",
+      "value": 4
+    }
+  ]
+}

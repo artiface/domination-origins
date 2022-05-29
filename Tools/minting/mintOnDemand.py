@@ -88,10 +88,10 @@ class OnDemandMinter:
         return tokenIds, dnaList
 
     def selectTroopTokens(self):
-        return [1002, 1003, 1004]
+        return [1000, 1001, 1002, 1003, 1004]
 
     def selectWeaponTokens(self):
-        return [10001, 10002, 10003]
+        return [20001, 20002, 20003]
 
     def getWeaponDNA(self, weaponTokenIds):
         dnaList = []

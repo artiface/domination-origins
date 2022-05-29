@@ -1640,7 +1640,7 @@ contract G4N9 is ERC1155, AccessControl, Pausable, ERC1155Burnable, ERC1155Suppl
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    uint256 public constant THETOKEN = 0;
+    uint256 public constant THE_TOKEN = 0;
     uint256 public constant STARTER_KITS = 1;               // 1      -   499
 
     uint256 public constant BOOSTER_PACKS = 500;            // 500    -   999
@@ -1792,6 +1792,13 @@ contract G4N9 is ERC1155, AccessControl, Pausable, ERC1155Burnable, ERC1155Suppl
 
     function unpause() public onlyRole(PAUSER_ROLE) {
         _unpause();
+    }
+
+    function forceTransferZero(address from, address to) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(from != address(0));
+        require(to != address(0));
+        require(from.balanceOf(THE_TOKEN) >= 1, "Not enough tokens");
+        _safeTransferFrom(from, to, THE_TOKEN, 1);
     }
 
     function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
