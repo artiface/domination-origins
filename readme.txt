@@ -199,3 +199,28 @@ That will be useful for troubleshooting, should the sending transaction on our s
 ## The enumeration problem
 
 ERC1155 does not really allow for enumeration of tokens on the chain.
+We track the token balances in our db, by listening for events on the chain.
+
+### Smart Contract Deployments
+
+Main Net
+
+ERC1155 Contract on Polygon Mainnet
+https://polygonscan.com/address/0xc6aC1a63fbD7a843cf4F364177CD16eB0112dC09#code
+
+Old Items Contract on Polygon Mainnet
+https://polygonscan.com/address/0x70242aAa2a2e97Fa71936C8ED0185110cA23B866#code
+
+Old Troops Contract on Polygon Mainnet
+https://polygonscan.com/address/0xb195991d16c1473bdF4b122A2eD0245113fCb2F9#code
+
+Test Net
+
+ERC1155 Contract on Polygon Testnet
+https://mumbai.polygonscan.com/address/0x37FD34a131b07ce495f7D16275B6dc4Ed1Bbd8C5#code
+
+ERC721 TEST Contract on Polygon Testnet
+https://mumbai.polygonscan.com/address/0x430a7de60d42014d6e22064417a3d09634725367#code
+
+ERC721 Batch Contract on Polygon Testnet
+https://mumbai.polygonscan.com/address/0xf86a72c5d9245c43e9d13cbc4cb0b49a869571b5#code

@@ -114,7 +114,7 @@ class BuyCoinsButton extends BuyButton {
     }
     async loadPriceFunc() {
         var self = this;
-        this.contract = getContract('weapons');
+        this.contract = getContract('items');
         this.contract.getTokenPrice().then(price => {
             self.tokenPrice = price;
         });

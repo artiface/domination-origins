@@ -10,7 +10,7 @@ from Tools.wallets import get_account
 
 
 class Contract:
-    def __init__(self, name, testnet=False):
+    def __init__(self, name, testnet=True):
         available_networks = {
             'testnet': {
                 'provider': 'https://matic-mumbai.chainstacklabs.com/',
@@ -21,6 +21,7 @@ class Contract:
                 'block_explorer': 'https://polygonscan.com/',
             }
         }
+        self.testnet = testnet
         network = available_networks['testnet'] if testnet else available_networks['mainnet']
         base_path = os.path.realpath(__file__)
         self.abi_path = os.path.join(os.path.dirname(base_path), 'abi')
@@ -43,20 +44,26 @@ class Contract:
     def getContract(self, name):
         if name == '+deploy+':
             return None
+
         addressMap = {
             'troops': "0xb195991d16c1473bdF4b122A2eD0245113fCb2F9",
             'items': "0x70242aAa2a2e97Fa71936C8ED0185110cA23B866",
-            'g4n9-erc1155-test': '0x5E52b90Ce1796155f4571f07987F03672115B59e',
-            'erc721': '0x430a7dE60D42014D6E22064417A3D09634725367',
+            'erc1155': '0xc6aC1a63fbD7a843cf4F364177CD16eB0112dC09',
         }
 
-        address = addressMap[name]
+        addressMapTest = {
+            'troops': "0x430a7de60d42014d6e22064417a3d09634725367",
+            'items': "0x430a7de60d42014d6e22064417a3d09634725367",
+            'erc1155': '0x37FD34a131b07ce495f7D16275B6dc4Ed1Bbd8C5',
+            'erc721batch': '0xf86a72c5d9245c43e9d13cbc4cb0b49a869571b5'
+        }
+
+        address = addressMapTest[name] if self.testnet else addressMap[name]
 
         abiMap = {
             'troops': self.abiFromFile('troops.json'),
             'items': self.abiFromFile('items.json'),
-            'g4n9-erc1155-test': self.abiFromFile('erc1155.json'),
-            'erc721': self.abiFromFile('erc721.json'),
+            'erc1155': self.abiFromFile('erc1155.json'),
         }
         abi = abiMap[name]
 
@@ -65,7 +72,7 @@ class Contract:
 
 
 class WritableContract(Contract):
-    def __init__(self, name, private_key, testnet=False):
+    def __init__(self, name, private_key, testnet=True):
         super().__init__(name, testnet)
         self.account = Account.from_key(private_key=private_key)
         self.web3.eth.defaultAccount = self.account.address
@@ -73,6 +80,26 @@ class WritableContract(Contract):
     def safeMint_erc721(self, target_address, nonce):
         contract_call = self.contract.functions.safeMint(target_address)
         return self.send_raw_transaction(contract_call, nonce)
+
+    def setContractUri(self, uri):
+        contract_call = self.contract.functions.setContractURI(uri)
+        return self.send_raw_transaction(contract_call)
+
+    def setURI(self, uri):
+        contract_call = self.contract.functions.setURI(uri)
+        return self.send_raw_transaction(contract_call)
+
+    def setGasReceiver(self, new_gas_receiver, part_of_thousand):
+        contract_call = self.contract.functions.setGasReceiver(new_gas_receiver, part_of_thousand)
+        return self.send_raw_transaction(contract_call)
+
+    def setBuyPrices(self, new_starter_price, new_booster_price):
+        contract_call = self.contract.functions.setPrices(new_starter_price, new_booster_price)
+        return self.send_raw_transaction(contract_call)
+
+    def setTokenReceiver(self, new_token_receiver):
+        contract_call = self.contract.functions.setTokenReceiver(new_token_receiver)
+        return self.send_raw_transaction(contract_call)
 
     def mint(self, target_address, token_id, dna, amount):
         contract_call = self.contract.functions.mint(target_address, token_id, amount, dna)
@@ -151,8 +178,8 @@ class WritableContract(Contract):
 
 
 class Deployer(WritableContract):
-    def __init__(self, contract_abi, contract_bytecode, private_key):
-        super().__init__('+deploy+', private_key)
+    def __init__(self, contract_abi, contract_bytecode, private_key, testnet=True):
+        super().__init__('+deploy+', private_key, testnet)
         self.contract_abi = contract_abi
         self.contract_bytecode = contract_bytecode
 
@@ -165,12 +192,13 @@ class Deployer(WritableContract):
         return contract_address
 
 
-def deploy_contract(name, private_key):
+def deploy_contract(name, private_key, testnet=True):
+    print('Deploying contract {} to {}'.format(name, 'test net' if testnet else 'MAIN NET'))
     parent_path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
     contract_path = os.path.join(parent_path, 'contracts', 'output', name)
     contract_abi = json.loads(open(contract_path + '.abi').read())
     contract_bytecode = open(contract_path + '.bin').read()
-    deployer = Deployer(contract_abi, contract_bytecode, private_key)
+    deployer = Deployer(contract_abi, contract_bytecode, private_key, testnet)
     return deployer.deploy()
 
 if __name__ == '__main__':

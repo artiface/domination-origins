@@ -9,10 +9,28 @@ if (!window.ethereum) {
 export let provider = undefined;
 export let signer = undefined;
 
-// Auto-connect to MetaMask
-await connectTest();
+let isTestnet = false;
+
+// try to find the connect button
+let connectButton = document.getElementById("connect");
+let connectTestButton = document.getElementById("connect_test");
+if (connectButton) {
+    connectButton.addEventListener("click", async () => {
+        await connect();
+    });
+}
+if (connectTestButton) {
+    connectTestButton.addEventListener("click", async () => {
+        await connectTest();
+    });
+}
+
+if (!connectButton && !connectTestButton) {
+    await connectTest();
+}
 
 export async function connect() {
+    isTestnet = false;
     provider = new ethers.providers.Web3Provider(window.ethereum);
     await provider.send("eth_requestAccounts", []);
     signer = await provider.getSigner();
@@ -20,6 +38,7 @@ export async function connect() {
 }
 
 export async function connectTest() {
+    isTestnet = true;
     provider = new ethers.providers.Web3Provider(window.ethereum);
     await provider.send("eth_requestAccounts", []);
     signer = await provider.getSigner();
@@ -73,22 +92,32 @@ async function ensureTestNetwork(provider) {
 }
 
 export function getContract(type) {
+
 	const addressMap = {
 		'troops': "0xb195991d16c1473bdF4b122A2eD0245113fCb2F9",
-		'weapons': "0x70242aAa2a2e97Fa71936C8ED0185110cA23B866",
+		'items': "0x70242aAa2a2e97Fa71936C8ED0185110cA23B866",
 		'staking': '0x1F827D438EeA6F06C034bf354243AB9b7B8cbB7f',
-		'erc1155': '0x5E52b90Ce1796155f4571f07987F03672115B59e',
+		'erc1155': '0xc6aC1a63fbD7a843cf4F364177CD16eB0112dC09',
 	};
-	const contractAddress = addressMap[type];
 
-	const mintingAbi = [
+	const addressMapTestnet = {
+		'erc1155': '0x37FD34a131b07ce495f7D16275B6dc4Ed1Bbd8C5',
+		'troops': '0x430a7de60d42014d6e22064417a3d09634725367',  // erc721 test contract
+		'items': '0x430a7de60d42014d6e22064417a3d09634725367',  // erc721 test contract
+		'erc721batch': '0xf86a72c5d9245c43e9d13cbc4cb0b49a869571b5'
+	};
+
+	const contractAddress = isTestnet ? addressMapTestnet[type] : addressMap[type];
+
+	const erc721enumerable = [
+		"function tokenOfOwnerByIndex(address owner, uint256 index) external view returns (uint256 tokenId)",
+	];
+
+	const erc721 = [
 		"function name() external view returns (string memory)",
 		"function symbol() external view returns (string memory)",
 		"function tokenURI(uint256 tokenId) external view returns (string memory)",
-		"function tokenOfOwnerByIndex(address owner, uint256 index) external view returns (uint256 tokenId)",
 		"function balanceOf(address account) external view returns (uint256)",
-		"function getTokenPrice() public view returns (uint256)",
-		"function buyToken(uint256 numberOfTokens) public payable returns(bool success)",
 		"function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public"
 	];
 
@@ -104,9 +133,14 @@ export function getContract(type) {
 		"function unstakeMul(uint256[] memory tokenIds) external"
 	];
 
+	const erc721batchAbi = [
+        "function transferBatch(address contract_address, address to_address, uint256[] memory tokenIds) external",
+        "function transferAllEnumerable(address contract_address, address to_address) external"
+    ];
+
 	const abis = {
-	    'troops': mintingAbi,
-        'weapons': mintingAbi,
+	    'troops': erc721 + erc721enumerable,
+        'items': erc721,
         'staking': stakingAbi,
         'erc1155': erc1155ExtendedAbi
 	}

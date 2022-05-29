@@ -14,7 +14,7 @@ Puzzles/
 
 images/
 layers/
-opensea/
+#opensea/
 metadata/
 accounts/
 contracts/output/

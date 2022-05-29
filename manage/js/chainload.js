@@ -103,7 +103,7 @@ function getContract(type) {
 };
 
 export async function mintNFTCollection(wallet_address, start_id, count) {
-	const contract = getContract('erc1155-test');
+	const contract = getContract('erc1155');
 	// create list of ids
     const ids = [];
     const amounts = [];

@@ -1,6 +1,6 @@
 "use strict";
-import { ethers } from "./ethers-5.1.esm.min.js";
-import { getTokenCount, loadUserNFTs, loadNFT, connect, signer, provider, getWallet } from "./chainload.js";
+import { ethers } from "/js/ethers-5.1.esm.min.js";
+import { getTokenCount, loadUserNFTs, loadNFT, connect, signer, provider } from "/js/chainload.js";
 
 class Cards {
     constructor(crypto) {
