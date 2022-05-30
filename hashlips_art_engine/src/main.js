@@ -138,7 +138,7 @@ const addMetadata = (_dna, _edition) => {
     image: `${baseUri}/${_edition}.png`,
     edition: _edition,
     date: dateTime,
-    external_url: `${externalUri}/${_edition}.png`,
+    external_url: `${externalUri}/${_edition}`,
     ...extraMetadata,
     attributes: attributesList,
   };
