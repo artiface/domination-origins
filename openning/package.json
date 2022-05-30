@@ -1,0 +1,15 @@
+{
+  "name": "openning",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "three": "^0.141.0",
+    "vite": "^2.9.9",
+    "@tweenjs/tween.js": "^18.6.4"
+  }
+}
