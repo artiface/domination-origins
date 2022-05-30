@@ -52,8 +52,8 @@ class Contract:
         }
 
         addressMapTest = {
-            'troops': "0x430a7de60d42014d6e22064417a3d09634725367",
-            'items': "0x430a7de60d42014d6e22064417a3d09634725367",
+            'troops': "0x430a7dE60D42014D6E22064417A3D09634725367",
+            'items': "0x430a7dE60D42014D6E22064417A3D09634725367",
             'erc1155': '0x37FD34a131b07ce495f7D16275B6dc4Ed1Bbd8C5',
             'erc721batch': '0xf86a72c5d9245c43e9d13cbc4cb0b49a869571b5'
         }

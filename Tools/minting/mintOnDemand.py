@@ -12,6 +12,8 @@ from getpass import getpass
 
 from Tools.chainlisten.listener import Listener
 from Tools.transact.contract import Contract, WritableContract
+from Tools.wallets import get_account
+
 
 class OnDemandMinter:
     def __init__(self, private_key_for_transactions):
@@ -28,7 +30,8 @@ class OnDemandMinter:
         self.listener = Listener(self.on_event)
 
     def startListening(self):
-        print("Listening for open starter kit events")
+        print("Listening for erc 721 tokens sent to {}".format(self.erc721_token_receiver_wallet))
+        print("Listening for erc 1155 tokens sent to {}".format(self.main_contract.contract.address))
         self.listener.listen([
             self.main_contract.contract.events.Received,         # 0
             self.main_contract.contract.events.ReceivedBatch,    # 1
@@ -36,7 +39,11 @@ class OnDemandMinter:
             self.troops_contract.contract.events.Transfer,       # 3
         ])
 
-    def on_event(self, event_index, event):
+    def on_event(self, event_index, raw_event):
+        tx_hash = raw_event['transactionHash'].hex()
+        event = raw_event['args']
+        print("Received Event {}: {}".format(event_index, event))
+        print("For Transaction: {}".format(tx_hash))
         if event_index < 2:
             sender_wallet = event['_sender']
             tokenIds = event['_tokenId']
@@ -60,14 +67,15 @@ class OnDemandMinter:
         mintIds = []
         for tokenId, amount in zip(tokenIds, amounts):
             print("Received {} erc1155 tokens with tokenId {} from {}".format(amount, tokenId, sender_wallet))
+            starterToken = []
+            starterDna = []
             if tokenId == 1:
                 starterToken, starterDna = self.onOpenStarterKit(sender_wallet, amount)
-                dnaList.append(starterDna)
-                mintIds.append(starterToken)
+            elif 10001 <= tokenId <= 20000:
+                starterToken, starterDna = self.onOpenStarterKit(sender_wallet, amount)
 
-            if 10001 <= tokenId <= 20000:
-                for _ in range(amount):
-                    self.onOpenStarterKit(sender_wallet)
+            dnaList.extend(starterDna)
+            mintIds.extend(starterToken)
 
         self.mintTokens(sender_wallet, mintIds, dnaList)
 
@@ -82,8 +90,8 @@ class OnDemandMinter:
             weaponTokenIds = self.selectWeaponTokens()
             weaponDnaList = self.getWeaponDNA(weaponTokenIds)
 
-            dnaList.append(troopDnaList + weaponDnaList)
-            tokenIds.append(troopTokenIds + weaponTokenIds)
+            dnaList.extend(troopDnaList + weaponDnaList)
+            tokenIds.extend(troopTokenIds + weaponTokenIds)
 
         return tokenIds, dnaList
 
@@ -160,7 +168,7 @@ class OnDemandMinter:
 if __name__ == '__main__':
     private_key = None
     try:
-        private_key = getpass('Private Key for transfers:')
+        private_key = get_account('mmx').privateKey #getpass('Private Key for transfers:')
     except Exception as error:
         print('ERROR', error)
     else:

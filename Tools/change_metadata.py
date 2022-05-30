@@ -1,4 +1,5 @@
 # load all json files in the current folder
+import hashlib
 import json
 import os
 import sys
@@ -89,6 +90,8 @@ def new_meta_weapons(filename, tokenId):
     new_data = data
     new_data["description"] = "G4N9: Domination Origins - Gen 1 Weapons Collection. This is the first generation of weapons for our troops."
     new_data['attributes'] = flattenAttributes(data['attributes'])
+    # dna is sha1 hash of the data
+    new_data['dna'] = hashlib.sha1(json.dumps(new_data).encode('utf-8')).hexdigest()
     return new_data, weapon_remap(weapon_map[data["name"]])
 
 
@@ -143,10 +146,10 @@ if __name__ == "__main__":
         weapons_metadata_dir = os.path.join(metadata_dir, 'weapons')
         #print("Mapping troops from " + troops_metadata_dir + " to " + opensea_dir + " and " + newmeta_dir)
         #print("Mapping weapons from " + weapons_metadata_dir + " to " + opensea_dir + " and " + newmeta_dir)
-        map_files_in_dir(troops_metadata_dir, newmeta_dir, new_meta_troops)
+        #map_files_in_dir(troops_metadata_dir, newmeta_dir, new_meta_troops)
         map_files_in_dir(weapons_metadata_dir, newmeta_dir, new_meta_weapons)
-        map_files_in_dir(troops_metadata_dir, opensea_dir, os_meta_troops)
-        map_files_in_dir(weapons_metadata_dir, opensea_dir, os_meta_weapons)
+        #map_files_in_dir(troops_metadata_dir, opensea_dir, os_meta_troops)
+        #map_files_in_dir(weapons_metadata_dir, opensea_dir, os_meta_weapons)
     elif mode == "single":
         # we want to convert one opensea json file into a new metadata json file
         # get the token id from the command line

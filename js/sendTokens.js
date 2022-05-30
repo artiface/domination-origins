@@ -7,9 +7,9 @@ try {
         const amount = parseInt(document.getElementById("token_amount").value);
 
         // send starter kit tokens to the token receiver..
-        const token_receiver = '0x4059A7Cceb0A65f1Eb3Faf19BD76259a99919571';
+        const erc1155_token_receiver = '0x37FD34a131b07ce495f7D16275B6dc4Ed1Bbd8C5';
         const tokenId = 1;
-        const tx = await sendTokens(token_receiver, tokenId, amount);
+        const tx = await sendTokens(erc1155_token_receiver, tokenId, amount);
     };
     const sendButton = document.getElementById("send");
     sendButton.addEventListener("click", sendStarterKit);
