@@ -1,6 +1,10 @@
 "use strict";
 import { ethers } from "./ethers-5.1.esm.min.js";
-import { signer, provider, connect, sendTokens } from "./chainload.js";
+import { signer, provider, connect, sendTokens, onTokensReceived } from "./chainload.js";
+
+async function onReceived(token_list) {
+    console.log("Received", token_list);
+}
 
 try {
     const sendStarterKit = async function() {
@@ -13,6 +17,7 @@ try {
     };
     const sendButton = document.getElementById("send");
     sendButton.addEventListener("click", sendStarterKit);
+    onTokensReceived(onReceived);
 }
 catch (e) {
     alert("Error during the transaction: " + e);

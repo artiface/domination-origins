@@ -166,7 +166,6 @@ export async function sendTroop(to_address, amount) {
 
 export async function sendTokens(to_address, tokenId, amount) {
     const contract = getContract('erc1155');
-    console.log(user_address, to_address, tokenId, amount);
     const tx = await contract.safeTransferFrom(user_address, to_address, tokenId, amount, []);
     return tx;
 }
@@ -239,3 +238,44 @@ export async function loadNFT(type, tokenId) {
 
 	return tokenInfo;
 };
+
+export function onTokensReceived(onReceivedCallback) {
+    const contract = getContract('erc1155');
+    const contractAddress = contract.address;
+    const nullAddress = '0x0000000000000000000000000000000000000000';
+    let filter = {
+        address: contractAddress,
+        topics: [
+            ethers.utils.id("TransferBatch(address,address,address,uint256[],uint256[])"),
+            null,
+            ethers.utils.hexZeroPad(nullAddress, 32),
+            ethers.utils.hexZeroPad(user_address, 32)
+        ]
+    };
+
+    provider.on(filter, async (event) => {
+        const tx_hash = event.transactionHash;
+        const tx = await provider.getTransaction(tx_hash);
+        // get input data
+        const data = tx.data;
+        const mintBatchIface = new ethers.utils.Interface(['function mintBatch(address to, uint256[] ids, uint256[] amounts, uint256[] dna)'])
+        const decoded_data = mintBatchIface.decodeFunctionData('mintBatch', data);
+
+        const tokenIds = decoded_data.ids;
+        const tokenAmounts = decoded_data.amounts;
+        const tokenDNAs = decoded_data.dna;
+        let tokensReceived = [];
+        for (let i = 0; i < tokenIds.length; i++) {
+            const tokenId = tokenIds[i];
+            const tokenAmount = tokenAmounts[i];
+            const tokenDNA = tokenDNAs[i];
+            const tokenInfo = {
+                'id': tokenId,
+                'amount': tokenAmount,
+                'dna': tokenDNA
+            }
+            tokensReceived.push(tokenInfo);
+        }
+        onReceivedCallback(tokensReceived);
+    });
+}

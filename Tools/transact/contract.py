@@ -74,6 +74,7 @@ class Contract:
 class WritableContract(Contract):
     def __init__(self, name, private_key, testnet=True):
         super().__init__(name, testnet)
+        self.next_nonce = False
         self.account = Account.from_key(private_key=private_key)
         self.web3.eth.defaultAccount = self.account.address
 
@@ -119,7 +120,7 @@ class WritableContract(Contract):
         return self.send_raw_transaction(contract_call)
 
     def send_raw_transaction(self, contract_call, nonce=None):
-        nonce = self.web3.eth.getTransactionCount(self.account.address) if nonce is None else nonce
+        nonce = max(self.web3.eth.getTransactionCount(self.account.address), self.next_nonce or 0) if nonce is None else nonce
         print('Using nonce:', nonce)
         unsigned_tx = contract_call.buildTransaction(
             {
@@ -142,7 +143,9 @@ class WritableContract(Contract):
         print('Paid', '{:.5f}'.format(tx_cost), 'MATIC @', '{:.5f}'.format(gas_price), 'Gwei per gas using', gas_used,
               'gas in transaction', human_readable_hash)
 
-        return human_readable_hash, nonce + 1, tx_receipt
+        self.next_nonce = nonce + 1
+
+        return human_readable_hash, tx_receipt
 
     def txLink(self, tx_hash):
         return self.block_explorer + 'tx/' + tx_hash
@@ -186,7 +189,7 @@ class Deployer(WritableContract):
     def deploy(self):
         contract = self.web3.eth.contract(abi=self.contract_abi, bytecode=self.contract_bytecode)
         contract_call = contract.constructor()
-        tx_hash, next_nonce, receipt = self.send_raw_transaction(contract_call)
+        tx_hash, receipt = self.send_raw_transaction(contract_call)
         contract_address = receipt['contractAddress']
         print('Deployed Contract address:', contract_address)
         return contract_address
