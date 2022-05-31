@@ -112,24 +112,40 @@ class Modal {
         this.selectedNode = null;
         this.refreshing = false;
     }
+    
+    openModal() {
+        this.modalParent.style.display = "flex";
+        setTimeout(() => {
+            document.getElementById("modal").style.transform = "scale(1)";
+            this.modalParent.style.opacity = 1;
+        }, 50);
+    }
+
+    closeModal() {
+        this.modalParent.style.opacity = 0;
+        document.getElementById("modal").style.transform = "scale(0)";
+        setTimeout(() => {
+            this.modalParent.style.display = "none";
+        }, 100);
+    }
 
     renderModal() {
-        this.modalParent.style.display = "flex";
         let data = `
         <div id="modal">
             <img src="./svgs/circle-xmark.svg" id="close-modal">
         </div>
         `
         this.modalParent.insertAdjacentHTML('beforeend', data);
+        this.openModal();
         document.getElementById("close-modal").addEventListener("click", () => {
-            this.modalParent.style.display = "none"
+            this.closeModal();
             this.firstTime = true;
         })
     }
 
     async renderPlayerModal() {
         if (this.rendered) {
-            this.modalParent.style.display = "flex"
+            this.openModal();
             if (this.selectedNode) this.renderPlayerDescription(this.crypto.troops[this.selectedNode.split("-")[1] - 1]);
             return;
         }
@@ -330,7 +346,7 @@ class Modal {
         if (!isAlreadySelected) {
             document.getElementById("modal-info-select-button").addEventListener("click", () => {
                 this.cards.changePlayer(player);
-                this.modalParent.style.display = "none";
+                this.closeModal();
             })
         }
     }

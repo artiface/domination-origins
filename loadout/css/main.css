@@ -76,6 +76,8 @@ input[type = "text"]:focus {
     height: 100vh;
     align-items: center;
     justify-content: center;
+    opacity: 0;
+    transition: opacity 0.1s ease-in-out;
 }
 
 #modal {
@@ -87,6 +89,7 @@ input[type = "text"]:focus {
     justify-content: space-between;
     padding: 10px;
     gap: 1%;
+    transition: transform 0.2s ease-in-out;
 }
 
 #close-modal {
