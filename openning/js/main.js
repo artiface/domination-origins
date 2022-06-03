@@ -27,13 +27,21 @@ let dummyTexture = new Promise((resolve, reject) => {
         }
     )
 });
+let theRockTexture = new Promise((resolve, reject) => {
+    loader.load(
+        '../assets/dummy2.jpg',
+        (texture) => {
+            resolve(texture);
+        }
+    )
+});
 
 class Card {
-    constructor(mesh) {
-        this.mesh = mesh;
+    constructor(group) {
+        this.group = group;
         this.anchor = {
-            x: mesh.position.x,
-            y: mesh.position.y
+            x: group.position.x,
+            y: group.position.y
         }
 
         this.count = Math.random() * 1000;
@@ -47,19 +55,19 @@ class Card {
     }
 
     get x() {
-        return this.mesh.position.x;
+        return this.group.position.x;
     }
 
     set x(x) {
-        this.mesh.position.x = x;
+        this.group.position.x = x;
     }
 
     get y() {
-        return this.mesh.position.y;
+        return this.group.position.y;
     }
 
     set y(y) {
-        this.mesh.position.y = y;
+        this.group.position.y = y;
     }
 }
 
@@ -72,26 +80,36 @@ async function getCards() {
     let yOffset = 3;
     let maxX = 5 * xOffset;
     for (let i = 0; i < 10; i++) {
-        const geometry = new THREE.BoxGeometry( 1, 2, .1 );
+        const group = new THREE.Group();
+
+        const geometry = new THREE.BoxGeometry( 1, 2, .01 );
 		const material = new THREE.MeshBasicMaterial({
             map: await dummyTexture,
         });
-        const cube = new THREE.Mesh(geometry, material);
+        const back = new THREE.Mesh(geometry, material);
+        group.add(back);
+
+		const material2 = new THREE.MeshBasicMaterial({
+            map: await theRockTexture,
+        });
+        const face = new THREE.Mesh(geometry, material2);
+        group.add(face);
     
         if (x >= maxX) {
             x = 0;
             y += yOffset; 
         }
-    
-        cube.position.x = x;
-        cube.position.y = y;
+        face.position.z -= .001;
+        group.position.x = x;
+        group.position.y = y;
+
         x += xOffset;
 
-        const card = new Card(cube);
+        const card = new Card(group);
     
         cards.push(card);
-        cubes.push(cube);
-        scene.add(cube);
+        cubes.push(group);
+        scene.add(group);
     }
     return { instances: cards, objects: cubes };
 }
@@ -125,19 +143,19 @@ function onClick(event) {
     raycaster.setFromCamera(pointer, camera);
     const intersects = raycaster.intersectObjects(cubes);
     if (intersects.length > 0) {
-        onCardClick(intersects[0]);
+        onCardClick(intersects[0].object.parent);
     }
 }
 renderer.domElement.addEventListener('mousedown', onClick);
 
 placeCamera();
 
-function onCardClick({ object }) {
+function onCardClick(object) {
     const card = cards.find(c => c.mesh === object);
     new TWEEN.Tween(object.rotation)
         .to({
             x: 0,
-            y: Math.PI,
+            y: -Math.PI,
             z: 0
         }, 1500)
         .easing(TWEEN.Easing.Elastic.InOut)
