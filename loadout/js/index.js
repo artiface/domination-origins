@@ -117,6 +117,8 @@ class Modal {
         this.modalParent.style.display = "flex";
         setTimeout(() => {
             document.getElementById("modal").style.transform = "scale(1)";
+        }, 20);
+        setTimeout(() => {
             this.modalParent.style.opacity = 1;
         }, 50);
     }
