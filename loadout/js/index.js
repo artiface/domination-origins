@@ -392,12 +392,12 @@ class Crypto {
     async load() {
         await connect();
         this.userAdress = await signer.getAddress();
+        document.getElementById("connected-info").innerHTML = `Connected as ${this.userAdress}`;
     }
 
     async addTroops() {
         this.pageCount++;
         const page = await this.loadPageNFT("troops", this.pageCount);
-        console.log(page)
         for (let j = 0; j < page.troops.length; j++) {
             let troop = {
                 LABEL: page.troops[j].tokenId,
@@ -430,6 +430,10 @@ class Crypto {
         }
     }
 }
+
+document.getElementById("play-button").addEventListener("click", () => {
+    //do whatever you want here
+})
 
 const crypto = new Crypto();
 
