@@ -78,6 +78,7 @@ input[type = "text"]:focus {
     justify-content: center;
     opacity: 0;
     transition: opacity 0.1s ease-in-out;
+    z-index: 2;
 }
 
 #modal {
