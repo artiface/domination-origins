@@ -37,12 +37,10 @@ let theRockTexture = new Promise((resolve, reject) => {
 });
 
 class Card {
-    constructor(group) {
+    constructor(group, position) {
         this.group = group;
-        this.anchor = {
-            x: group.position.x,
-            y: group.position.y
-        }
+        this.anchor = position;
+        this.hasMoved = false;
 
         this.count = Math.random() * 1000;
     }
@@ -50,8 +48,8 @@ class Card {
     shake() {
         this.count += .01;
 
-        this.x = this.anchor.x + Math.cos(this.count) / 20;
-        this.y = this.anchor.y + Math.cos(this.count) / 20;
+        this.x = (this.hasMoved ? this.anchor.x : this.x) + Math.cos(this.count) / 20;
+        this.y = (this.hasMoved ? this.anchor.y : this.y) + Math.cos(this.count) / 20;
     }
 
     get x() {
@@ -100,12 +98,13 @@ async function getCards() {
             y += yOffset; 
         }
         face.position.z -= .001;
-        group.position.x = x;
-        group.position.y = y;
+
+        //group.position.x = x;
+        //group.position.y = y;
 
         x += xOffset;
 
-        const card = new Card(group);
+        const card = new Card(group, {x, y});
     
         cards.push(card);
         cubes.push(group);
@@ -115,7 +114,7 @@ async function getCards() {
 }
 
 function placeCamera() {
-    let x = 0, y = 0;
+    let x = .5, y = .5;
     for (let i = 0; i < cards.length; i++) {
         x += cards[i].x;
         y += cards[i].y;
@@ -128,9 +127,15 @@ function placeCamera() {
     camera.position.y = y;
 }
 
+let cards = []
+let cubes = []
+
+animate();
+
 const result = await getCards();
-const cards = result.instances;
-const cubes = result.objects;
+cards = result.instances;
+cubes = result.objects;
+PlaceCards();
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
@@ -148,8 +153,6 @@ function onClick(event) {
 }
 renderer.domElement.addEventListener('mousedown', onClick);
 
-placeCamera();
-
 function onCardClick(object) {
     const card = cards.find(c => c.mesh === object);
     new TWEEN.Tween(object.rotation)
@@ -162,6 +165,17 @@ function onCardClick(object) {
         .start();
 }
 
+function PlaceCards() {
+    for (let i = 0; i < cards.length; i++) {
+        const card = cards[i];
+        new TWEEN.Tween(card.group.position)
+            .to(card.anchor, 1000)
+            .easing(TWEEN.Easing.Elastic.InOut)
+            .start()
+            .onUpdate(() => placeCamera())
+            .onComplete(() => card.hasMoved = true);
+    }
+}
 
 function animate() {
     requestAnimationFrame( animate );
@@ -174,13 +188,3 @@ function animate() {
 
     renderer.render( scene, camera );
 };
-
-animate();
-
-
-const tick = () => {
-	requestAnimationFrame( tick );
-	renderer.render( scene, camera );
-}
-
-tick();
