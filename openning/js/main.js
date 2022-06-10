@@ -43,10 +43,14 @@ class Card {
         this.hasMoved = false;
 
         this.count = Math.random() * 1000;
+        this.lastTime = Date.now();
     }
 
     shake() {
-        this.count += .01;
+        const deltaTime = Date.now() - this.lastTime;
+        this.lastTime = Date.now();
+
+        this.count += .001 * deltaTime;
 
         this.x = (this.hasMoved ? this.anchor.x : this.x) + Math.cos(this.count) / 20;
         this.y = (this.hasMoved ? this.anchor.y : this.y) + Math.cos(this.count) / 20;
