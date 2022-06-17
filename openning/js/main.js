@@ -1,15 +1,15 @@
 import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js';
 
-const sleep = ms => {
-    return new Promise(resolve => setTimeout(resolve, ms))
-}
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, innerWidth / innerHeight, 0.1, 1000 );
 camera.position.z = 5;
 
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+});
 renderer.setSize( innerWidth, innerHeight );
 document.body.appendChild( renderer.domElement );
 window.addEventListener('resize', () => {
@@ -52,8 +52,30 @@ class Card {
 
         this.count += .001 * deltaTime;
 
-        this.x = (this.hasMoved ? this.anchor.x : this.x) + Math.cos(this.count) / 20;
-        this.y = (this.hasMoved ? this.anchor.y : this.y) + Math.cos(this.count) / 20;
+        if (this.hasMoved) {
+            this.x = this.anchor.x + Math.cos(this.count) / 20;
+            this.y = this.anchor.y + Math.cos(this.count) / 20;
+        }
+    }
+
+    set hasMoved(value) {
+        if (value) {
+            const position = { 
+                x: this.anchor.x + Math.cos(this.count) / 20, 
+                y: this.anchor.y + Math.cos(this.count) / 20 
+            };
+
+            new TWEEN.Tween(this.group.position)
+                .to(position, 80)
+                .easing(TWEEN.Easing.Cubic.InOut)
+                .start();
+        }
+
+        this._hasMoved = value;
+    }
+
+    get hasMoved() {
+        return this._hasMoved;
     }
 
     get x() {
@@ -103,8 +125,8 @@ async function getCards() {
         }
         face.position.z -= .001;
 
-        //group.position.x = x;
-        //group.position.y = y;
+        group.position.x = maxX / 2;
+        group.position.y = yOffset / 2;
 
         x += xOffset;
 
@@ -137,9 +159,10 @@ let cubes = []
 animate();
 
 const result = await getCards();
+placeCamera()
 cards = result.instances;
 cubes = result.objects;
-PlaceCards();
+await PlaceCards();
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
@@ -169,9 +192,12 @@ function onCardClick(object) {
         .start();
 }
 
-function PlaceCards() {
+async function PlaceCards() {
     for (let i = 0; i < cards.length; i++) {
         const card = cards[i];
+
+        await sleep(100);
+
         new TWEEN.Tween(card.group.position)
             .to(card.anchor, 1000)
             .easing(TWEEN.Easing.Elastic.InOut)
