@@ -179,9 +179,6 @@ function onCardClick(object) {
     const card = cards.find(c => c.group === object);
 
     if (card.clicked) return;
-    Card.revealCount++
-
-    if (Card.revealCount === cards.length) displayExitButton();
 
     new TWEEN.Tween(object.rotation)
         .to({
@@ -191,7 +188,9 @@ function onCardClick(object) {
         }, 1500)
         .easing(TWEEN.Easing.Elastic.InOut)
         .onComplete(() => {
+            Card.revealCount++
             card.clicked = true;
+            if (Card.revealCount === cards.length) displayExitButton();
         })
         .start();
 }
