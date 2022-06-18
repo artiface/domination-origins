@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js';
+import CSS from "../css/style.css"
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -9,6 +10,7 @@ camera.position.z = 5;
 
 const renderer = new THREE.WebGLRenderer({
     antialias: true,
+    alpha: true
 });
 renderer.setSize( innerWidth, innerHeight );
 document.body.appendChild( renderer.domElement );
@@ -36,39 +38,46 @@ let theRockTexture = new Promise((resolve, reject) => {
     )
 });
 
+let cards = []
+let cubes = []
+let raycaster;
+let pointer;
+
+animate();
+
 class Card {
+    static revealCount = 0;
     constructor(group, position) {
         this.group = group;
         this.anchor = position;
         this.hasMoved = false;
 
-        this.count = Math.random() * 1000;
+        this.sleepTime = Math.random() * 1000;
+
+        this.count = 0;
         this.lastTime = Date.now();
+        this.clicked = false;
     }
 
     shake() {
         const deltaTime = Date.now() - this.lastTime;
         this.lastTime = Date.now();
 
-        this.count += .001 * deltaTime;
+        if (this.sleepTime < 0) 
+            this.count += .001 * deltaTime;
+        else 
+            this.sleepTime -= 5;
+        
 
         if (this.hasMoved) {
-            this.x = this.anchor.x + Math.cos(this.count) / 20;
-            this.y = this.anchor.y + Math.cos(this.count) / 20;
+            this.x = this.anchor.x + Math.cos(this.count) / 30;
+            this.y = this.anchor.y + Math.cos(this.count) / 30;
         }
     }
 
     set hasMoved(value) {
         if (value) {
-            const position = { 
-                x: this.anchor.x + Math.cos(this.count) / 20, 
-                y: this.anchor.y + Math.cos(this.count) / 20 
-            };
 
-            new TWEEN.Tween(this.group.position)
-                .to(position, 80)
-                .easing(TWEEN.Easing.Cubic.InOut)
-                .start();
         }
 
         this._hasMoved = value;
@@ -153,19 +162,6 @@ function placeCamera() {
     camera.position.y = y;
 }
 
-let cards = []
-let cubes = []
-
-animate();
-
-const result = await getCards();
-placeCamera()
-cards = result.instances;
-cubes = result.objects;
-await PlaceCards();
-
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
 function onClick(event) {
 	// calculate pointer position in normalized device coordinates
 	// (-1 to +1) for both components
@@ -178,10 +174,15 @@ function onClick(event) {
         onCardClick(intersects[0].object.parent);
     }
 }
-renderer.domElement.addEventListener('mousedown', onClick);
 
 function onCardClick(object) {
-    const card = cards.find(c => c.mesh === object);
+    const card = cards.find(c => c.group === object);
+
+    if (card.clicked) return;
+    Card.revealCount++
+
+    if (Card.revealCount === cards.length) displayExitButton();
+
     new TWEEN.Tween(object.rotation)
         .to({
             x: 0,
@@ -189,7 +190,18 @@ function onCardClick(object) {
             z: 0
         }, 1500)
         .easing(TWEEN.Easing.Elastic.InOut)
+        .onComplete(() => {
+            card.clicked = true;
+        })
         .start();
+}
+
+function displayExitButton() {
+    document.getElementById("exit-container").style.pointerEvents = "all";
+    document.getElementById("exit-container").style.opacity = "1";
+    document.getElementById("exit-button").addEventListener("mousedown", () => {
+        closeCardMenu();
+    })
 }
 
 async function PlaceCards() {
@@ -207,14 +219,73 @@ async function PlaceCards() {
     }
 }
 
-function animate() {
-    requestAnimationFrame( animate );
 
+function animate() {
     TWEEN.update();
 
     for (let i = 0; i < cards.length; i++) {
         cards[i].shake();
     }
 
-    renderer.render( scene, camera );
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
 };
+
+function reset() {
+    Card.revealCount = 0;
+    cards = []
+    cubes = []
+
+    while(scene.children.length > 0){ 
+        scene.remove(scene.children[0]); 
+    }
+}
+
+function initCards() {
+    reset();
+
+    getCards().then(result => {
+        placeCamera()
+        cards = result.instances;
+        cubes = result.objects;
+        PlaceCards().then(() => {
+            raycaster = new THREE.Raycaster();
+            pointer = new THREE.Vector2();
+            renderer.domElement.addEventListener('mousedown', onClick);
+        });
+    });
+}
+
+class Tile {
+    constructor(packType) {
+        this.buyButton = document.getElementById(`buy-${packType}`)
+        this.openButton = document.getElementById(`open-${packType}`)
+
+        this.buyButton.addEventListener("mousedown", () => {
+        })
+
+        this.openButton.addEventListener("mousedown", () => {
+            openCardMenu();
+            initCards();
+        })
+    }
+}
+
+function openCardMenu() {
+    document.getElementById("container").style.filter = "blur(10px)";
+    document.getElementById("container").style.pointerEvents = "none";
+    renderer.domElement.style.pointerEvents = "all";
+    renderer.domElement.style.opacity = "1";
+}
+
+function closeCardMenu() {
+    document.getElementById("container").style.filter = "blur(0px)";
+    document.getElementById("container").style.pointerEvents = "all";
+    document.getElementById("exit-container").style.pointerEvents = "none";
+    document.getElementById("exit-container").style.opacity = "0";
+    renderer.domElement.style.pointerEvents = "none";
+    renderer.domElement.style.opacity = "0";
+}
+
+const boosterPack = new Tile("booster")
+const starterPack = new Tile("starter")

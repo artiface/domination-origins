@@ -1,4 +1,205 @@
 body {
     padding: 0;
     margin: 0;
+    user-select: none;
+    font-family: "Casanova Scotia";
+}
+
+@font-face {
+    font-family: "Casanova Scotia";
+    src: url("../assets/CasanovaScotia.otf") format("opentype");
+}
+
+
+canvas {
+    position: absolute;
+    z-index: 1;
+    pointer-events: none;
+    transition: opacity .5s ease;
+}
+
+#container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-image: url("../assets/Opening_0000_Layer-2.png");
+    transition: filter .5s ease;
+}
+
+.header {
+    height: 15%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2%;
+}
+
+.header-logo {
+    height: 60%;
+    aspect-ratio: 1;
+    background-image: url("../assets/Opening_0001s_0002_Shape-4.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.header-title-group {
+    height: 60%;
+    width: 30%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+.header-title-image {
+    width: 100%;
+    height: 50%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.header-title-image1 {
+    background-image: url("../assets/Opening_0001s_0001_G4N9-PACK-OPENING.png");
+}
+
+.header-title-image2 {
+    background-image: url("../assets/Opening_0001s_0000_HTTPS___WWW.G4N9.SITE.png");
+}
+
+.card {
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 100%;
+    aspect-ratio: 744/1039;
+}
+
+.starter-pack-1 {
+    background-image: url("../assets/Starter_pack_1.png");
+}
+
+.starter-pack-2 {
+    background-image: url("../assets/Starter_pack_2.png");
+}
+
+#exit-container {
+    display: flex;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+    transition: opacity .5s ease;
+    opacity: 0;
+    pointer-events: none;
+}
+
+#exit-button {
+    position: absolute;
+    width: 10%!important;
+    height: auto!important;
+    aspect-ratio: 142/41;
+    align-self: center;
+}
+
+.group-button {
+    display: flex;
+    width: 100%;
+    height: 10%;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 5%;
+}
+
+.text-info-tile {
+    width: 100%;
+    height: 5%;
+    color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.button {
+    width: 100%;
+    height: 100%;
+    background-image: url("../assets/Opening_0002s_0001_buttons-copy-2.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: aliceblue;
+    cursor: pointer;
+}
+
+.button:active {
+    background-image: url("../assets/Opening_0002s_0000_Layer-5.png");
+}
+
+.menu {
+    position: relative;
+    width: 100%;
+    height: 70%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 1%;
+}
+
+.footer {
+    height: 15%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2%;
+}
+
+.footer-image {
+    height: 40%;
+    aspect-ratio: 1;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.footer-facebook {
+    background-image: url("../assets/Opening_0000s_0000s_0000s_0000_L1.png");
+}
+
+.footer-tiktok {
+    background-image: url("../assets/Opening_0000s_0000s_0000s_0001_L1.png");
+}
+
+.footer-discord {
+    background-image: url("../assets/Opening_0000s_0000s_0000s_0002_L1.png");
+}
+
+.footer-twitter {
+    background-image: url("../assets/Opening_0000s_0000s_0000s_0003_L1.png");
+}
+
+.footer-instagram {
+    background-image: url("../assets/Opening_0000s_0000s_0000s_0004_L1.png");
+}
+
+.tile {
+    position: relative;
+    width: 20%;
+    height: 100%;
+    gap: 2%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
