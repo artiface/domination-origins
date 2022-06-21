@@ -6,6 +6,19 @@
         <title>Openning</title>
     </head>
     <body>
+        <div id="modal-container">
+            <div id="modal">
+                <div id="close-modal">X</div>
+                <div id="modal-title"></div>
+                <div id="article-price"></div>
+                <div class="input-number">
+                    <div class="number-button" id="buy-decrease">-</div>
+                    <div type="text" id="input-number-field">0</div>
+                    <div class="number-button" id="buy-increase">+</div>
+                </div>
+                <div id="buy-article" style="width: 20%; height: 15%; font-size: 1vw;" class="button">Buy</div>
+            </div>
+        </div>
         <div id="exit-container">
             <div class="button" id="exit-button">Done</div>
         </div>
@@ -24,7 +37,7 @@
                         <div id="buy-booster" class="button">Buy</div>
                         <div id="open-booster" class="button">Open</div>
                     </div>
-                    <div class="text-info-tile">1 Booster Pack Remaining</div>
+                    <div class="text-info-tile">1 Booster Pack Remaining</div> <!--TODO REAL AMOUNT-->
                 </div>
                 <div class="tile">
                     <div class="card starter-pack-2"></div>
@@ -32,7 +45,7 @@
                         <div id="buy-starter" class="button">Buy</div>
                         <div id="open-starter" class="button">Open</div>
                     </div>
-                    <div class="text-info-tile">1 Starter Pack Remaining</div>
+                    <div class="text-info-tile">1 Starter Pack Remaining</div> <!--TODO REAL AMOUNT-->
                 </div>
             </div>
             <div class="footer">
@@ -43,6 +56,6 @@
                 <div class="footer-image footer-discord"></div>
             </div>
         </div>
-        <script type="module" src="/js/main.js"></script>
+        <script type="module" src="./js/main.js"></script>
     </body>
 </html>

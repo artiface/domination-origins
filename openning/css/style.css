@@ -18,6 +18,102 @@ canvas {
     transition: opacity .5s ease;
 }
 
+#input-number-field {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    border-width: 2px;
+    border-style: solid;
+    background: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    cursor: pointer;
+    user-select: text;
+    font-size: 1em;
+    transform: scale(1);
+    transition: transform 0.1s ease 0s, border-color 0.1s ease 0s;
+}
+
+.number-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    height: 100%;
+    aspect-ratio: 1;
+    cursor: pointer;
+    transform: scale(1);
+    transition: transform 0.1s ease, border 0.1s ease;
+}
+
+.number-button:active {
+    transform: scale(.9);
+    border: 2px solid black;
+}
+
+.input-number {
+    aspect-ratio: 3/1;
+    height: 15%;
+    display: flex;
+    align-items: center;
+    gap: 1%;
+    border: 2px solid grey;
+}
+
+#modal-container {
+    opacity: 0;
+    display: none;
+    pointer-events: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+    transition: opacity .3s ease;
+}
+
+
+
+#modal {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    width: 30%;
+    gap: 8%;
+    z-index: 2;
+    aspect-ratio: 2/1;
+    background-color: white;
+    transition: transform .3s ease;
+    box-sizing: border-box;
+    padding-left: 2%;
+}
+
+#close-modal {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    cursor: pointer;
+    position: absolute;
+    background: red;
+    color: white;
+    top: -10px;
+    right: -10px;
+}
+
+#modal-title {
+    width: 100%;
+    font-size: 2vw;
+}
+
 #container {
     position: absolute;
     width: 100%;
@@ -88,7 +184,7 @@ canvas {
 }
 
 #exit-container {
-    display: flex;
+    display: none;
     position: absolute;
     width: 100%;
     height: 100%;

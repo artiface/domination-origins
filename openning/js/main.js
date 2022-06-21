@@ -1,6 +1,7 @@
+import CSS from "../css/style.css"
 import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js';
-import CSS from "../css/style.css"
+import { getContract } from "./chainload";
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -198,7 +199,7 @@ function onCardClick(object) {
 function displayExitButton() {
     document.getElementById("exit-container").style.pointerEvents = "all";
     document.getElementById("exit-container").style.opacity = "1";
-    document.getElementById("exit-button").addEventListener("mousedown", () => {
+    document.getElementById("exit-button").addEventListener("click", () => {
         closeCardMenu();
     })
 }
@@ -250,24 +251,124 @@ function initCards() {
         PlaceCards().then(() => {
             raycaster = new THREE.Raycaster();
             pointer = new THREE.Vector2();
-            renderer.domElement.addEventListener('mousedown', onClick);
+            renderer.domElement.addEventListener('click', onClick);
         });
     });
 }
 
 class Tile {
     constructor(packType) {
+        console.log(packType);
+
         this.buyButton = document.getElementById(`buy-${packType}`)
         this.openButton = document.getElementById(`open-${packType}`)
+        this._amount = 0;
 
-        this.buyButton.addEventListener("mousedown", () => {
-        })
-
-        this.openButton.addEventListener("mousedown", () => {
-            openCardMenu();
-            initCards();
-        })
+        this.loadPrice().then((price) => {
+            console.log(price)
+            if (price?._isBigNumber) console.log(price.toNumber())
+            //console.log(this.price.toNumber())
+            this.buyButton.addEventListener("click", () => {
+                openModal(`${packType} pack`, price, this);
+            })
+    
+            this.openButton.addEventListener("click", () => {
+                openCardMenu();
+                initCards();
+            })
+        }).catch(err => {
+            alert(err)
+        });
     }
+
+    async buy(tokenID) {
+        const amount = parseInt(document.getElementById("input-number-field").innerText);
+        const price = this.price;
+        const totalPrice = price.mul(amount);
+        const gasEstimated = await this.contract.estimateGas.buyStarter(this.tokenID, amount, { value: totalPrice.toString() });
+
+        const options = {
+            value: totalPrice,
+            gasLimit: gasEstimated.mul(120).div(100)
+        };
+
+        await this.contract.buyStarter(starterTokenId, amount, options);
+    }
+}
+
+class Booster extends Tile {
+    constructor(packType) {
+        super(packType);
+        this.tokenID = 500;
+    }
+
+    async loadPrice() {
+        this.contract = getContract('erc1155');
+        return new Promise((resolve, reject) => {
+            this.contract.BOOSTER_PRICE().then(price => {
+                resolve(price);
+            }).catch(err => {
+                reject(err);
+            }); 
+        })
+
+    }
+}
+
+class Starter extends Tile {
+    constructor(packType) {
+        super(packType);
+        this.tokenID = 1;
+    }
+
+    async loadPrice() {
+        this.contract = getContract('erc1155');
+        this.contract.STARTER_PRICE().then(price => {
+            this.price = price;
+        });
+    }
+}
+
+function openModal(title, price, tile) {
+    document.getElementById("modal-title").innerText = title;
+    console.log(price.toNumber())
+    document.getElementById("article-price").innerText = `Price : ${price.toNumber()} MATIC`;
+    const container = document.getElementById("container");
+    container.style.filter = "blur(10px)";
+    container.style.pointerEvents = "none";
+    const modalContainer = document.getElementById("modal-container");
+    modalContainer.style.pointerEvents = "all";
+    modalContainer.style.opacity = "1";
+    const modal = document.getElementById("modal");
+    modal.style.transform = "scale(1.1)";
+    const close = document.getElementById("close-modal");
+
+    document.getElementById("input-number-field").innerText = "0";
+        
+    const buyButton = document.getElementById("buy-article");
+    const buyCallback = async () => {
+        await tile.buy();
+    }
+    buyButton.addEventListener("click", buyCallback)
+
+    const modalCloseCallback = (event) => {
+        if (event.target !== modalContainer && event.target !== close) return;
+        closeModal();
+        buyButton.removeEventListener("click", buyCallback);
+        modalContainer.removeEventListener("click", event);
+    }
+    modalContainer.addEventListener("click", modalCloseCallback)
+}
+
+function closeModal() {
+    const container = document.getElementById("container");
+    container.style.filter = "blur(0px)";
+    container.style.pointerEvents = "all";
+    const modalContainer = document.getElementById("modal-container");
+    modalContainer.style.pointerEvents = "none";
+    modalContainer.style.opacity = "0";
+    const modal = document.getElementById("modal");
+    modal.style.transform = "scale(1)";
 }
 
 function openCardMenu() {
@@ -286,5 +387,20 @@ function closeCardMenu() {
     renderer.domElement.style.opacity = "0";
 }
 
-const boosterPack = new Tile("booster")
-const starterPack = new Tile("starter")
+window.onload = () => {
+    document.getElementById("exit-container").style.display = "flex";
+    document.getElementById("modal-container").style.display = "flex";
+
+    const field = document.getElementById("input-number-field");
+
+    document.getElementById("buy-decrease").addEventListener("click", () => {
+        field.innerText = Math.max(parseInt(field.innerText) - 1, 0);
+    })
+
+    document.getElementById("buy-increase").addEventListener("click", () => {
+        field.innerText = parseInt(field.innerText) + 1;
+    })
+
+    const starterPack = new Starter("starter")
+    const boosterPack = new Booster("booster")
+}
