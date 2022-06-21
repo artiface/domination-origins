@@ -261,24 +261,26 @@ class Tile {
         console.log(packType);
 
         this.buyButton = document.getElementById(`buy-${packType}`)
+        console.log(this.buyButton )
         this.openButton = document.getElementById(`open-${packType}`)
         this._amount = 0;
 
-        this.loadPrice().then((price) => {
-            console.log(price)
+
+        this.buyButton.addEventListener("click", () => {
+            openModal(`${packType} pack`, 0, this);
+        })
+
+        this.openButton.addEventListener("click", () => {
+            openCardMenu();
+            initCards();
+        })
+
+        /*this.loadPrice().then((price) => {
             if (price?._isBigNumber) console.log(price.toNumber())
             //console.log(this.price.toNumber())
-            this.buyButton.addEventListener("click", () => {
-                openModal(`${packType} pack`, price, this);
-            })
-    
-            this.openButton.addEventListener("click", () => {
-                openCardMenu();
-                initCards();
-            })
         }).catch(err => {
             alert(err)
-        });
+        });*/
     }
 
     async buy(tokenID) {
@@ -331,8 +333,8 @@ class Starter extends Tile {
 
 function openModal(title, price, tile) {
     document.getElementById("modal-title").innerText = title;
-    console.log(price.toNumber())
-    document.getElementById("article-price").innerText = `Price : ${price.toNumber()} MATIC`;
+    //console.log(price.toNumber())
+    document.getElementById("article-price").innerText = `Price : ${0} MATIC`; //price.toNumber()
     const container = document.getElementById("container");
     container.style.filter = "blur(10px)";
     container.style.pointerEvents = "none";
