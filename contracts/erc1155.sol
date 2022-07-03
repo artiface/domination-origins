@@ -1727,8 +1727,8 @@ contract G4N9 is ERC1155, AccessControl, Pausable, ERC1155Burnable, ERC1155Suppl
     function buyStarter(uint256 id, uint8 amount) public payable
     {
         address operator = _msgSender();
-        require(msg.value == STARTER_PRICE * amount, "G4N9-buy: You must send an exact amount");
-        require(id >= STARTER_KITS && id < BOOSTER_PACKS, "G4N9-buy: Invalid token id");
+        require(msg.value == STARTER_PRICE * amount, "You must send an exact amount");
+        require(id >= STARTER_KITS && id < BOOSTER_PACKS, "Invalid token id");
         _mint(operator, id, amount, "");
 
         uint256 gas_reserve_part = (msg.value * _gas_share) / 1000;
@@ -1738,8 +1738,8 @@ contract G4N9 is ERC1155, AccessControl, Pausable, ERC1155Burnable, ERC1155Suppl
     function buyBooster(uint256 id, uint8 amount) public payable
     {
         address operator = _msgSender();
-        require(msg.value == BOOSTER_PRICE * amount, "G4N9-buy: You must send an exact amount");
-        require(id >= BOOSTER_PACKS && id < LOW_TROOPS_START, "G4N9-buy: Invalid token id");
+        require(msg.value == BOOSTER_PRICE * amount, "You must send an exact amount");
+        require(id >= BOOSTER_PACKS && id < LOW_TROOPS_START, "Invalid token id");
         _mint(operator, id, amount, "");
 
         uint256 gas_reserve_part = (msg.value * _gas_share) / 1000;
@@ -1763,11 +1763,6 @@ contract G4N9 is ERC1155, AccessControl, Pausable, ERC1155Burnable, ERC1155Suppl
             _token_dna[ids[i]] = dna[i];
         }
     }
-    /*
-    function setDNA(uint256 id, uint256 dna) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        _token_dna[id] = dna;
-    }
-    */
     function dnaOf(uint256 id) public view returns (uint256) {
         return _token_dna[id];
     }
@@ -1793,14 +1788,12 @@ contract G4N9 is ERC1155, AccessControl, Pausable, ERC1155Burnable, ERC1155Suppl
     function unpause() public onlyRole(PAUSER_ROLE) {
         _unpause();
     }
-
+    /*
     function forceTransferZero(address from, address to) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(from != address(0));
-        require(to != address(0));
-        require(from.balanceOf(THE_TOKEN) >= 1, "Not enough tokens");
-        _safeTransferFrom(from, to, THE_TOKEN, 1);
+        require(balanceOf(from, THE_TOKEN) >= 1);
+        _safeTransferFrom(from, to, THE_TOKEN, 1, "");
     }
-
+    */
     function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
         internal
         whenNotPaused

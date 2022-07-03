@@ -1,0 +1,11 @@
+accounts
+
+/Services/token_data/images/
+
+/Services/token_data/metadata/
+
+/Services/token_data/opensea/
+
+/Services/token_data/thumbs/
+
+/Tools/chainlisten/balances.db

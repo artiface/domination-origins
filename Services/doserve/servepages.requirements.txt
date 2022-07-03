@@ -1,0 +1,3 @@
+pyuwsgi
+flask
+web3

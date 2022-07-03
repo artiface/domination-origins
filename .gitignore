@@ -1,6 +1,4 @@
-battles/running/
-battles/cache/
-doserve/battles/
+/Services/doserve/battles/
 bin/
 .DS_Store
 .idea/
@@ -12,10 +10,18 @@ WeaponNFTs/
 Puzzles/
 *.db
 
-hashlips_art_engine/build/images/
+MintingBackend/hashlips_art_engine/build/images/
 layers/
 #images/
 #opensea/
 #metadata/
 accounts/
 contracts/output/
+
+/Services/token_data/images/
+
+/Services/token_data/metadata/
+
+/Services/token_data/opensea/
+
+/Services/token_data/thumbs/

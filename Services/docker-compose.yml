@@ -1,0 +1,43 @@
+services:
+  pageserver:
+    container_name: pageserver
+    hostname: pageserver
+
+    build:
+      context: .
+      dockerfile: pageserver.Dockerfile
+    image: 32kb.org:5000/pageserver
+    environment:
+      PYTHONUNBUFFERED: 1
+    volumes:
+      - ./token_data:/home/worker/data
+      - ./battles:/home/worker/battles
+
+  gameserver:
+    container_name: gameserver
+    hostname: gameserver
+
+    build:
+      context: .
+      dockerfile: gameserver.Dockerfile
+    image: 32kb.org:5000/gameserver
+    environment:
+      PYTHONUNBUFFERED: 1
+    volumes:
+      - ./token_data:/home/worker/token_data
+      - ./battles:/home/worker/battles
+
+  minter:
+    container_name: minter
+    hostname: minter
+
+    build:
+      context: .
+      dockerfile: minter.Dockerfile
+    image: 32kb.org:5000/minter
+    environment:
+      PYTHONUNBUFFERED: 1
+    volumes:
+      - ./accounts:/home/worker/accounts
+      - ./token_data:/home/worker/hashlips_art_engine/build
+      - ./token_data/dnalist.json:/home/worker/hashlips_art_engine/dnalist.json

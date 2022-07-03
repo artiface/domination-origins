@@ -1,8 +1,0 @@
-{
-  "name": "G4N9: Domination Origins",
-  "description": "This is the main g4n9 token contract. Accept no less.",
-  "image": "https://g4n9.site/images/g4n9-logo.png",
-  "external_link": "https://g4n9.site/",
-  "seller_fee_basis_points": 750,
-  "fee_recipient": "0xddf047721E8d9996E74325145c31da14bCFB093E"
-}
