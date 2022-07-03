@@ -26,25 +26,28 @@ class Tracker:
         #currentBlock = self.web3.eth.blockNumber
 
     def on_raw_event(self, event_index, event):
+        print("Raw Event of type %s" % event_index)
+        tx_hash = event["transactionHash"].hex()
         args = event["args"]
         is_batch = 'id' not in args and 'ids' in args
         tokenIds = args["ids"] if is_batch else [args["id"]]
         from_address = args["from"]
-        to_address = args.to
+        to_address = args["to"]
         values = args["values"] if is_batch else [args["value"]]
 
         for tokenId, value in zip(tokenIds, values):
-            self.on_transfer(tokenId, from_address, to_address, value)
+            self.on_transfer(tx_hash, tokenId, from_address, to_address, value)
 
         return {
+            'tx_hash': tx_hash,
             'tokenIds': tokenIds,
             'from': from_address,
             'to': to_address,
             'values': values
         }
 
-    def on_transfer(self, token_id, from_address, to_address, value):
-        print('on_transfer: {} of tokens with id {} from {} to {}'.format(value, token_id, from_address, to_address))
+    def on_transfer(self, tx_hash, token_id, from_address, to_address, value):
+        print('new transfer (tx: {}): {} of tokens with id {} from {} to {}'.format(tx_hash, value, token_id, from_address, to_address))
         if from_address == '0x0000000000000000000000000000000000000000':
             self.db.mintToken(token_id, to_address, value)
         else:
