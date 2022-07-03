@@ -1,11 +1,12 @@
 accounts
 
-/Services/token_data/images/
+*.psd
 
-/Services/token_data/metadata/
+*.xcf
 
-/Services/token_data/opensea/
+*.tsx
 
-/Services/token_data/thumbs/
+*.md
 
-/Tools/chainlisten/balances.db
+battles.sqlite
+balances.db

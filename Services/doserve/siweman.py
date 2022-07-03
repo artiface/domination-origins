@@ -1,3 +1,4 @@
+import os
 import string
 import random
 import datetime
@@ -5,11 +6,13 @@ from datetime import timedelta
 
 from siwe import siwe
 from siwe.siwe import SiweMessage
+
+from config import BATTLE_DATA_DIRECTORY
 from storage import Storage
 
 class SignInManager:
     def __init__(self):
-        self.sqlite_file = 'battles.sqlite'
+        self.sqlite_file = os.path.join(BATTLE_DATA_DIRECTORY, 'battles.sqlite')
         self.db = Storage(self.sqlite_file)
         self.authCounter = 0
 

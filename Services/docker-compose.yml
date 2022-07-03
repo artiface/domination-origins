@@ -10,7 +10,7 @@ services:
     environment:
       PYTHONUNBUFFERED: 1
     volumes:
-      - ./token_data:/home/worker/data
+      - ./token_data:/home/worker/token_data
       - ./battles:/home/worker/battles
 
   gameserver:
@@ -41,3 +41,34 @@ services:
       - ./accounts:/home/worker/accounts
       - ./token_data:/home/worker/hashlips_art_engine/build
       - ./token_data/dnalist.json:/home/worker/hashlips_art_engine/dnalist.json
+
+  proxy:
+    container_name: proxy
+    hostname: proxy
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./ReverseProxy/vhosts:/etc/nginx/conf.d
+      - ./static:/var/www/g4n9
+    build:
+      context: .
+      dockerfile: nginx.Dockerfile
+    image: 32kb.org:5000/proxy
+
+  tracker:
+    container_name: tracker
+    hostname: tracker
+    environment:
+      PYTHONUNBUFFERED: 1
+    volumes:
+      - ./battles:/home/worker/battles
+    build:
+      context: .
+      dockerfile: tracker.Dockerfile
+    image: 32kb.org:5000/tracker
+
+networks:
+  default:
+    name: g4n9-net
+    external: true

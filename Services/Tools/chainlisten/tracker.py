@@ -1,10 +1,12 @@
+import os
 import sys
 
 from web3 import Web3
 from web3.middleware import geth_poa_middleware
 
-from MintingBackend.helper.listener import Listener
-from MintingBackend.transact import Contract
+from doserve.config import BATTLE_DATA_DIRECTORY, TEST_NETWORK
+from listener import Listener
+from MintingBackend.transact.contract import Contract
 from storage import Storage
 from scanner import JSONifiedState, EventScanner
 
@@ -13,10 +15,13 @@ class Tracker:
     def __init__(self):
         polymain = 'https://rpc.ankr.com/polygon'
         mumbai = 'https://matic-mumbai.chainstacklabs.com'
+        rpc_endpoint = mumbai if TEST_NETWORK else polymain
+        network_name = 'test network' if TEST_NETWORK else 'MAIN NET'
+        print('Tracker running on %s' % network_name)
         self.ipfsGateway = 'https://gateway.ipfs.io/' #'https://ipfs.io/'
-        self.web3 = Web3(Web3.HTTPProvider(mumbai), middlewares=[])
+        self.web3 = Web3(Web3.HTTPProvider(rpc_endpoint), middlewares=[])
         self.web3.middleware_onion.inject(geth_poa_middleware, layer=0)
-        self.db = Storage('balances.db')
+        self.db = Storage(os.path.join(BATTLE_DATA_DIRECTORY, 'balances.db'))
         self.listener = Listener(self.on_raw_event)
         #currentBlock = self.web3.eth.blockNumber
 
@@ -81,18 +86,18 @@ if __name__ == '__main__':
     # check if argument is "listen"
     if len(sys.argv) > 1 and sys.argv[1] == 'listen':
         t = Tracker()
-        c = Contract()
+        c = Contract('erc1155', testnet=TEST_NETWORK)
         contract = c.getMainContract()
         event_list = [contract.events.TransferSingle, contract.events.TransferBatch]
         block = t.getCurrentBlock()
-        print('Listening from block:', block)
+        print('Listening for txs on contract %s starting from block %s' % (contract.address, block))
         t.listen(event_list)
     # check if argument is "scan"
     elif len(sys.argv) > 1 and sys.argv[1] == 'scan':
         # get start and end block from the command line arguments
         end_block = 'latest' #int(sys.argv[2])
         t = Tracker()
-        c = Contract()
+        c = Contract('erc1155', testnet=TEST_NETWORK)
         contract = c.getMainContract()
         start_block = 26409555
         event_list = [contract.events.TransferSingle, contract.events.TransferBatch]

@@ -11,7 +11,8 @@ from doserve.config import BATTLE_DATA_DIRECTORY
 from doserve.chain import loadLocalNFT
 from storage import Storage
 
-db = Storage('battles.sqlite')
+db_file = os.path.join(BATTLE_DATA_DIRECTORY, 'battles.sqlite')
+db = Storage(db_file)
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
@@ -88,6 +89,8 @@ def health():
 @app.route('/api/troop/<int:generation>/<int:tokenId>', methods=['GET'])
 def troop_detail_json(generation, tokenId):
     tokenData = loadLocalNFT('troop', tokenId)
+    if not tokenData:
+        return False
     templateData = prepareTroopDataForAPI(generation, tokenData)
     return templateData
 
@@ -107,7 +110,10 @@ def all_troop_detail_json(generation, page):
 
 @app.route('/troops/<int:generation>/<int:tokenId>', methods=['GET'])
 def troop_detail(generation, tokenId):
-    return render('troops_detail', troop_detail_json(generation, tokenId))
+    tokenData = troop_detail_json(generation, tokenId)
+    if not tokenData:
+        return "No data"
+    return render('troops_detail', tokenData)
 
 
 @app.route('/battle-summary/<int:battleId>', methods=['GET'])

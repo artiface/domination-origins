@@ -34,7 +34,7 @@ class GameServer:
         self.hostname = hostname
         self.connected = set()
         self.playersLookingForBattle = set()
-        self.storage = Storage('battles.sqlite')
+        self.storage = Storage(os.path.join(BATTLE_DATA_DIRECTORY, 'battles.sqlite'))
         self.matches = {}
         self.skillHandler = SkillHandler(self)
         print("Server Init")

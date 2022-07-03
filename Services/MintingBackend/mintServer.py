@@ -12,11 +12,16 @@ from Tools.chainlisten.listener import Listener
 from MintingBackend.transact.contract import Contract, WritableContract
 from Tools.wallets import get_account
 
+from doserve.config import TEST_NETWORK
+
+
 class OnDemandMinter:
     def __init__(self, private_key_for_transactions):
         self.metadata_dir = '/home/worker/hashlips_art_engine/build/metadata'
         self.image_dir = '/home/worker/hashlips_art_engine/build/images'
-        self.main_contract = WritableContract('erc1155', private_key_for_transactions, testnet=True)
+        network_name = 'test network' if TEST_NETWORK else 'MAIN NET'
+        print("Minter running on %s" % network_name)
+        self.main_contract = WritableContract('erc1155', private_key_for_transactions, testnet=TEST_NETWORK)
 
         # We listen to transfer events to this address
         self.erc721_token_receiver_wallet = '0x4059A7Cceb0A65f1Eb3Faf19BD76259a99919571'
