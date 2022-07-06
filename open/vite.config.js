@@ -6,6 +6,7 @@ export default defineConfig({
         FullReload('', { root: __dirname }),
     ],
     build: {
-        target: 'esnext'
+        target: 'esnext',
+        outDir: '../Services/open'
     }
 })
