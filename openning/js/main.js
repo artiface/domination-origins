@@ -2,6 +2,7 @@ import CSS from "../css/style.css"
 import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js';
 import { getContract } from "./chainload";
+import { ethers } from "ethers";
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -24,7 +25,7 @@ window.addEventListener('resize', () => {
 const loader = new THREE.TextureLoader();
 let dummyTexture = new Promise((resolve, reject) => {
     loader.load(
-        '../assets/dummy.jpeg',
+        'https://i.imgur.com/CkmEmKk.jpeg',
         (texture) => {
             resolve(texture);
         }
@@ -32,7 +33,7 @@ let dummyTexture = new Promise((resolve, reject) => {
 });
 let theRockTexture = new Promise((resolve, reject) => {
     loader.load(
-        '../assets/dummy2.jpg',
+        'https://i.imgur.com/CkmEmKk.jpeg',
         (texture) => {
             resolve(texture);
         }
@@ -256,37 +257,86 @@ function initCards() {
     });
 }
 
-class Tile {
+class Pack {
     constructor(packType) {
-        console.log(packType);
+        this.packType = packType;
+        this.loadPrice();
+    }
 
-        this.buyButton = document.getElementById(`buy-${packType}`)
-        console.log(this.buyButton )
-        this.openButton = document.getElementById(`open-${packType}`)
+    init() {
+        this.buyButton = document.getElementById(`buy-${this.packType}`)
+        this.openButton = document.getElementById(`open-${this.packType}`)
         this._amount = 0;
 
 
         this.buyButton.addEventListener("click", () => {
-            openModal(`${packType} pack`, 0, this);
+            openModal(`${this.packType} pack`, 0, this);
         })
 
         this.openButton.addEventListener("click", () => {
             openCardMenu();
             initCards();
         })
-
-        /*this.loadPrice().then((price) => {
-            if (price?._isBigNumber) console.log(price.toNumber())
-            //console.log(this.price.toNumber())
-        }).catch(err => {
-            alert(err)
-        });*/
     }
 
-    async buy(tokenID) {
+    updatePrice() {
         const amount = parseInt(document.getElementById("input-number-field").innerText);
-        const price = this.price;
-        const totalPrice = price.mul(amount);
+        const totalPrice = this.tokenPrice.mul(amount);
+        console.log(this.tokenPrice._hex)
+        console.log(this.tokenPrice.toString())
+        document.getElementById("article-price").innerText = `Price : ${ethers.utils.formatUnits(totalPrice, 18)} MATIC`; //price.toNumber()
+    }
+}
+
+class Booster extends Pack {
+    constructor(packType) {
+        super(packType);
+        this.tokenID = 500;
+    }
+
+    loadPrice() {
+        this.contract = getContract('erc1155');
+        this.contract.BOOSTER_PRICE().then(price => {
+            this.tokenPrice = price;
+            console.log(this.packType, this.tokenPrice);
+            this.init();
+        });
+    }
+
+    async buy() {
+        const amount = parseInt(document.getElementById("input-number-field").innerText);
+        const totalPrice = this.tokenPrice.mul(amount);
+
+        const gasEstimated = await this.contract.estimateGas.buyBooster(this.tokenID, amount, { value: totalPrice.toString() });
+
+        const options = {
+            value: totalPrice,
+            gasLimit: gasEstimated.mul(120).div(100)
+        };
+
+        await this.contract.buyBooster(this.tokenID, amount, options);
+    }
+}
+
+class Starter extends Pack {
+    constructor(packType) {
+        super(packType);
+        this.tokenID = 1;
+    }
+
+    loadPrice() {
+        this.contract = getContract('erc1155');
+        this.contract.STARTER_PRICE().then(price => {
+            this.tokenPrice = price;
+            console.log(this.packType, this.tokenPrice);
+            this.init();
+        });
+    }
+
+    async buy() {
+        const amount = parseInt(document.getElementById("input-number-field").innerText);
+        const totalPrice = this.tokenPrice.mul(amount);
+
         const gasEstimated = await this.contract.estimateGas.buyStarter(this.tokenID, amount, { value: totalPrice.toString() });
 
         const options = {
@@ -294,40 +344,7 @@ class Tile {
             gasLimit: gasEstimated.mul(120).div(100)
         };
 
-        await this.contract.buyStarter(starterTokenId, amount, options);
-    }
-}
-
-class Booster extends Tile {
-    constructor(packType) {
-        super(packType);
-        this.tokenID = 500;
-    }
-
-    async loadPrice() {
-        this.contract = getContract('erc1155');
-        return new Promise((resolve, reject) => {
-            this.contract.BOOSTER_PRICE().then(price => {
-                resolve(price);
-            }).catch(err => {
-                reject(err);
-            }); 
-        })
-
-    }
-}
-
-class Starter extends Tile {
-    constructor(packType) {
-        super(packType);
-        this.tokenID = 1;
-    }
-
-    async loadPrice() {
-        this.contract = getContract('erc1155');
-        this.contract.STARTER_PRICE().then(price => {
-            this.price = price;
-        });
+        await this.contract.buyStarter(this.tokenID, amount, options);
     }
 }
 
@@ -389,20 +406,23 @@ function closeCardMenu() {
     renderer.domElement.style.opacity = "0";
 }
 
-window.onload = () => {
-    document.getElementById("exit-container").style.display = "flex";
-    document.getElementById("modal-container").style.display = "flex";
 
-    const field = document.getElementById("input-number-field");
+document.getElementById("exit-container").style.display = "flex";
+document.getElementById("modal-container").style.display = "flex";
 
-    document.getElementById("buy-decrease").addEventListener("click", () => {
-        field.innerText = Math.max(parseInt(field.innerText) - 1, 0);
-    })
+const field = document.getElementById("input-number-field");
 
-    document.getElementById("buy-increase").addEventListener("click", () => {
-        field.innerText = parseInt(field.innerText) + 1;
-    })
+document.getElementById("buy-decrease").addEventListener("click", () => {
+    field.innerText = Math.max(parseInt(field.innerText) - 1, 0);
+    starterPack.updatePrice();
+    boosterPack.updatePrice();
+})
 
-    const starterPack = new Starter("starter")
-    const boosterPack = new Booster("booster")
-}
+document.getElementById("buy-increase").addEventListener("click", () => {
+    field.innerText = parseInt(field.innerText) + 1;
+    starterPack.updatePrice();
+    boosterPack.updatePrice();
+})
+
+const starterPack = new Starter("starter")
+const boosterPack = new Booster("booster")
