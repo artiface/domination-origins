@@ -14,5 +14,6 @@
     <h2>Open Page</h2>
     <input id="token_amount" type="number" name="amount" />
     <button id="send">Send</button>
+    <div id="result"></div>
 </body>
 </html>
