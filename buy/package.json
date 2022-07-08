@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "vite": "^2.9.9",
-    "vite-plugin-full-reload": "^1.0.0"
+    "vite-plugin-full-reload": "^1.0.1"
   },
   "dependencies": {
     "ethers": "^5.6.9"

@@ -5,8 +5,9 @@ export default defineConfig({
     plugins: [
         FullReload('', { root: __dirname }),
     ],
+    base: './',
     build: {
         target: 'esnext',
-        outDir: '../Services/open'
+        outDir: '../Services/static/open'
     }
 })
