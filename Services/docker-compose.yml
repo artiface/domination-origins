@@ -43,8 +43,8 @@ services:
       - ./token_data/dnalist.json:/home/worker/hashlips_art_engine/dnalist.json
 
   proxy:
-    container_name: proxy
-    hostname: proxy
+    container_name: g4n9-proxy
+    hostname: g4n9-proxy
     volumes:
       - ./ReverseProxy/vhosts:/etc/nginx/conf.d
       - ./static:/var/www/g4n9
@@ -67,5 +67,5 @@ services:
 
 networks:
   default:
-    name: g4n9-net
+    name: dockernet
     external: true
