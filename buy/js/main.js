@@ -12,17 +12,11 @@ class Pack {
 
     init() {
         this.buyButton = document.getElementById(`buy-${this.packType}`)
-        this.openButton = document.getElementById(`open-${this.packType}`)
         this._amount = 0;
 
 
         this.buyButton.addEventListener("click", () => {
             openModal(`${this.packType} pack`, 0, this);
-        })
-
-        this.openButton.addEventListener("click", () => {
-            openCardMenu();
-            initCards();
         })
     }
 
