@@ -12,8 +12,9 @@ class Listener:
             for index, filterItem in filters:
                 entries = []
                 try:
+                    print('Checking for new events on %s' % filterItem)
                     entries = filterItem.get_new_entries()
-                except requests.exceptions.HTTPError as e:
+                except (requests.exceptions.HTTPError, ValueError) as e:
                     print(e)
                 for event in entries:
                     self.on_raw_event(index, event)

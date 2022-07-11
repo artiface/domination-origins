@@ -45,9 +45,6 @@ services:
   proxy:
     container_name: proxy
     hostname: proxy
-    ports:
-      - 80:80
-      - 443:443
     volumes:
       - ./ReverseProxy/vhosts:/etc/nginx/conf.d
       - ./static:/var/www/g4n9
