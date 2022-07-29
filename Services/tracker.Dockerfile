@@ -1,4 +1,4 @@
-FROM python:3.10-alpine3.16
+FROM python:3.9-alpine3.16
 
 RUN apk update && apk add build-base && python3 -m pip install --upgrade pip && adduser -D worker
 USER worker

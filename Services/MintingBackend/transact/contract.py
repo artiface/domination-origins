@@ -11,7 +11,7 @@ class Contract:
     def __init__(self, name, testnet=True):
         available_networks = {
             'testnet': {
-                'provider': 'https://matic-mumbai.chainstacklabs.com/',
+                'provider': 'wss://ws-matic-mumbai.chainstacklabs.com', #'https://matic-mumbai.chainstacklabs.com/',
                 'block_explorer': 'https://mumbai.polygonscan.com/',
             },
             'mainnet': {
@@ -24,7 +24,7 @@ class Contract:
         base_path = os.path.realpath(__file__)
         self.abi_path = os.path.join(os.path.dirname(base_path), 'abi')
         self.block_explorer = network['block_explorer']
-        self.web3 = Web3(Web3.HTTPProvider(network['provider']), middlewares=[])
+        self.web3 = Web3(Web3.WebsocketProvider(network['provider']), middlewares=[])
         self.web3.middleware_onion.inject(geth_poa_middleware, layer=0)
         self.chain_id = self.web3.toHex(self.web3.eth.chain_id)
         self.contract = self.getContract(name)
