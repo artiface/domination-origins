@@ -1,5 +1,5 @@
 import asyncio
-
+from web3.auto import w3
 import requests.exceptions
 
 
