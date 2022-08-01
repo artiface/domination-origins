@@ -52,6 +52,8 @@ services:
       context: .
       dockerfile: nginx.Dockerfile
     image: 32kb.org:5000/proxy
+    ports:
+        - 80:80
 
   tracker:
     container_name: tracker
